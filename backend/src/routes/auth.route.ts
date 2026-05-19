@@ -1,0 +1,19 @@
+import { Router } from 'express';
+import * as authController from '../controllers/auth.controller';
+
+const router = Router();
+
+// User Auth Routes
+router.post('/register', authController.registerUser);
+router.post('/login', authController.loginUser);
+
+// Tenant Auth Routes
+router.post('/register/tenant', authController.registerTenant);
+router.post('/login/tenant', authController.loginTenant);
+
+// General Auth Routes (Verification & Reset Password)
+router.post('/verify', authController.verifyEmail);
+router.post('/reset-password', authController.requestReset);
+router.post('/confirm-reset', authController.confirmReset);
+
+export default router;
