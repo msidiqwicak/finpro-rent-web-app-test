@@ -1,4 +1,4 @@
-interface PropertyProps {
+interface PropertyCardProps {
   name: string;
   location: string;
   price: number;
@@ -7,33 +7,51 @@ interface PropertyProps {
   ecoFeature: string;
 }
 
-export default function PropertyCard({ name, location, price, rating, imageUrl, ecoFeature }: PropertyProps) {
+export default function PropertyCard({ name, location, price, rating, imageUrl, ecoFeature }: PropertyCardProps) {
   return (
-    <article className="bg-surface rounded-xl overflow-hidden shadow-sm border border-outline-variant/20 hover:shadow-md transition-shadow duration-300 group cursor-pointer">
-      <div className="relative h-64 overflow-hidden">
-        <img 
-          alt={name} 
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-          src={imageUrl} 
-        />
-        <div className="absolute top-4 left-4 bg-surface-container-lowest/90 backdrop-blur px-3 py-1 rounded-full flex items-center gap-1">
-          <span className="text-sm text-secondary">🍃</span>
-          <span className="font-caption text-caption text-on-surface">{ecoFeature}</span>
+    <article className="property-card">
+      {/* Image — fixed aspect ratio prevents height inconsistency */}
+      <div className="property-card__image-wrap">
+        <img src={imageUrl} alt={name} loading="lazy" />
+
+        {/* Eco badge — pill with Material Symbol icon */}
+        <div className="eco-badge">
+          <span className="material-symbols-outlined" style={{ fontSize: 14, fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20", color: 'var(--secondary)' }}>eco</span>
+          <span>{ecoFeature}</span>
         </div>
+
+        {/* Wishlist */}
+        <button className="wishlist-btn" aria-label={`Save ${name} to wishlist`}>
+          <span className="material-symbols-outlined" style={{ fontSize: 18, fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24" }}>favorite</span>
+        </button>
       </div>
-      <div className="p-6 flex flex-col h-[calc(100%-16rem)]">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="font-headline-sm text-[20px] text-on-surface">{name}</h3>
-          <div className="flex items-center gap-1 text-on-surface">
-            <span className="text-sm">⭐</span>
-            <span className="font-label-md text-label-md">{rating.toFixed(1)}</span>
+
+      {/* Card body */}
+      <div className="property-card__body">
+        <div className="property-card__header">
+          <h3 className="property-card__name">{name}</h3>
+          <div className="property-card__rating">
+            <span className="material-symbols-outlined" style={{ fontSize: 15, fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20", color: '#f59e0b' }}>star</span>
+            <span>{rating.toFixed(1)}</span>
           </div>
         </div>
-        <p className="font-body-md text-body-md text-on-surface-variant mb-4">{location}</p>
-        <div className="flex justify-between items-center mt-auto">
-          <p className="font-headline-sm text-[18px] text-primary-container font-bold">
-            ${price} <span className="font-body-md text-sm font-normal text-on-surface-variant">/ night</span>
+
+        <p className="property-card__location">
+          <span className="material-symbols-outlined" style={{ fontSize: 14, verticalAlign: 'middle', marginRight: 3, color: 'var(--on-surface-variant)', fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20" }}>location_on</span>
+          {location}
+        </p>
+
+        <div className="property-card__footer">
+          <p className="property-card__price">
+            {'$'}{price} <span>/ night</span>
           </p>
+          <button
+            className="btn btn-ghost"
+            style={{ fontSize: 13, padding: '7px 16px', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 4 }}
+          >
+            View
+            <span className="material-symbols-outlined" style={{ fontSize: 16, fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20" }}>arrow_forward</span>
+          </button>
         </div>
       </div>
     </article>

@@ -1,45 +1,60 @@
+import { useState } from 'react';
+
+const CITIES = ['Bali', 'Bandung', 'Yogyakarta', 'Lombok', 'Raja Ampat', 'Labuan Bajo', 'Flores', 'Manado', 'Nusa Penida'];
+
+const today = new Date().toISOString().split('T')[0];
+
 export default function SearchWidget() {
-  const handleSearch = (e: React.FormEvent) => {
+  const [guests, setGuests] = useState(1);
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: implement actual search redirection with query params
-    console.log('Search initiated');
+    // TODO: redirect to /search with query params
   };
 
   return (
-    <form onSubmit={handleSearch} className="bg-surface p-4 rounded-xl shadow-lg w-full max-w-4xl flex flex-col md:flex-row gap-4 items-center border border-outline-variant/30">
-      <div className="flex-1 w-full px-4 py-2 border-b md:border-b-0 md:border-r border-outline-variant/30 text-left">
-        <label className="block font-caption text-caption text-on-surface-variant mb-1">Location</label>
-        <select className="w-full bg-transparent border-none p-0 focus:ring-0 font-body-md text-body-md text-on-surface outline-none">
-          <option value="" disabled selected>Where to?</option>
-          <option value="Bali">Bali</option>
-          <option value="Bandung">Bandung</option>
-          <option value="Yogyakarta">Yogyakarta</option>
-          <option value="Lombok">Lombok</option>
-        </select>
-      </div>
-      
-      <div className="flex-1 w-full px-4 py-2 border-b md:border-b-0 md:border-r border-outline-variant/30 text-left">
-        <label className="block font-caption text-caption text-on-surface-variant mb-1">Dates</label>
-        <input 
-          type="date" 
-          className="w-full bg-transparent border-none p-0 focus:ring-0 font-body-md text-body-md text-on-surface outline-none" 
-          placeholder="Add dates" 
-        />
-      </div>
-      
-      <div className="flex-1 w-full px-4 py-2 text-left">
-        <label className="block font-caption text-caption text-on-surface-variant mb-1">Guests</label>
-        <input 
-          type="number" 
-          min="1"
-          className="w-full bg-transparent border-none p-0 focus:ring-0 font-body-md text-body-md text-on-surface outline-none" 
-          placeholder="Add guests" 
-        />
-      </div>
-      
-      <button type="submit" className="w-full md:w-auto bg-primary text-on-primary p-4 rounded-lg hover:bg-primary/90 transition-all flex items-center justify-center min-w-[56px]">
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-      </button>
-    </form>
+    <div className="search-widget">
+      <form className="search-widget__form" onSubmit={handleSubmit}>
+
+        {/* Location */}
+        <div className="search-field">
+          <label className="search-field__label" htmlFor="sw-location">Location</label>
+          <select id="sw-location" className="search-field__select" defaultValue="">
+            <option value="" disabled>Where to?</option>
+            {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+
+        {/* Check-in */}
+        <div className="search-field">
+          <label className="search-field__label" htmlFor="sw-checkin">Dates</label>
+          <input id="sw-checkin" type="date" className="search-field__input" min={today} />
+        </div>
+
+        {/* Nights / Duration */}
+        <div className="search-field">
+          <label className="search-field__label" htmlFor="sw-nights">Nights</label>
+          <select id="sw-nights" className="search-field__select" defaultValue="">
+            <option value="" disabled>Duration</option>
+            {[1,2,3,4,5,6,7,10,14].map(n => <option key={n} value={n}>{n} night{n > 1 ? 's' : ''}</option>)}
+          </select>
+        </div>
+
+        {/* Guests */}
+        <div className="search-field">
+          <span className="search-field__label">Guests</span>
+          <div className="search-field__guest-row">
+            <button type="button" className="guest-btn" onClick={() => setGuests(g => Math.max(1, g - 1))} disabled={guests <= 1} aria-label="Decrease guests">−</button>
+            <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--on-surface)', minWidth: 20, textAlign: 'center' }}>{guests}</span>
+            <button type="button" className="guest-btn" onClick={() => setGuests(g => Math.min(20, g + 1))} disabled={guests >= 20} aria-label="Increase guests">+</button>
+          </div>
+        </div>
+
+        {/* Submit — Material Symbol search icon */}
+        <button type="submit" className="search-widget__submit" aria-label="Search properties">
+          <span className="material-symbols-outlined" style={{ fontSize: 22, fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>search</span>
+        </button>
+      </form>
+    </div>
   );
 }

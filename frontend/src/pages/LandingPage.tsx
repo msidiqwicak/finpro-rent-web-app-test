@@ -7,15 +7,15 @@ import Footer from '../components/Footer';
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <>
       <Navbar />
-      <main className="flex-1">
+      <main>
         <Hero />
         <CategoryFilter />
         <FeaturedProperties />
         <Sustainability />
       </main>
       <Footer />
-    </div>
+    </>
   );
 }
