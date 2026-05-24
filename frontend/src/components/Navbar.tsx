@@ -1,228 +1,94 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { NavLinks } from './NavLinks';
+import NavDropdown from './NavDropdown';
 
-const NAV_LINKS = [
-  { to: '/search', label: 'Find Stays', public: true },
-  { to: '/sustainability', label: 'Sustainability', public: true },
-  { to: '/about', label: 'About Us', public: true },
-];
+function Toast({ msg }: { msg: string }) {
+  return (
+    <div role="alert" aria-live="polite" style={{
+      position: 'fixed', top: 80, left: '50%', transform: 'translateX(-50%)',
+      zIndex: 9999, background: 'var(--primary-container)', color: 'var(--on-primary)',
+      padding: '12px 20px', borderRadius: 12, fontSize: 14, fontWeight: 500,
+      fontFamily: "'Manrope', sans-serif", display: 'flex', alignItems: 'center',
+      gap: 8, boxShadow: '0 8px 24px rgba(6,27,14,0.25)',
+      animation: 'slideDown 0.3s ease', maxWidth: '90vw',
+    }}>
+      <span className="material-symbols-outlined" style={{ fontSize: 18, flexShrink: 0 }}>info</span>
+      {msg}
+    </div>
+  );
+}
 
 export default function Navbar() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen]   = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user, logout }  = useAuth();
+  const navigate          = useNavigate();
 
-  // Tampilkan toast notifikasi sementara (2.5 detik)
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
+  const showToast    = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2500); };
+  const handleLogout = () => { logout(); navigate('/'); showToast('You have successfully logged out.'); };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-    showToast('Anda telah berhasil keluar.');
-  };
-
-  // Tombol "Host Your Eco-Stay" — hanya untuk USER (bukan TENANT)
   const handleHostClick = (e: React.MouseEvent) => {
-    if (!user) {
-      e.preventDefault();
-      showToast('Anda harus login terlebih dahulu untuk mendaftar sebagai Host.');
-    } else if (user.role === 'TENANT') {
-      e.preventDefault();
-      showToast('Akun Tenant tidak dapat mendaftar sebagai Host baru.');
-    }
-    // Jika role USER -> biarkan navigasi berjalan normal
+    if (!user)                  { e.preventDefault(); showToast('Please login first to register as a Host.'); return; }
+    if (user.role === 'TENANT') { e.preventDefault(); showToast('Tenant accounts cannot register as a new Host.'); }
   };
 
+  const isTenant   = user?.role === 'TENANT';
   const isLoggedIn = !!user;
-  const isUser = user?.role === 'USER';
-  const isTenant = user?.role === 'TENANT';
 
   return (
     <>
-      {/* ====== TOAST NOTIFICATION ====== */}
-      {toast && (
-        <div className="toast-notification" role="alert" aria-live="polite">
-          <span className="material-symbols-outlined" style={{ fontSize: 18, flexShrink: 0 }}>info</span>
-          {toast}
-        </div>
-      )}
+      {toast && <Toast msg={toast} />}
 
-      <header className="navbar">
-        <div className="navbar__inner container-page">
+      <header style={{ position: 'sticky', top: 0, zIndex: 50, height: 72, background: 'rgba(249,250,248,0.88)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid var(--outline-variant)', boxShadow: 'var(--shadow-nav)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '100%', maxWidth: 1280, margin: '0 auto', padding: '0 20px' }}>
 
-          {/* Logo */}
-          <Link to="/" className="navbar__logo" style={{ textDecoration: 'none', color: 'var(--on-surface)' }}>
+          <Link to="/" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 20, fontWeight: 700, color: 'var(--primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
             Evergreen Escapes
           </Link>
 
-          {/* Desktop Nav Links */}
-          <nav className="navbar__links">
-            {NAV_LINKS.map(({ to, label }) => (
-              <Link key={to} to={to} className="navbar__link">
-                {label}
-              </Link>
-            ))}
-          </nav>
+          <NavLinks />
 
-          {/* Right Actions */}
-          <div className="navbar__actions">
-
-            {/* Tombol "Host Your Eco-Stay" — disabled style jika TENANT */}
-            <Link
-              to="/tenant/register"
-              className={`navbar__cta ${isTenant ? 'navbar__cta--disabled' : ''}`}
-              onClick={handleHostClick}
-              title={isTenant ? 'Akun Tenant tidak dapat mendaftar sebagai Host baru' : ''}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Link to="/tenant/register" onClick={handleHostClick}
+              className="navbar-cta"
+              style={{ fontFamily: "'Manrope',sans-serif", fontSize: 13, fontWeight: 700, background: 'var(--primary)', color: '#fff', borderRadius: 9999, padding: '9px 20px', textDecoration: 'none', whiteSpace: 'nowrap', letterSpacing: '0.01em', transition: 'opacity 0.2s', opacity: isTenant ? 0.45 : 1, cursor: isTenant ? 'not-allowed' : 'pointer', alignItems: 'center' }}
             >
               Host Your Eco-Stay
             </Link>
 
-            {/* Kondisi tampilan berdasarkan status login */}
             {!isLoggedIn ? (
-              // Belum login → tampilkan icon person yang mengarah ke login
-              <Link to="/login" aria-label="Login" className="btn-icon" title="Login atau Daftar">
+              <Link to="/login" aria-label="Login" title="Login or Register"
+                style={{ width: 40, height: 40, borderRadius: 9999, border: '1px solid var(--outline-variant)', color: 'var(--primary)', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: 37 }}>person</span>
               </Link>
             ) : (
-              // Sudah login → tampilkan dropdown profil
-              <div className="navbar__profile-menu">
-                <button
-                  className="btn-icon navbar__profile-btn"
-                  aria-label="Menu profil"
-                  onClick={() => setOpen(o => !o)}
-                  title={`Login sebagai ${user.name} (${user.role})`}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: 32, color: 'var(--primary)' }}>
-                    account_circle
-                  </span>
+              <div style={{ position: 'relative' }}>
+                <button aria-label="Profile menu" onClick={() => setOpen(o => !o)} title={`Logged in as ${user.name} (${user.role})`}
+                  style={{ width: 40, height: 40, borderRadius: 9999, border: '2px solid var(--primary)', background: 'transparent', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 32, color: 'var(--primary)' }}>account_circle</span>
                 </button>
-
-                {/* Dropdown menu */}
-                {open && (
-                  <div className="navbar__dropdown" onClick={() => setOpen(false)}>
-                    {/* Info user */}
-                    <div className="navbar__dropdown-header">
-                      <p className="navbar__dropdown-name">{user.name}</p>
-                      <span className={`role-badge role-badge--${user.role.toLowerCase()}`}>
-                        {user.role}
-                      </span>
-                    </div>
-                    <div className="navbar__dropdown-divider" />
-
-                    {/* Menu khusus USER */}
-                    {isUser && (
-                      <>
-                        <Link to="/profile" className="navbar__dropdown-item">
-                          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>person</span>
-                          Profil Saya
-                        </Link>
-                        <Link to="/bookings" className="navbar__dropdown-item">
-                          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>calendar_month</span>
-                          Pemesanan Saya
-                        </Link>
-                      </>
-                    )}
-
-                    {/* Menu khusus TENANT */}
-                    {isTenant && (
-                      <>
-                        <Link to="/tenant/dashboard" className="navbar__dropdown-item">
-                          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>dashboard</span>
-                          Dashboard
-                        </Link>
-                        <Link to="/tenant/properties" className="navbar__dropdown-item">
-                          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>home_work</span>
-                          Properti Saya
-                        </Link>
-                        <Link to="/tenant/bookings" className="navbar__dropdown-item">
-                          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>receipt_long</span>
-                          Kelola Pemesanan
-                        </Link>
-                      </>
-                    )}
-
-                    {/* Item yang di-disable untuk role yang salah */}
-                    {isTenant && (
-                      <div
-                        className="navbar__dropdown-item navbar__dropdown-item--disabled"
-                        title="Fitur ini hanya untuk akun User biasa"
-                        onClick={() => showToast('Fitur ini hanya tersedia untuk akun User biasa, bukan Tenant.')}
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>hotel</span>
-                        Pesan Penginapan
-                        <span className="disabled-label">User only</span>
-                      </div>
-                    )}
-
-                    {isUser && (
-                      <div
-                        className="navbar__dropdown-item navbar__dropdown-item--disabled"
-                        title="Fitur ini hanya untuk akun Tenant"
-                        onClick={() => showToast('Fitur ini hanya tersedia untuk akun Tenant. Daftarkan properti Anda melalui tombol "Host Your Eco-Stay".')}
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>dashboard</span>
-                        Dashboard Tenant
-                        <span className="disabled-label">Tenant only</span>
-                      </div>
-                    )}
-
-                    <div className="navbar__dropdown-divider" />
-
-                    {/* Logout */}
-                    <button onClick={handleLogout} className="navbar__dropdown-item navbar__dropdown-item--logout">
-                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>logout</span>
-                      Keluar
-                    </button>
-                  </div>
-                )}
+                {open && <NavDropdown user={user} onLogout={handleLogout} onClose={() => setOpen(false)} onToast={showToast} />}
               </div>
             )}
 
-            {/* Hamburger — mobile only */}
-            <button
-              className="navbar__hamburger btn-icon"
-              aria-label="Toggle menu"
-              onClick={() => setOpen(o => !o)}
-            >
+            <button aria-label="Toggle menu" onClick={() => setOpen(o => !o)}
+              className="navbar-hamburger"
+              style={{ width: 40, height: 40, borderRadius: 9999, border: '1px solid var(--outline-variant)', background: 'transparent', cursor: 'pointer', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
               <span className="material-symbols-outlined" style={{ fontSize: 20 }}>{open ? 'close' : 'menu'}</span>
             </button>
           </div>
         </div>
 
-        {/* Mobile dropdown */}
         {open && (
-          <nav className="navbar__mobile-menu">
-            <div className="container-page" style={{ display: 'flex', flexDirection: 'column' }}>
-              {NAV_LINKS.map(({ to, label }) => (
-                <Link key={to} to={to} onClick={() => setOpen(false)} className="navbar__mobile-link">
-                  {label}
-                </Link>
-              ))}
-              {isUser && (
-                <Link to="/profile" onClick={() => setOpen(false)} className="navbar__mobile-link">
-                  Profil Saya
-                </Link>
-              )}
-              {isTenant && (
-                <Link to="/tenant/dashboard" onClick={() => setOpen(false)} className="navbar__mobile-link">
-                  Dashboard Tenant
-                </Link>
-              )}
-              {!isLoggedIn && (
-                <Link to="/login" onClick={() => setOpen(false)} className="navbar__mobile-link" style={{ color: 'var(--primary)', fontWeight: 700 }}>
-                  Login / Daftar
-                </Link>
-              )}
-              {isLoggedIn && (
-                <button onClick={handleLogout} className="navbar__mobile-link" style={{ background: 'none', border: 'none', textAlign: 'left', color: '#c0392b', cursor: 'pointer', fontWeight: 700 }}>
-                  Keluar
-                </button>
-              )}
+          <nav style={{ background: 'var(--surface-white)', borderTop: '1px solid var(--outline-variant)', padding: '8px 0' }}>
+            <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px', display: 'flex', flexDirection: 'column' }}>
+              <NavLinks mobile onClose={() => setOpen(false)} />
+              {user?.role === 'USER'   && <Link to="/profile"          onClick={() => setOpen(false)} style={{ display: 'block', padding: '12px 0', fontSize: 14, fontWeight: 600, color: 'var(--on-surface)', borderBottom: '1px solid var(--surface-high)', textDecoration: 'none' }}>My Profile</Link>}
+              {user?.role === 'TENANT' && <Link to="/tenant/dashboard" onClick={() => setOpen(false)} style={{ display: 'block', padding: '12px 0', fontSize: 14, fontWeight: 600, color: 'var(--on-surface)', borderBottom: '1px solid var(--surface-high)', textDecoration: 'none' }}>Tenant Dashboard</Link>}
+              {!isLoggedIn && <Link to="/login" onClick={() => setOpen(false)} style={{ display: 'block', padding: '12px 0', fontSize: 14, fontWeight: 700, color: 'var(--primary)', textDecoration: 'none' }}>Login / Register</Link>}
+              {isLoggedIn  && <button onClick={handleLogout} style={{ background: 'none', border: 'none', textAlign: 'left', color: '#c0392b', cursor: 'pointer', fontWeight: 700, padding: '12px 0', fontSize: 14 }}>Logout</button>}
             </div>
           </nav>
         )}

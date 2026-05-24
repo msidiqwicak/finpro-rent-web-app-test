@@ -1,16 +1,18 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import LandingPage from './pages/LandingPage';
 
-// ============================================================
-// HALAMAN PLACEHOLDER
-// ============================================================
-// Halaman-halaman ini belum dibuat secara penuh, namun sudah
-// didefinisikan di sini agar sistem routing & guard sudah siap.
-// Nanti cukup ganti komponen placeholder ini dengan komponen aslinya.
-const UserProfilePage = () => <div style={{padding:'2rem', textAlign:'center'}}>Halaman Profil User (Dalam Pengerjaan)</div>;
-const TenantDashboardPage = () => <div style={{padding:'2rem', textAlign:'center'}}>Halaman Dashboard Tenant (Dalam Pengerjaan)</div>;
+// ======== HALAMAN PUBLIK ========
+import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
+import RegisterUserPage from './pages/RegisterUserPage';
+import RegisterTenantPage from './pages/RegisterTenantPage';
+import VerifyPage from './pages/VerifyPage';
+
+// ======== HALAMAN PLACEHOLDER (belum dibuat penuh) ========
+// Nanti ganti komponen placeholder ini dengan komponen halaman aslinya.
+const UserProfilePage = () => <div style={{padding:'2rem', textAlign:'center'}}>User Profile Page (Work in Progress)</div>;
+const TenantDashboardPage = () => <div style={{padding:'2rem', textAlign:'center'}}>Tenant Dashboard Page (Work in Progress)</div>;
 
 // ============================================================
 // KOMPONEN APP (ROUTING UTAMA)
@@ -23,8 +25,19 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* ======== RUTE PUBLIK ======== */}
-          {/* Halaman ini bisa diakses siapa saja, login atau tidak */}
           <Route path="/" element={<LandingPage />} />
+
+          {/* Auth: Login */}
+          <Route path="/login" element={<LoginPage />} />
+
+          {/* Auth: Registrasi User biasa */}
+          <Route path="/register" element={<RegisterUserPage />} />
+
+          {/* Auth: Registrasi Tenant */}
+          <Route path="/tenant/register" element={<RegisterTenantPage />} />
+
+          {/* Auth: Verifikasi email & set password (token dari URL) */}
+          <Route path="/verify/:token" element={<VerifyPage />} />
 
           {/* ======== RUTE TERPROTEKSI: USER ======== */}
           {/* Hanya bisa diakses oleh user yang sudah login dengan role 'USER' */}
@@ -54,3 +67,4 @@ function App() {
 }
 
 export default App;
+
