@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-
+import { useNavigate, useParams } from "react-router-dom";
+import api from "../api/axiosConfig";
 import PaymentTimerBanner from "../components/payment/PaymentTimerBanner";
 import BankDetailsCard from "../components/payment/BankDetailsCard";
 import PaymentUploadCard from "../components/payment/PaymentUploadCard";
@@ -8,11 +8,44 @@ import OrderSummarySidebar from "../components/payment/OrderSummarySidebar";
 
 export default function Payment() {
   const navigate = useNavigate();
-  const [file, setFile] = useState<File | null>(null);
+  const { id } = useParams(); // Mengambil Booking ID dari URL (/payment/:id)
 
-  const handleSubmit = () => {
-    alert("Pembayaran berhasil dikonfirmasi! Menunggu verifikasi host.");
-    navigate("/");
+  const [file, setFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!file || !id) return;
+    setIsSubmitting(true);
+
+    try {
+      const formData = new FormData();
+
+      formData.append("bookingId", id);
+      formData.append("amount", "500000");
+      formData.append("method", "TRANSFER_BANK");
+
+      // 1. UBAH DI SINI: Gunakan "image" sesuai dengan uploadProof.single("image")
+      formData.append("image", file);
+
+      // 2. UBAH DI SINI: Tambahkan "/upload" di akhir URL
+      const response = await api.post("/payments/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log("Upload Sukses:", response.data);
+      alert("Pembayaran berhasil dikirim! Menunggu verifikasi host.");
+
+      navigate("/");
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.error || "Gagal mengunggah bukti pembayaran.";
+      alert(`Error: ${errorMessage}`);
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
