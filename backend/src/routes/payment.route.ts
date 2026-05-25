@@ -1,11 +1,19 @@
 import { Router } from "express";
-import { uploadPaymentProof } from "../controllers/payment.controller.js";
-import { uploadProof } from "../middlewares/upload.middleware.js";
+import { uploadPaymentProof as uploadPaymentProofController } from "../controllers/payment.controller.js";
+import { uploadPaymentProof } from "../middlewares/upload.middleware.js";
+import { authenticate, authorizeRole } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
 // Endpoint: POST /api/payments/upload
-// Middleware uploadProof.single('image') bertugas menangkap file dengan key 'image'
-router.post("/upload", uploadProof.single("image"), uploadPaymentProof);
+// Alur middleware: authenticate → authorizeRole('USER') → uploadProof → controller
+// Hanya USER yang sudah login (bukan TENANT) yang bisa upload bukti pembayaran
+router.post(
+  "/upload",
+  authenticate,
+  authorizeRole("USER"),
+  uploadPaymentProof.single("image"),
+  uploadPaymentProofController
+);
 
 export default router;

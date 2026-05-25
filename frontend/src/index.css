@@ -60,12 +60,8 @@
   display: inline-block;
   line-height: 1;
   text-transform: none;
-  letter-spacing: normal;
-  word-wrap: normal;
   white-space: nowrap;
-  direction: ltr;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
 }
 
 /* ================================================

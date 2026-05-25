@@ -10,7 +10,7 @@ const PROPERTIES = [
     rating: 4.9,
     ecoFeature: "Solar Powered",
     imageUrl:
-      "https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=800&auto=format&fit=crop",
+      "https://res.cloudinary.com/dpxovlms4/image/upload/v1779440989/finpro/assets/mossy_cabin.jpg",
   },
   {
     id: 2,
@@ -20,7 +20,7 @@ const PROPERTIES = [
     rating: 4.8,
     ecoFeature: "Zero Waste",
     imageUrl:
-      "https://images.unsplash.com/photo-1587061949409-02df41d5e562?q=80&w=800&auto=format&fit=crop",
+      "https://res.cloudinary.com/dpxovlms4/image/upload/v1779440989/finpro/assets/pine_grove.jpg",
   },
   {
     id: 3,
@@ -30,7 +30,7 @@ const PROPERTIES = [
     rating: 5.0,
     ecoFeature: "Water Positive",
     imageUrl:
-      "https://images.unsplash.com/photo-1510798831971-661eb04b3739?q=80&w=800&auto=format&fit=crop",
+      "https://res.cloudinary.com/dpxovlms4/image/upload/v1779440991/finpro/assets/waterfall_sanctuary.jpg",
   },
   {
     id: 4,
@@ -40,7 +40,7 @@ const PROPERTIES = [
     rating: 4.7,
     ecoFeature: "Off-Grid",
     imageUrl:
-      "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=800&auto=format&fit=crop",
+      "https://res.cloudinary.com/dpxovlms4/image/upload/v1779440992/finpro/assets/jungle_treehouse.jpg",
   },
   {
     id: 5,
@@ -50,7 +50,7 @@ const PROPERTIES = [
     rating: 4.8,
     ecoFeature: "Carbon Neutral",
     imageUrl:
-      "https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=800&auto=format&fit=crop",
+      "https://res.cloudinary.com/dpxovlms4/image/upload/v1779440992/finpro/assets/riverside_pod.jpg",
   },
   {
     id: 6,
@@ -60,35 +60,80 @@ const PROPERTIES = [
     rating: 5.0,
     ecoFeature: "Marine Protected",
     imageUrl:
-      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=800&auto=format&fit=crop",
+      "https://res.cloudinary.com/dpxovlms4/image/upload/v1779440993/finpro/assets/mountain_lodge.jpg",
   },
 ];
 
 export default function FeaturedProperties() {
   return (
     <section aria-label="Featured properties">
-      {/* Jika class container-page & section-gap ini buatanmu di CSS lama, biarkan saja. 
-          Atau bisa diganti full Tailwind: className="max-w-7xl mx-auto px-6 py-12" */}
-      <div className="container-page section-gap">
-        {/* Header - Sudah Full Tailwind! */}
-        <div className="flex items-end justify-between mb-10">
+      <div
+        style={{ maxWidth: 1280, margin: "0 auto", padding: "64px 20px" }}
+        className="md:px-8 lg:px-16"
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "space-between",
+            marginBottom: 40,
+          }}
+        >
           <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <span className="material-symbols-outlined text-[15px] text-green-700 font-light">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                marginBottom: 8,
+              }}
+            >
+              <span
+                className="material-symbols-outlined"
+                style={{
+                  fontSize: 15,
+                  color: "var(--secondary)",
+                  fontVariationSettings:
+                    "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20",
+                }}
+              >
                 eco
               </span>
-              <p className="text-sm font-bold uppercase tracking-wider text-green-700">
+              <p
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: "var(--secondary)",
+                }}
+              >
                 Our Top Picks
               </p>
             </div>
-            <h2 className="text-3xl font-display font-bold text-gray-900">
+            <h2
+              style={{
+                fontFamily: "'Plus Jakarta Sans',sans-serif",
+                fontSize: "clamp(24px,3.5vw,32px)",
+                fontWeight: 600,
+                color: "var(--on-surface)",
+              }}
+            >
               Featured Eco-Retreats
             </h2>
           </div>
-
           <a
             href="#"
-            className="flex items-center gap-1 text-sm font-medium text-green-900 hover:text-green-700 transition-colors"
+            style={{
+              fontFamily: "'Manrope',sans-serif",
+              fontSize: 14,
+              fontWeight: 600,
+              color: "var(--primary)",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              textDecoration: "none",
+            }}
           >
             View all
             <span className="material-symbols-outlined text-[16px] font-light">
@@ -97,17 +142,10 @@ export default function FeaturedProperties() {
           </a>
         </div>
 
-        {/* Grid Kartu */}
-        <div className="property-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Grid: uses CSS class for responsive 1→2→3 columns (media query required) */}
+        <div className="property-grid">
           {PROPERTIES.map((p) => (
-            // 2. Ini dia bagian pentingnya! Membungkus PropertyCard dengan Link
-            <Link
-              key={p.id}
-              to={`/property/${p.id}`}
-              className="block transition-transform hover:-translate-y-1"
-            >
-              <PropertyCard {...p} />
-            </Link>
+            <PropertyCard key={p.id} {...p} />
           ))}
         </div>
       </div>

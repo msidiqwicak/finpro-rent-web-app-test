@@ -12,6 +12,7 @@ export interface TokenPayload {
 }
 
 export const generateAccessToken = (payload: Omit<TokenPayload, 'purpose'>): string => {
+  console.log("🔑 [DEBUG] generateAccessToken - Secret:", JWT_SECRET);
   return jwt.sign({ ...payload, purpose: 'access' }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 };
 
@@ -24,5 +25,7 @@ export const generateResetToken = (payload: Omit<TokenPayload, 'purpose'>): stri
 };
 
 export const verifyToken = (token: string): TokenPayload => {
+  console.log("🔑 [DEBUG] verifyToken - Secret:", JWT_SECRET);
+  console.log("🔑 [DEBUG] verifyToken - Token:", token);
   return jwt.verify(token, JWT_SECRET) as TokenPayload;
 };

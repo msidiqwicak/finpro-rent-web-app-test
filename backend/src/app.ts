@@ -5,6 +5,7 @@ import authRoutes from "./routes/auth.route.js";
 import { startBookingCron } from "./cron/cancelExpiredBookings.js";
 import bookingRoutes from "./routes/booking.route.js";
 import paymentRoutes from "./routes/payment.route.js";
+import userRoutes from "./routes/user.route.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -16,6 +17,7 @@ app.use(express.static("public"));
 app.use("/api/auth", authRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/users", userRoutes);
 startBookingCron();
 app.use(
   (
