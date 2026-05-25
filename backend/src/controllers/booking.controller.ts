@@ -9,7 +9,7 @@ export const createBooking = async (
     // Asumsi: userId didapatkan dari token JWT via middleware auth
     const userId = req.body.userId;
     // const userId = (req as any).user?.id;
-    const { roomTypeId, unitId, checkIn, checkOut } = req.body;
+    const { roomTypeId, checkIn, checkOut } = req.body;
 
     if (!userId) {
       res.status(401).json({ error: "Unauthorized. Harap login." });
@@ -19,7 +19,6 @@ export const createBooking = async (
     const booking = await createBookingProcess(
       userId,
       roomTypeId,
-      unitId,
       new Date(checkIn),
       new Date(checkOut),
     );

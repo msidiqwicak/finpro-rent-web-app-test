@@ -1,46 +1,57 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-// ======== HALAMAN PUBLIK ========
-import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import RegisterUserPage from './pages/RegisterUserPage';
-import RegisterTenantPage from './pages/RegisterTenantPage';
-import VerifyPage from './pages/VerifyPage';
+// ======== CONTEXT & PROTECTION ========
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
-// ======== HALAMAN PLACEHOLDER (belum dibuat penuh) ========
-// Nanti ganti komponen placeholder ini dengan komponen halaman aslinya.
-const UserProfilePage = () => <div style={{padding:'2rem', textAlign:'center'}}>User Profile Page (Work in Progress)</div>;
-const TenantDashboardPage = () => <div style={{padding:'2rem', textAlign:'center'}}>Tenant Dashboard Page (Work in Progress)</div>;
+// ======== PAGES ========
+import LandingPage from "./pages/LandingPage";
+import Checkout from "./pages/Checkout";
+import Payment from "./pages/Payment";
+import OrderHistory from "./pages/OrderHistory";
+import LoginPage from "./pages/LoginPage";
+import RegisterUserPage from "./pages/RegisterUserPage";
+import RegisterTenantPage from "./pages/RegisterTenantPage";
+import VerifyPage from "./pages/VerifyPage";
+
+// ======== PLACEHOLDERS ========
+const UserProfilePage = () => (
+  <div style={{ padding: "2rem", textAlign: "center" }}>
+    User Profile Page (Work in Progress)
+  </div>
+);
+const TenantDashboardPage = () => (
+  <div style={{ padding: "2rem", textAlign: "center" }}>
+    Tenant Dashboard Page (Work in Progress)
+  </div>
+);
 
 // ============================================================
 // KOMPONEN APP (ROUTING UTAMA)
 // ============================================================
 function App() {
   return (
-    // AuthProvider HARUS membungkus BrowserRouter dan seluruh rute
-    // agar useAuth() bisa diakses dari semua halaman dan komponen
     <AuthProvider>
       <BrowserRouter>
         <Routes>
           {/* ======== RUTE PUBLIK ======== */}
           <Route path="/" element={<LandingPage />} />
 
-          {/* Auth: Login */}
+          {/* ======== RUTE AUTH ======== */}
           <Route path="/login" element={<LoginPage />} />
-
-          {/* Auth: Registrasi User biasa */}
           <Route path="/register" element={<RegisterUserPage />} />
-
-          {/* Auth: Registrasi Tenant */}
           <Route path="/tenant/register" element={<RegisterTenantPage />} />
-
-          {/* Auth: Verifikasi email & set password (token dari URL) */}
           <Route path="/verify/:token" element={<VerifyPage />} />
 
+          {/* ======== RUTE TRANSAKSI & BOOKING ======== */}
+          {/* Catatan: Kalau halaman ini butuh login, kamu bisa bungkus 
+              dengan <ProtectedRoute> seperti pada rute /profile */}
+          <Route path="/checkout/:id" element={<Checkout />} />
+          <Route path="/payment/:id" element={<Payment />} />
+          <Route path="/bookings" element={<OrderHistory />} />
+
           {/* ======== RUTE TERPROTEKSI: USER ======== */}
-          {/* Hanya bisa diakses oleh user yang sudah login dengan role 'USER' */}
           <Route
             path="/profile"
             element={
@@ -51,7 +62,6 @@ function App() {
           />
 
           {/* ======== RUTE TERPROTEKSI: TENANT ======== */}
-          {/* Hanya bisa diakses oleh user yang sudah login dengan role 'TENANT' */}
           <Route
             path="/tenant/dashboard"
             element={
@@ -67,4 +77,3 @@ function App() {
 }
 
 export default App;
-
