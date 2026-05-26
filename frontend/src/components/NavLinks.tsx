@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
 
 const NAV_LINKS = [
-  { to: '/search',       label: 'Find Stays'    },
+  { to: '/search',         label: 'Find Stays'    },
   { to: '/sustainability', label: 'Sustainability' },
-  { to: '/about',        label: 'About Us'      },
+  { to: '/about',          label: 'About Us'      },
 ];
 
 interface NavLinksProps {
@@ -17,8 +17,7 @@ export function NavLinks({ mobile, onClose }: NavLinksProps) {
       <>
         {NAV_LINKS.map(({ to, label }) => (
           <Link key={to} to={to} onClick={onClose}
-            className="block py-3 text-sm font-semibold border-b"
-            style={{ color: 'var(--on-surface)', borderColor: 'var(--surface-high)' }}
+            className="block py-3 text-sm font-semibold text-on-surface border-b border-surface-high"
           >
             {label}
           </Link>
@@ -31,10 +30,7 @@ export function NavLinks({ mobile, onClose }: NavLinksProps) {
     <nav className="hidden md:flex items-center gap-8">
       {NAV_LINKS.map(({ to, label }) => (
         <Link key={to} to={to}
-          className="text-sm font-semibold pb-0.5 border-b-2 border-transparent transition-colors"
-          style={{ color: 'var(--on-surface-variant)' }}
-          onMouseEnter={e => { e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.borderBottomColor = 'var(--primary)'; }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'var(--on-surface-variant)'; e.currentTarget.style.borderBottomColor = 'transparent'; }}
+          className="text-sm font-semibold text-on-surface-variant hover:text-primary pb-0.5 border-b-2 border-transparent hover:border-primary transition-colors duration-200"
         >
           {label}
         </Link>

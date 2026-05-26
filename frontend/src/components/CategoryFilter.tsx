@@ -7,29 +7,16 @@ const CATEGORIES = [
 ];
 
 function CategoryItem({ name, icon }: { name: string; icon: string }) {
-  const handleEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.transform = 'translateY(-3px)';
-    const box = e.currentTarget.querySelector('.cat-icon-box') as HTMLElement;
-    const ico = e.currentTarget.querySelector('.material-symbols-outlined') as HTMLElement;
-    if (box) { box.style.background = 'var(--secondary-container)'; box.style.borderColor = 'var(--secondary)'; }
-    if (ico) { ico.style.color = 'var(--on-secondary-container)'; }
-  };
-
-  const handleLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.transform = 'translateY(0)';
-    const box = e.currentTarget.querySelector('.cat-icon-box') as HTMLElement;
-    const ico = e.currentTarget.querySelector('.material-symbols-outlined') as HTMLElement;
-    if (box) { box.style.background = 'var(--surface-container)'; box.style.borderColor = 'transparent'; }
-    if (ico) { ico.style.color = 'var(--on-surface-variant)'; }
-  };
-
   return (
-    <button aria-label={`Filter by ${name}`} onMouseEnter={handleEnter} onMouseLeave={handleLeave}
-      style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: 12, transition: 'transform 0.2s' }}>
-      <div className="cat-icon-box" style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--surface-container)', border: '1px solid transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.25s ease' }}>
-        <span className="material-symbols-outlined" style={{ fontSize: 28, color: 'var(--on-surface-variant)', fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24", transition: 'color 0.25s ease' }}>{icon}</span>
+    <button aria-label={`Filter by ${name}`}
+      className="group flex flex-col items-center gap-2.5 bg-transparent border-none cursor-pointer px-2 py-1 rounded-xl transition-transform duration-200 hover:-translate-y-1"
+    >
+      <div className="w-16 h-16 rounded-full bg-surface-high border border-transparent flex items-center justify-center transition-all duration-200 ease-in-out group-hover:bg-secondary-container group-hover:border-secondary">
+        <span className="material-symbols-outlined text-[28px] text-on-surface-variant group-hover:text-on-secondary-container transition-colors duration-200 [font-variation-settings:'FILL'_0,'wght'_300,'GRAD'_0,'opsz'_24]">
+          {icon}
+        </span>
       </div>
-      <span style={{ fontFamily: "'Manrope',sans-serif", fontSize: 13, fontWeight: 600, color: 'var(--on-surface-variant)', letterSpacing: '0.02em' }}>{name}</span>
+      <span className="font-body text-[13px] font-semibold text-on-surface-variant tracking-[0.02em]">{name}</span>
     </button>
   );
 }
@@ -37,12 +24,12 @@ function CategoryItem({ name, icon }: { name: string; icon: string }) {
 export default function CategoryFilter() {
   return (
     <section aria-label="Property categories">
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '36px 20px' }} className="md:px-8 lg:px-16">
-        <hr style={{ border: 'none', borderTop: '1px solid var(--surface-high)', marginBottom: 32 }} />
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px 48px' }}>
+      <div className="max-w-[1280px] mx-auto px-5 py-9 md:px-8 lg:px-16">
+        <hr className="border-none border-t border-surface-high mb-8" />
+        <div className="flex flex-wrap justify-center gap-x-12 gap-y-4">
           {CATEGORIES.map(cat => <CategoryItem key={cat.name} {...cat} />)}
         </div>
-        <hr style={{ border: 'none', borderTop: '1px solid var(--surface-high)', marginTop: 32 }} />
+        <hr className="border-none border-t border-surface-high mt-8" />
       </div>
     </section>
   );

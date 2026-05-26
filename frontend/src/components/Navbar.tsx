@@ -6,15 +6,10 @@ import NavDropdown from './NavDropdown';
 
 function Toast({ msg }: { msg: string }) {
   return (
-    <div role="alert" aria-live="polite" style={{
-      position: 'fixed', top: 80, left: '50%', transform: 'translateX(-50%)',
-      zIndex: 9999, background: 'var(--primary-container)', color: 'var(--on-primary)',
-      padding: '12px 20px', borderRadius: 12, fontSize: 14, fontWeight: 500,
-      fontFamily: "'Manrope', sans-serif", display: 'flex', alignItems: 'center',
-      gap: 8, boxShadow: '0 8px 24px rgba(6,27,14,0.25)',
-      animation: 'slideDown 0.3s ease', maxWidth: '90vw',
-    }}>
-      <span className="material-symbols-outlined" style={{ fontSize: 18, flexShrink: 0 }}>info</span>
+    <div role="alert" aria-live="polite"
+      className="fixed top-20 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-2 bg-primary-container text-on-primary text-[14px] font-medium font-body px-5 py-3 rounded-xl shadow-[0_8px_24px_rgba(6,27,14,0.25)] max-w-[90vw]"
+    >
+      <span className="material-symbols-outlined text-[18px] shrink-0">info</span>
       {msg}
     </div>
   );
@@ -41,54 +36,55 @@ export default function Navbar() {
     <>
       {toast && <Toast msg={toast} />}
 
-      <header style={{ position: 'sticky', top: 0, zIndex: 50, height: 72, background: 'rgba(249,250,248,0.88)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid var(--outline-variant)', boxShadow: 'var(--shadow-nav)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '100%', maxWidth: 1280, margin: '0 auto', padding: '0 20px' }}>
+      <header className="sticky top-0 z-50 h-[72px] bg-surface/90 backdrop-blur-md border-b border-outline-variant shadow-[0_1px_3px_rgba(6,27,14,0.08)]">
+        <div className="flex items-center justify-between h-full max-w-[1280px] mx-auto px-5">
 
-          <Link to="/" style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 20, fontWeight: 700, color: 'var(--primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Link to="/" className="font-display font-bold text-xl text-primary flex items-center gap-2">
             Evergreen Escapes
           </Link>
 
           <NavLinks />
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div className="flex items-center gap-3">
             <Link to="/tenant/register" onClick={handleHostClick}
-              className="navbar-cta"
-              style={{ fontFamily: "'Manrope',sans-serif", fontSize: 13, fontWeight: 700, background: 'var(--primary)', color: '#fff', borderRadius: 9999, padding: '9px 20px', textDecoration: 'none', whiteSpace: 'nowrap', letterSpacing: '0.01em', transition: 'opacity 0.2s', opacity: isTenant ? 0.45 : 1, cursor: isTenant ? 'not-allowed' : 'pointer', alignItems: 'center' }}
+              className={`hidden md:inline-flex items-center font-body text-[13px] font-bold bg-primary text-on-primary rounded-full px-5 py-2.5 whitespace-nowrap tracking-tight hover:opacity-90 transition-opacity ${isTenant ? 'opacity-45 cursor-not-allowed' : ''}`}
             >
               Host Your Eco-Stay
             </Link>
 
             {!isLoggedIn ? (
               <Link to="/login" aria-label="Login" title="Login or Register"
-                style={{ width: 40, height: 40, borderRadius: 9999, border: '1px solid var(--outline-variant)', color: 'var(--primary)', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 37 }}>person</span>
+                className="w-10 h-10 rounded-full border border-outline-variant text-primary bg-transparent flex items-center justify-center hover:bg-surface-low transition-colors"
+              >
+                <span className="material-symbols-outlined text-[22px]">person</span>
               </Link>
             ) : (
-              <div style={{ position: 'relative' }}>
+              <div className="relative">
                 <button aria-label="Profile menu" onClick={() => setOpen(o => !o)} title={`Logged in as ${user.name} (${user.role})`}
-                  style={{ width: 40, height: 40, borderRadius: 9999, border: '2px solid var(--primary)', background: 'transparent', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 32, color: 'var(--primary)' }}>account_circle</span>
+                  className="w-10 h-10 rounded-full border-2 border-primary bg-transparent flex items-center justify-center hover:bg-surface-low transition-colors cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[22px] text-primary">account_circle</span>
                 </button>
                 {open && <NavDropdown user={user} onLogout={handleLogout} onClose={() => setOpen(false)} onToast={showToast} />}
               </div>
             )}
 
             <button aria-label="Toggle menu" onClick={() => setOpen(o => !o)}
-              className="navbar-hamburger"
-              style={{ width: 40, height: 40, borderRadius: 9999, border: '1px solid var(--outline-variant)', background: 'transparent', cursor: 'pointer', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>{open ? 'close' : 'menu'}</span>
+              className="flex md:hidden w-10 h-10 rounded-full border border-outline-variant bg-transparent items-center justify-center text-primary hover:bg-surface-low transition-colors cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[20px]">{open ? 'close' : 'menu'}</span>
             </button>
           </div>
         </div>
 
         {open && (
-          <nav style={{ background: 'var(--surface-white)', borderTop: '1px solid var(--outline-variant)', padding: '8px 0' }}>
-            <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 20px', display: 'flex', flexDirection: 'column' }}>
+          <nav className="bg-surface-white border-t border-outline-variant py-2">
+            <div className="max-w-[1280px] mx-auto px-5 flex flex-col">
               <NavLinks mobile onClose={() => setOpen(false)} />
-              {user?.role === 'USER'   && <Link to="/profile"          onClick={() => setOpen(false)} style={{ display: 'block', padding: '12px 0', fontSize: 14, fontWeight: 600, color: 'var(--on-surface)', borderBottom: '1px solid var(--surface-high)', textDecoration: 'none' }}>My Profile</Link>}
-              {user?.role === 'TENANT' && <Link to="/tenant/dashboard" onClick={() => setOpen(false)} style={{ display: 'block', padding: '12px 0', fontSize: 14, fontWeight: 600, color: 'var(--on-surface)', borderBottom: '1px solid var(--surface-high)', textDecoration: 'none' }}>Tenant Dashboard</Link>}
-              {!isLoggedIn && <Link to="/login" onClick={() => setOpen(false)} style={{ display: 'block', padding: '12px 0', fontSize: 14, fontWeight: 700, color: 'var(--primary)', textDecoration: 'none' }}>Login / Register</Link>}
-              {isLoggedIn  && <button onClick={handleLogout} style={{ background: 'none', border: 'none', textAlign: 'left', color: '#c0392b', cursor: 'pointer', fontWeight: 700, padding: '12px 0', fontSize: 14 }}>Logout</button>}
+              {user?.role === 'USER'   && <Link to="/profile"          onClick={() => setOpen(false)} className="block py-3 text-[14px] font-semibold text-on-surface border-b border-surface-high">My Profile</Link>}
+              {user?.role === 'TENANT' && <Link to="/tenant/dashboard" onClick={() => setOpen(false)} className="block py-3 text-[14px] font-semibold text-on-surface border-b border-surface-high">Tenant Dashboard</Link>}
+              {!isLoggedIn && <Link to="/login" onClick={() => setOpen(false)} className="block py-3 text-[14px] font-bold text-primary">Login / Register</Link>}
+              {isLoggedIn  && <button onClick={handleLogout} className="text-left py-3 text-[14px] font-bold text-red-600 bg-transparent border-none cursor-pointer">Logout</button>}
             </div>
           </nav>
         )}

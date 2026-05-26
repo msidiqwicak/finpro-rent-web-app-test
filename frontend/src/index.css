@@ -1,97 +1,50 @@
 @import "tailwindcss";
 
-/* ================================================
-   1. MENGHUBUNGKAN VARIABEL KE TAILWIND V4
-   ================================================ */
 @theme {
-  /* Menyambungkan warna dari :root agar bisa jadi class (contoh: bg-surface, text-primary) */
-  --color-surface: var(--surface);
-  --color-surface-dim: var(--surface-dim);
-  --color-surface-container-lowest: var(--surface-container-lowest);
-  --color-surface-container-low: var(--surface-container-low);
-  --color-surface-container: var(--surface-container);
-  --color-surface-container-high: var(--surface-container-high);
-  --color-surface-container-highest: var(--surface-container-highest);
+  /* ── Brand Colors ─────────────────────────── */
+  --color-primary:                  #061b0e;
+  --color-on-primary:               #ffffff;
+  --color-primary-container:        #1b3022;
+  --color-on-primary-container:     #819986;
+  --color-primary-fixed:            #d0e9d4;
+  --color-primary-fixed-dim:        #b4cdb8;
+  --color-on-primary-fixed:         #0b2013;
 
-  --color-on-surface: var(--on-surface);
-  --color-on-surface-variant: var(--on-surface-variant);
+  --color-secondary:                #56642b;
+  --color-on-secondary:             #ffffff;
+  --color-secondary-container:      #d6e7a1;
+  --color-on-secondary-container:   #5a682f;
 
-  --color-primary: var(--primary);
-  --color-on-primary: var(--on-primary);
-  --color-primary-container: var(--primary-container);
-  --color-on-primary-container: var(--on-primary-container);
-  --color-primary-fixed: var(--primary-fixed);
-  --color-primary-fixed-dim: var(--primary-fixed-dim);
-  --color-on-primary-fixed: var(--on-primary-fixed);
+  /* ── Surface Colors ───────────────────────── */
+  --color-surface:                  #f9faf8;
+  --color-surface-dim:              #d9dad8;
+  --color-surface-low:              #f3f4f2;
+  --color-surface-high:             #e7e8e6;
+  --color-surface-white:            #ffffff;
 
-  --color-secondary: var(--secondary);
-  --color-on-secondary: var(--on-secondary);
-  --color-secondary-container: var(--secondary-container);
-  --color-on-secondary-container: var(--on-secondary-container);
+  /* ── Content Colors ───────────────────────── */
+  --color-on-surface:               #191c1b;
+  --color-on-surface-variant:       #434843;
 
-  --color-outline: var(--outline);
-  --color-outline-variant: var(--outline-variant);
+  /* ── Border Colors ────────────────────────── */
+  --color-outline:                  #737973;
+  --color-outline-variant:          #c3c8c1;
 
-  /* Mendaftarkan Font Family (Bisa langsung dipanggil via class font-headline-md dll) */
-  --font-headline-md: "Plus Jakarta Sans", sans-serif;
-  --font-display-lg: "Plus Jakarta Sans", sans-serif;
-  --font-headline-sm: "Plus Jakarta Sans", sans-serif;
-  --font-display-lg-mobile: "Plus Jakarta Sans", sans-serif;
-
-  --font-body-md: "Manrope", sans-serif;
-  --font-label-md: "Manrope", sans-serif;
-  --font-caption: "Manrope", sans-serif;
-  --font-body-lg: "Manrope", sans-serif;
+  /* ── Typography ───────────────────────────── */
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  --font-body:    "Manrope", sans-serif;
 }
 
-/* ================================================
-   2. MATERIAL SYMBOLS
-   ================================================ */
-.material-symbols-outlined {
-  font-family: "Material Symbols Outlined";
-  font-variation-settings:
-    "FILL" 0,
-    "wght" 300,
-    "GRAD" 0,
-    "opsz" 24;
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  display: inline-block;
-  line-height: 1;
-  text-transform: none;
-  white-space: nowrap;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* ================================================
-   3. DESIGN SYSTEM — VARIABLES ONLY
-   ================================================ */
-:root {
-  --surface: #f9faf8;
-  --surface-dim: #d9dad8;
-  --surface-container-lowest: #ffffff;
-  --surface-container-low: #f3f4f2;
-  --surface-container: #edeeec;
-  --surface-container-high: #e7e8e6;
-  --surface-container-highest: #e1e3e1;
-
-  --on-surface: #191c1b;
-  --on-surface-variant: #434843;
-
-  --primary: #061b0e;
-  --on-primary: #ffffff;
-  --primary-container: #1b3022;
-  --on-primary-container: #819986;
-  --primary-fixed: #d0e9d4;
-  --primary-fixed-dim: #b4cdb8;
-  --on-primary-fixed: #0b2013;
-
-  --secondary: #56642b;
-  --on-secondary: #ffffff;
-  --secondary-container: #d6e7a1;
-  --on-secondary-container: #5a682f;
-
-  --outline: #737973;
-  --outline-variant: #c3c8c1;
+/* Hide native browser password reveal icons (e.g. Edge) to prevent double toggles */
+@layer base {
+  input[type="password"]::-ms-reveal,
+  input[type="password"]::-ms-clear {
+    display: none;
+  }
+  input[type="password"]::-webkit-credentials-auto-fill-button {
+    visibility: hidden;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+  }
 }

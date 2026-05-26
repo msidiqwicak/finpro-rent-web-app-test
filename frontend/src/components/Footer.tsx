@@ -2,19 +2,24 @@ const LINKS = ['Legal', 'Company', 'Privacy Policy', 'Terms of Service', 'Contac
 
 function NewsletterSection() {
   return (
-    <div style={{ background: 'var(--primary-container)', position: 'relative', overflow: 'hidden', paddingBlock: 80 }}>
-      <div style={{ position: 'absolute', top: -80, right: -80, width: 320, height: 320, borderRadius: 9999, background: 'rgba(208,233,212,0.10)', filter: 'blur(60px)', pointerEvents: 'none' }} />
-      <div style={{ position: 'relative', zIndex: 1, maxWidth: 1280, margin: '0 auto', padding: '0 20px' }} className="md:px-8 lg:px-16">
-        <div style={{ maxWidth: 640, margin: '0 auto', textAlign: 'center' }}>
-          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--primary-fixed-dim)', marginBottom: 12 }}>Stay Connected</p>
-          <h2 style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 'clamp(24px,3.5vw,32px)', fontWeight: 600, color: 'var(--on-primary)', marginBottom: 12 }}>Join the Evergreen Community</h2>
-          <p style={{ fontFamily: "'Manrope',sans-serif", fontSize: 18, color: 'rgba(255,255,255,0.75)', marginBottom: 36 }}>Sign up for eco-travel tips, exclusive retreats, and early access to our newest sustainable properties.</p>
-          {/* .newsletter-form: stacked on mobile, row on sm+ via CSS class */}
-          <form className="newsletter-form">
+    <div className="bg-primary-container relative overflow-hidden py-20">
+      <div className="absolute top-[-80px] right-[-80px] w-80 h-80 rounded-full bg-primary-fixed/10 blur-[60px] pointer-events-none" />
+      <div className="relative z-10 max-w-[1280px] mx-auto px-5 md:px-8 lg:px-16">
+        <div className="max-w-[640px] mx-auto text-center">
+          <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-primary-fixed-dim mb-3">Stay Connected</p>
+          <h2 className="font-display text-[clamp(24px,3.5vw,32px)] font-semibold text-on-primary mb-3">
+            Join the Evergreen Community
+          </h2>
+          <p className="font-body text-[18px] text-on-primary/75 mb-9">
+            Sign up for eco-travel tips, exclusive retreats, and early access to our newest sustainable properties.
+          </p>
+          <form className="flex flex-col gap-3 max-w-xl mx-auto sm:flex-row">
             <input type="email" placeholder="Your email address" aria-label="Email address" required
-              style={{ flex: 1, minWidth: 0, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: 9999, padding: '14px 24px', color: 'white', fontFamily: "'Manrope',sans-serif", fontSize: 15, outline: 'none', transition: 'border-color 0.2s' }} />
+              className="flex-1 min-w-0 bg-white/10 border border-white/22 rounded-full px-6 py-3.5 text-white font-body text-[15px] outline-none placeholder:text-white/50 focus:border-white/50 transition-colors"
+            />
             <button type="submit"
-              style={{ background: 'var(--primary-fixed)', color: 'var(--on-primary-fixed)', padding: '14px 28px', borderRadius: 9999, fontFamily: "'Manrope',sans-serif", fontWeight: 700, fontSize: 14, whiteSpace: 'nowrap', border: 'none', cursor: 'pointer', transition: 'opacity 0.2s' }}>
+              className="bg-primary-fixed text-on-primary-fixed px-7 py-3.5 rounded-full font-body font-bold text-[14px] whitespace-nowrap border-none cursor-pointer hover:opacity-90 transition-opacity"
+            >
               Subscribe
             </button>
           </form>
@@ -26,20 +31,23 @@ function NewsletterSection() {
 
 export default function Footer() {
   return (
-    <footer aria-label="Site footer" style={{ background: 'var(--surface-low)', borderTop: '1px solid var(--outline-variant)' }}>
+    <footer aria-label="Site footer" className="bg-surface-low border-t border-outline-variant">
       <NewsletterSection />
-      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 20px' }} className="md:px-8 lg:px-16">
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+      <div className="max-w-[1280px] mx-auto px-5 py-7 md:px-8 lg:px-16">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p style={{ fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 16, fontWeight: 700, color: 'var(--on-surface)' }}>Evergreen Escapes</p>
-            <p style={{ fontFamily: "'Manrope',sans-serif", fontSize: 12, color: 'var(--on-surface-variant)', marginTop: 2 }}>© {new Date().getFullYear()} Evergreen Escapes. All rights reserved.</p>
+            <p className="font-display font-bold text-[16px] text-on-surface">Evergreen Escapes</p>
+            <p className="font-body text-[12px] text-on-surface-variant mt-0.5">
+              © {new Date().getFullYear()} Evergreen Escapes. All rights reserved.
+            </p>
           </div>
-          <nav aria-label="Footer links" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 24px' }}>
+          <nav aria-label="Footer links" className="flex flex-wrap gap-x-6 gap-y-2">
             {LINKS.map(label => (
-              <a key={label} href="#" style={{ fontFamily: "'Manrope',sans-serif", fontSize: 13, color: 'var(--on-surface-variant)', textDecoration: 'none', transition: 'color 0.2s' }}
-                onMouseEnter={e => (e.currentTarget.style.color = 'var(--primary)')}
-                onMouseLeave={e => (e.currentTarget.style.color = 'var(--on-surface-variant)')}
-              >{label}</a>
+              <a key={label} href="#"
+                className="font-body text-[13px] text-on-surface-variant hover:text-primary transition-colors duration-200"
+              >
+                {label}
+              </a>
             ))}
           </nav>
         </div>

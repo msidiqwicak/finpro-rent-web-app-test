@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import SocialLogin from '../components/SocialLogin';
 
-function AuthHeader({ title, subtitle }: { title: string; subtitle: string }) {
+const INPUT_CLS = 'w-full pl-11 pr-4 py-3.5 bg-surface border border-outline-variant rounded-xl text-[15px] text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all disabled:opacity-60';
+
+function AuthHeader() {
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-8">
-        <Link to="/" className="font-display font-bold text-xl text-[--primary]">Evergreen Escapes</Link>
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[--secondary-container] text-[--on-secondary-container] text-[11px] font-bold uppercase rounded-full tracking-wider">
+        <Link to="/" className="font-display font-bold text-xl text-primary">Evergreen Escapes</Link>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary-container text-on-secondary-container text-[11px] font-bold uppercase rounded-full tracking-wider">
           <span className="material-symbols-outlined text-[16px]">person</span>
           Guest Account
         </div>
       </div>
-      <h1 className="font-display font-bold text-3xl text-[--on-surface] mb-2">{title}</h1>
-      <p className="text-[--on-surface-variant] text-[15px]">{subtitle}</p>
+      <h1 className="font-display font-bold text-3xl text-on-surface mb-2">Create an Account</h1>
+      <p className="text-on-surface-variant text-[15px]">Discover the best eco-stays and create unforgettable experiences.</p>
     </div>
   );
 }
@@ -20,13 +23,11 @@ function AuthHeader({ title, subtitle }: { title: string; subtitle: string }) {
 function AuthInput({ id, label, icon, type, value, onChange, disabled, placeholder }: any) {
   return (
     <div className="mb-5">
-      <label htmlFor={id} className="block text-[12px] font-bold uppercase tracking-wider text-[--on-surface-variant] mb-2">{label}</label>
+      <label htmlFor={id} className="block text-[12px] font-bold uppercase tracking-wider text-on-surface-variant mb-2">{label}</label>
       <div className="relative flex items-center">
-        <span className="material-symbols-outlined absolute left-4 text-[--outline] text-[20px]">{icon}</span>
-        <input
-          id={id} name={id} type={type} placeholder={placeholder}
-          value={value} onChange={onChange} disabled={disabled}
-          className="w-full pl-11 pr-4 py-3.5 bg-[--surface] border border-[--outline-variant] rounded-xl text-[15px] text-[--on-surface] focus:outline-none focus:border-[--primary] focus:ring-1 focus:ring-[--primary] transition-all disabled:opacity-60"
+        <span className="material-symbols-outlined absolute left-4 text-outline text-[20px]">{icon}</span>
+        <input id={id} name={id} type={type} placeholder={placeholder}
+          value={value} onChange={onChange} disabled={disabled} className={INPUT_CLS}
         />
       </div>
     </div>
@@ -35,20 +36,17 @@ function AuthInput({ id, label, icon, type, value, onChange, disabled, placehold
 
 function AlertMsg({ msg, isError }: { msg: string; isError?: boolean }) {
   if (!msg) return null;
-  // Handle backend Indonesian errors mapped to English
   let displayMsg = msg;
   if (msg.includes('Email sudah terdaftar')) displayMsg = 'Email is already registered.';
-  else if (msg.includes('harus diisi')) displayMsg = 'Name and email are required.';
+  else if (msg.includes('harus diisi'))      displayMsg = 'Name and email are required.';
 
   return (
-    <div className={`flex items-start gap-2 px-4 py-3 rounded-xl text-[14px] font-semibold mb-6 ${isError ? 'bg-[#fdf0f0] text-[#c0392b] border border-[#f5c6c6]' : 'bg-[--primary-fixed] text-[--on-primary-fixed] border border-[--primary-fixed-dim]'}`}>
+    <div className={`flex items-start gap-2 px-4 py-3 rounded-xl text-[14px] font-semibold mb-6 ${isError ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-primary-fixed text-on-primary-fixed border border-primary-fixed-dim'}`}>
       <span className="material-symbols-outlined text-[20px] shrink-0">{isError ? 'error' : 'check_circle'}</span>
       <span>{displayMsg}</span>
     </div>
   );
 }
-
-import SocialLogin from '../components/SocialLogin';
 
 export default function RegisterUserPage() {
   const navigate = useNavigate();
@@ -80,25 +78,21 @@ export default function RegisterUserPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[--surface-low] flex items-center justify-center p-5 relative overflow-hidden">
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[--primary-fixed]/30 blur-[80px]" />
-      
-      <div className="w-full max-w-[480px] bg-white rounded-3xl shadow-[--shadow-raised] border border-[--outline-variant]/30 p-8 sm:p-10 relative z-10">
-        <AuthHeader 
-          title="Create an Account" 
-          subtitle="Discover the best eco-stays and create unforgettable experiences." 
-        />
+    <div className="min-h-screen bg-surface-low flex items-center justify-center p-5 relative overflow-hidden">
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary-fixed/30 blur-[80px]" />
 
+      <div className="w-full max-w-[480px] bg-white rounded-3xl shadow-[0_4px_24px_rgba(6,27,14,0.10)] border border-outline-variant/30 p-8 sm:p-10 relative z-10">
+        <AuthHeader />
         <AlertMsg msg={success} />
-        
+
         {!success && (
           <form onSubmit={handleSubmit} noValidate>
-            <AuthInput id="name" label="Full Name" icon="person" type="text" placeholder="John Doe" value={form.name} onChange={handleChange} disabled={loading} />
-            <AuthInput id="email" label="Email Address" icon="mail" type="email" placeholder="john@example.com" value={form.email} onChange={handleChange} disabled={loading} />
-            
+            <AuthInput id="name"  label="Full Name"      icon="person" type="text"  placeholder="John Doe"         value={form.name}  onChange={handleChange} disabled={loading} />
+            <AuthInput id="email" label="Email Address"  icon="mail"   type="email" placeholder="john@example.com" value={form.email} onChange={handleChange} disabled={loading} />
             <AlertMsg msg={error} isError />
-
-            <button type="submit" disabled={loading} className="w-full bg-[--primary] text-white font-bold text-[15px] py-3.5 rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-70 mt-2">
+            <button type="submit" disabled={loading}
+              className="w-full bg-primary text-on-primary font-bold text-[15px] py-3.5 rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-70 mt-2 cursor-pointer border-none"
+            >
               {loading ? 'Registering...' : <><span className="material-symbols-outlined text-[20px]">how_to_reg</span> Register Now</>}
             </button>
           </form>
@@ -106,9 +100,9 @@ export default function RegisterUserPage() {
 
         {!success && <SocialLogin />}
 
-        <div className="mt-8 pt-6 border-t border-[--surface-high] text-center text-[14px] text-[--on-surface-variant]">
-          <p className="mb-2">Already have an account? <Link to="/login" className="font-bold text-[--primary] hover:underline">Log in here</Link></p>
-          <p>Want to host a property? <Link to="/tenant/register" className="font-bold text-[--secondary] hover:underline">Register as Tenant</Link></p>
+        <div className="mt-8 pt-6 border-t border-surface-high text-center text-[14px] text-on-surface-variant">
+          <p className="mb-2">Already have an account? <Link to="/login" className="font-bold text-primary hover:underline">Log in here</Link></p>
+          <p>Want to host a property? <Link to="/tenant/register" className="font-bold text-secondary hover:underline">Register as Tenant</Link></p>
         </div>
       </div>
     </div>
