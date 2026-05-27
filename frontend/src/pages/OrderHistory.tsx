@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import api from "../api/axiosConfig";
 import OrderCard from "../components/booking/OrderCard";
+import Navbar from "../components/Navbar";
 
 export default function OrderHistory() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -63,19 +64,7 @@ export default function OrderHistory() {
   });
   return (
     <div className="bg-surface min-h-screen font-body text-on-surface pb-24 md:pb-0">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-surface-white/80 backdrop-blur-md border-b border-outline-variant">
-        <div className="flex justify-between items-center w-full px-6 md:px-12 h-16 max-w-7xl mx-auto">
-          <div className="text-xl font-display font-bold text-primary">
-            Finpro Escapes
-          </div>
-          <div className="flex items-center gap-4">
-            <button className="p-2 hover:bg-surface-low rounded-full material-symbols-outlined text-primary transition-colors">
-              notifications
-            </button>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Main Content */}
       <main className="w-full max-w-7xl mx-auto px-6 md:px-12 py-8 md:py-12">
