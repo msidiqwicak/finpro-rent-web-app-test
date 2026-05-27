@@ -147,9 +147,18 @@ export const getAllBookings = async (search?: string, date?: string) => {
 
   // 1. Filter berdasarkan Nomor Order (ID) jika ada input teks
   if (search && search.trim() !== "") {
+    // Trik PostgreSQL: Gunakan Raw Query untuk me-casting UUID menjadi Text
+    // Catatan: Jika nama tabel di databasemu huruf kecil semua, ubah "Booking" menjadi "booking"
+    const matchingRecords = await prisma.$queryRaw<Array<{ id: string }>>`
+      SELECT id FROM "booking" WHERE id::text ILIKE ${"%" + search + "%"}
+    `;
+
+    // Ekstrak hasil pencarian menjadi array berisi ID saja
+    const matchedIds = matchingRecords.map((record) => record.id);
+
+    // Masukkan array ID tersebut ke dalam Prisma menggunakan operator 'in'
     whereClause.id = {
-      contains: search,
-      mode: "insensitive",
+      in: matchedIds,
     };
   }
 

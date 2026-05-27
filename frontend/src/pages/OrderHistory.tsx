@@ -7,7 +7,24 @@ export default function OrderHistory() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dateQuery, setDateQuery] = useState(""); // State baru untuk filter tanggal
   const [isLoading, setIsLoading] = useState(true);
-
+  const [activeTab, setActiveTab] = useState<"ongoing" | "completed">(
+    "ongoing",
+  );
+  // Fungsi untuk menerjemahkan status Database ke status UI
+  const formatStatus = (dbStatus: string) => {
+    switch (dbStatus) {
+      case "WAITING_FOR_PAYMENT":
+        return "Pending Payment";
+      case "WAITING_FOR_CONFIRMATION":
+        return "Waiting Confirmation";
+      case "CONFIRMED": // Sesuaikan dengan enum di Prismamu
+        return "Confirmed";
+      case "CANCELED": // Sesuaikan dengan enum di Prismamu
+        return "Canceled";
+      default:
+        return dbStatus;
+    }
+  };
   // Ambil data dari backend setiap kali salah satu filter berubah
   useEffect(() => {
     const fetchOrders = async () => {
@@ -32,6 +49,18 @@ export default function OrderHistory() {
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery, dateQuery]); // Berjalan ulang jika searchQuery ATAU dateQuery berubah
 
+  // Pisahkan data berdasarkan tab yang aktif
+  const displayedOrders = orders.filter((order) => {
+    if (activeTab === "ongoing") {
+      // Masukkan semua status yang masih berjalan ke sini
+      return ["WAITING_FOR_PAYMENT", "WAITING_FOR_CONFIRMATION"].includes(
+        order.status,
+      );
+    } else {
+      // Masukkan semua status yang sudah selesai/batal ke sini
+      return ["CANCELED", "CONFIRMED"].includes(order.status);
+    }
+  });
   return (
     <div className="bg-surface min-h-screen font-body text-on-surface pb-24 md:pb-0">
       {/* Header */}
@@ -62,10 +91,24 @@ export default function OrderHistory() {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-8 gap-6 w-full">
           {/* Tabs Filter */}
           <div className="flex p-1 bg-surface-low rounded-lg w-full lg:w-auto border border-outline-variant">
-            <button className="flex-1 lg:flex-none px-6 py-2 bg-surface-white text-primary font-bold text-sm rounded-md shadow-sm">
+            <button
+              onClick={() => setActiveTab("ongoing")}
+              className={`flex-1 lg:flex-none px-6 py-2 font-bold text-sm rounded-md transition-all ${
+                activeTab === "ongoing"
+                  ? "bg-surface-white text-primary shadow-sm" // Style jika aktif
+                  : "text-on-surface-variant hover:text-primary" // Style jika tidak aktif
+              }`}
+            >
               Ongoing
             </button>
-            <button className="flex-1 lg:flex-none px-6 py-2 text-on-surface-variant hover:text-primary font-bold text-sm rounded-md transition-all">
+            <button
+              onClick={() => setActiveTab("completed")}
+              className={`flex-1 lg:flex-none px-6 py-2 font-bold text-sm rounded-md transition-all ${
+                activeTab === "completed"
+                  ? "bg-surface-white text-primary shadow-sm"
+                  : "text-on-surface-variant hover:text-primary"
+              }`}
+            >
               Completed
             </button>
           </div>
@@ -86,8 +129,19 @@ export default function OrderHistory() {
                   placeholder="Search order number..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-surface-white border border-outline-variant rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary transition-colors"
+                  className="w-full pl-12 pr-10 py-3 bg-surface-white border border-outline-variant rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary transition-colors"
                 />
+
+                {/* Tombol Clear (X) - Hanya muncul jika ada teks yang diketik */}
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")} // Otomatis mengosongkan state
+                    className="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-on-surface-variant hover:text-red-600 transition-colors bg-surface-white"
+                    title="Clear search"
+                  >
+                    close
+                  </button>
+                )}
               </div>
             </div>
 
@@ -125,8 +179,8 @@ export default function OrderHistory() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {orders.length > 0 ? (
-              orders.map((order) => (
+            {displayedOrders.length > 0 ? (
+              displayedOrders.map((order) => (
                 <OrderCard
                   key={order.id}
                   // Title diisi dengan Nama Properti
@@ -143,11 +197,7 @@ export default function OrderHistory() {
                     currency: "IDR",
                     minimumFractionDigits: 0,
                   }).format(Number(order.total_price))}
-                  status={
-                    order.status === "WAITING_FOR_PAYMENT"
-                      ? "Pending Payment"
-                      : "Confirmed"
-                  }
+                  status={formatStatus(order.status)}
                   image="https://images.unsplash.com/photo-1542718610-a1d656d1884c?q=80&w=600&auto=format&fit=crop"
                 />
               ))
