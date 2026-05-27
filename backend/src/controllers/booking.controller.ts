@@ -3,7 +3,9 @@ import {
   createBookingProcess,
   getBookingDetails,
   cancelBookingById,
+  getAllBookings,
 } from "../services/booking.service.js";
+
 export const createBooking = async (
   req: Request,
   res: Response,
@@ -81,5 +83,27 @@ export const cancelBookingProcess = async (
     res
       .status(500)
       .json({ error: "Terjadi kesalahan saat membatalkan pesanan" });
+  }
+};
+
+export const getBookings = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { search, date } = req.query;
+
+    const searchQuery = typeof search === "string" ? search : undefined;
+    const dateQuery = typeof date === "string" ? date : undefined;
+
+    // Meneruskan kedua query ke layer Service
+    const bookings = await getAllBookings(searchQuery, dateQuery);
+
+    res.status(200).json({ data: bookings });
+  } catch (error: any) {
+    console.error("Error fetching bookings history:", error);
+    res
+      .status(500)
+      .json({ error: "Terjadi kesalahan saat mengambil riwayat pesanan" });
   }
 };

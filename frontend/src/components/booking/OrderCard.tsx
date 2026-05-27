@@ -1,7 +1,8 @@
 import React from "react";
 
 interface OrderCardProps {
-  title: string;
+  title: string; // Digunakan untuk Nama Properti
+  subtitle?: string; // BARU: Digunakan untuk Tipe Kamar (opsional agar aman)
   date: string;
   orderId: string;
   price: string;
@@ -11,6 +12,7 @@ interface OrderCardProps {
 
 export default function OrderCard({
   title,
+  subtitle, // Tangkap prop baru di sini
   date,
   orderId,
   price,
@@ -24,8 +26,6 @@ export default function OrderCard({
       {/* Bagian Gambar & Badge Status */}
       <div className="h-48 w-full bg-surface-dim relative">
         <img alt={title} className="w-full h-full object-cover" src={image} />
-
-        {/* BADGE STATUS: Menggunakan warna dari design system */}
         <div
           className={`absolute top-4 right-4 font-body font-bold text-xs px-3 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm bg-opacity-95 shadow-sm ${
             isConfirmed
@@ -43,13 +43,20 @@ export default function OrderCard({
       {/* Bagian Detail Text */}
       <div className="p-6 flex-grow flex flex-col justify-between">
         <div>
-          {/* JUDUL: Menggunakan Plus Jakarta Sans (--font-display) */}
-          <h3 className="text-lg font-display font-bold text-primary mb-2 line-clamp-1">
+          {/* JUDUL UTAMA (Properti) */}
+          <h3 className="text-lg font-display font-bold text-primary mb-1 line-clamp-1">
             {title}
           </h3>
 
-          {/* TEKS DETAIL: Menggunakan Manrope (--font-body) */}
-          <div className="text-on-surface-variant font-body text-sm mb-4 flex flex-col gap-2">
+          {/* SUB-JUDUL (Tipe Kamar) */}
+          {subtitle && (
+            <p className="font-body text-sm text-on-surface-variant font-semibold mb-3 line-clamp-1">
+              {subtitle}
+            </p>
+          )}
+
+          {/* TEKS DETAIL (Tanggal & Nomor Order) */}
+          <div className="text-on-surface-variant font-body text-sm mb-4 flex flex-col gap-2 mt-2">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px]">
                 calendar_today
@@ -73,8 +80,6 @@ export default function OrderCard({
               {price}
             </span>
           </div>
-
-          {/* TOMBOL AKSI */}
           <button
             className={`text-sm font-body font-bold px-5 py-2.5 rounded-full transition-colors ${
               isConfirmed

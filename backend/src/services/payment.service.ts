@@ -23,13 +23,3 @@ export const processPaymentUpload = async (
     }),
   ]);
 };
-
-// Tambahkan di bawah fungsi getBookingDetails yang sudah ada
-export const cancelBookingById = async (id: string) => {
-  return await prisma.booking.update({
-    where: { id },
-    data: {
-      status: "CANCELED", // Pastikan "CANCELED" sesuai dengan penulisan Enum di skema Prisma kamu
-    },
-  });
-};

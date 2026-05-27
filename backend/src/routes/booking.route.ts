@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   createBooking,
+  getBookings,
   getBookingById,
   cancelBookingProcess,
 } from "../controllers/booking.controller.js";
@@ -12,6 +13,7 @@ const router = Router();
 router.post("/", authenticate, authorizeRole("USER"), createBooking);
 // sementara tanpa validasi
 // router.get("/:id", authenticate, authorizeRole("USER"), getBookingById);
+router.get("/", getBookings);
 router.get("/:id", getBookingById);
 router.put("/:id/cancel", cancelBookingProcess);
 export default router;
