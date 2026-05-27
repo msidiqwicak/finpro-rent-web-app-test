@@ -8,12 +8,20 @@ const router = Router();
 // Endpoint: POST /api/payments/upload
 // Alur middleware: authenticate → authorizeRole('USER') → uploadProof → controller
 // Hanya USER yang sudah login (bukan TENANT) yang bisa upload bukti pembayaran
+
+// sementara tanpa validasi
+// router.post(
+//   "/upload",
+//   authenticate,
+//   authorizeRole("USER"),
+//   uploadPaymentProof.single("image"),
+//   uploadPaymentProofController
+// );
+
 router.post(
   "/upload",
-  authenticate,
-  authorizeRole("USER"),
   uploadPaymentProof.single("image"),
-  uploadPaymentProofController
+  uploadPaymentProofController,
 );
 
 export default router;

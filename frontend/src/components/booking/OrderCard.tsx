@@ -1,7 +1,8 @@
 import React from "react";
 
 interface OrderCardProps {
-  title: string;
+  title: string; // Digunakan untuk Nama Properti
+  subtitle?: string; // BARU: Digunakan untuk Tipe Kamar (opsional agar aman)
   date: string;
   orderId: string;
   price: string;
@@ -11,6 +12,7 @@ interface OrderCardProps {
 
 export default function OrderCard({
   title,
+  subtitle, // Tangkap prop baru di sini
   date,
   orderId,
   price,
@@ -20,15 +22,15 @@ export default function OrderCard({
   const isConfirmed = status === "Confirmed";
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col group hover:-translate-y-1 transition-transform duration-300">
+    <div className="bg-surface-white rounded-xl border border-outline-variant shadow-sm overflow-hidden flex flex-col group hover:-translate-y-1 transition-transform duration-300">
       {/* Bagian Gambar & Badge Status */}
-      <div className="h-48 w-full bg-gray-100 relative">
+      <div className="h-48 w-full bg-surface-dim relative">
         <img alt={title} className="w-full h-full object-cover" src={image} />
         <div
-          className={`absolute top-4 right-4 font-medium text-xs px-3 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm bg-opacity-90 ${
+          className={`absolute top-4 right-4 font-body font-bold text-xs px-3 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm bg-opacity-95 shadow-sm ${
             isConfirmed
-              ? "bg-green-100 text-green-800"
-              : "bg-orange-100 text-orange-800"
+              ? "bg-primary-fixed text-on-primary-fixed"
+              : "bg-secondary-container text-on-secondary-container"
           }`}
         >
           <span className="material-symbols-outlined text-[16px]">
@@ -41,10 +43,20 @@ export default function OrderCard({
       {/* Bagian Detail Text */}
       <div className="p-6 flex-grow flex flex-col justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">
+          {/* JUDUL UTAMA (Properti) */}
+          <h3 className="text-lg font-display font-bold text-primary mb-1 line-clamp-1">
             {title}
           </h3>
-          <div className="text-gray-500 text-sm mb-4 flex flex-col gap-2">
+
+          {/* SUB-JUDUL (Tipe Kamar) */}
+          {subtitle && (
+            <p className="font-body text-sm text-on-surface-variant font-semibold mb-3 line-clamp-1">
+              {subtitle}
+            </p>
+          )}
+
+          {/* TEKS DETAIL (Tanggal & Nomor Order) */}
+          <div className="text-on-surface-variant font-body text-sm mb-4 flex flex-col gap-2 mt-2">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px]">
                 calendar_today
@@ -59,18 +71,20 @@ export default function OrderCard({
         </div>
 
         {/* Bagian Harga & Tombol */}
-        <div className="flex justify-between items-end mt-4 pt-4 border-t border-gray-100">
+        <div className="flex justify-between items-end mt-4 pt-4 border-t border-surface-high">
           <div>
-            <span className="block text-gray-400 text-xs uppercase tracking-wider font-medium">
+            <span className="block text-on-surface-variant text-xs uppercase tracking-wider font-body font-bold mb-1">
               Total
             </span>
-            <span className="text-xl font-bold text-gray-900">{price}</span>
+            <span className="text-xl font-display font-bold text-primary">
+              {price}
+            </span>
           </div>
           <button
-            className={`text-sm font-medium px-5 py-2.5 rounded-lg transition-colors ${
+            className={`text-sm font-body font-bold px-5 py-2.5 rounded-full transition-colors ${
               isConfirmed
-                ? "bg-gray-900 text-white hover:bg-gray-800 shadow-md"
-                : "bg-white border border-green-700 text-green-700 hover:bg-green-50"
+                ? "bg-primary text-on-primary hover:opacity-90 shadow-md"
+                : "bg-transparent border border-primary text-primary hover:bg-surface-low"
             }`}
           >
             {isConfirmed ? "View Details" : "Complete Payment"}
