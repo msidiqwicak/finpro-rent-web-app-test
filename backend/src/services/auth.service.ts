@@ -120,3 +120,90 @@ export const confirmPasswordReset = async (
     data: { password_hash: hashed },
   });
 };
+
+/**
+ * Handles Social Login/Register (Google / Facebook via Firebase).
+ *
+ * Action = "REGISTER":
+ *   - Creates a new user if not already exists.
+ *   - If requestedRole is TENANT, also creates a record in the tenant table.
+ *   - If user already exists (email or provider_id match), just logs them in.
+ *
+ * Action = "LOGIN":
+ *   - USER: Finds or creates user, returns token.
+ *   - TENANT: Finds user, but REJECTS if they are not registered as a Tenant.
+ */
+export const socialLogin = async (
+  email:         string,
+  name:          string,
+  provider:      string,
+  providerId:    string,
+  action:        'LOGIN' | 'REGISTER',
+  requestedRole: 'USER' | 'TENANT',
+) => {
+  // 1. Try to find existing user by provider_id (most accurate) or email
+  let user = await prisma.users.findFirst({
+    where: { provider_id: providerId },
+    include: { tenant: true },
+  });
+
+  if (!user) {
+    user = await prisma.users.findUnique({
+      where: { email },
+      include: { tenant: true },
+    });
+
+    // Link this social provider to the existing email-based account
+    if (user) {
+      user = await prisma.users.update({
+        where: { id: user.id },
+        data: { provider, provider_id: providerId, is_verified: true },
+        include: { tenant: true },
+      });
+    }
+  }
+
+  // ── REGISTER flow ────────────────────────────────────────────────────────
+  if (action === 'REGISTER') {
+    if (!user) {
+      // Create the base user account
+      user = await prisma.users.create({
+        data: { name, email, provider, provider_id: providerId, is_verified: true },
+        include: { tenant: true },
+      });
+    }
+
+    // If registering as TENANT and not yet a tenant, create tenant record
+    if (requestedRole === 'TENANT' && !user.tenant) {
+      await prisma.tenant.create({ data: { user_id: user.id, name } });
+      // Reload user with tenant relation
+      user = await prisma.users.findUnique({
+        where: { id: user.id },
+        include: { tenant: true },
+      });
+    }
+  }
+
+  // ── LOGIN flow ───────────────────────────────────────────────────────────
+  if (action === 'LOGIN') {
+    if (!user) {
+      // For login, we don't auto-create accounts — email must already be registered
+      throw new Error('Akun dengan email ini belum terdaftar. Silakan registrasi terlebih dahulu.');
+    }
+
+    // Strict role validation: Tenant login MUST have a tenant record
+    if (requestedRole === 'TENANT' && !user.tenant) {
+      throw new Error('Akun ini tidak terdaftar sebagai Tenant. Silakan gunakan akun Tenant yang valid.');
+    }
+  }
+
+  // Determine actual role from database (source of truth)
+  const actualRole = user!.tenant ? 'TENANT' : 'USER';
+  const token      = generateAccessToken({ id: user!.id, email: user!.email, role: actualRole });
+
+  return {
+    token,
+    user: { id: user!.id, name: user!.name, email: user!.email, role: actualRole },
+  };
+};
+

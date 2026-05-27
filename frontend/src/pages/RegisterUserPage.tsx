@@ -98,7 +98,7 @@ export default function RegisterUserPage() {
           </form>
         )}
 
-        {!success && <SocialLogin />}
+        {!success && <SocialLogin action="REGISTER" requestedRole="USER" redirectTo="/" />}
 
         <div className="mt-8 pt-6 border-t border-surface-high text-center text-[14px] text-on-surface-variant">
           <p className="mb-2">Already have an account? <Link to="/login" className="font-bold text-primary hover:underline">Log in here</Link></p>

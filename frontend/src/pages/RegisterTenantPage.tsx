@@ -110,7 +110,7 @@ export default function RegisterTenantPage() {
           </form>
         )}
 
-        {!success && <SocialLogin />}
+        {!success && <SocialLogin action="REGISTER" requestedRole="TENANT" redirectTo="/tenant/dashboard" />}
 
         <div className="mt-8 pt-6 border-t border-surface-high text-center text-[14px] text-on-surface-variant">
           <p className="mb-2">Already have a Tenant account? <Link to="/login" className="font-bold text-secondary hover:underline">Log in here</Link></p>

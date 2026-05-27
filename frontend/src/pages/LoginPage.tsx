@@ -115,7 +115,11 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <SocialLogin />
+        <SocialLogin
+          action="LOGIN"
+          requestedRole={mode}
+          redirectTo={isTenant ? '/tenant/dashboard' : '/'}
+        />
 
         <div className="mt-8 pt-6 border-t border-surface-high text-center text-[14px] text-on-surface-variant">
           <p>Don't have an account? <Link to={isTenant ? '/tenant/register' : '/register'} className={`font-bold hover:underline ${isTenant ? 'text-secondary' : 'text-primary'}`}>Sign up {isTenant ? 'as Tenant' : 'now'}</Link></p>

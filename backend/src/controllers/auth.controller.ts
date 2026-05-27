@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import * as authService from '../services/auth.service.js';
 import * as authSchema from '../schemas/auth.schema.js';
+import { verifyFirebaseToken } from '../utils/firebase.js';
 
 export const registerUser = async (req: Request, res: Response) => {
   try {
@@ -56,4 +57,39 @@ export const confirmReset = async (req: Request, res: Response) => {
     await authService.confirmPasswordReset(data.token, data.newPassword);
     res.status(200).json({ message: 'Password berhasil direset.' });
   } catch (error: any) { res.status(400).json({ error: error.message }); }
+};
+
+/**
+ * POST /api/auth/social-login
+ * Receives a Firebase ID token, action (LOGIN | REGISTER), and requestedRole (USER | TENANT).
+ * Verifies the token, then delegates to socialLogin service with strict role enforcement.
+ */
+export const handleSocialLogin = async (req: Request, res: Response) => {
+  try {
+    const { idToken, provider, action, requestedRole } = req.body as {
+      idToken:       string;
+      provider:      string;
+      action:        'LOGIN' | 'REGISTER';
+      requestedRole: 'USER' | 'TENANT';
+    };
+
+    if (!idToken || !provider || !action || !requestedRole) {
+      res.status(400).json({ error: 'idToken, provider, action, and requestedRole are required.' });
+      return;
+    }
+
+    const firebaseUser = await verifyFirebaseToken(idToken);
+    const result       = await authService.socialLogin(
+      firebaseUser.email,
+      firebaseUser.name,
+      provider.toUpperCase(),
+      firebaseUser.uid,
+      action,
+      requestedRole,
+    );
+
+    res.status(200).json(result);
+  } catch (error: any) {
+    res.status(401).json({ error: error.message ?? 'Social login failed.' });
+  }
 };
