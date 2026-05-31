@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import api from "../api/axiosConfig";
 import OrderCard from "../components/booking/OrderCard";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/layout/Navbar";
 
 export default function OrderHistory() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -37,7 +37,7 @@ export default function OrderHistory() {
         );
         setOrders(response.data.data);
       } catch (error) {
-        console.error("Gagal memuat riwayat pesanan:", error);
+        // error ditangani secara diam-diam; UI akan menampilkan daftar kosong
       } finally {
         setIsLoading(false);
       }

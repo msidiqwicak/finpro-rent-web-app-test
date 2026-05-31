@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import api from "../api/axiosConfig";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
@@ -60,21 +60,14 @@ export default function Checkout() {
 
       // 3. Tembak API menggunakan Axios
       const response = await api.post("/bookings", payload);
-
-      // Mengambil ID booking dari response backend
       const bookingData = response.data.data;
-      console.log("Auto-assign berhasil! Booking ID:", bookingData.id);
-
-      // 4. Lanjut ke halaman Payment sambil membawa ID booking aslinya di URL!
       navigate(`/payment/${bookingData.id}`);
     } catch (error: any) {
-      // Menangkap pesan error dari backend
       const errorMessage =
         error.response?.data?.error ||
         error.message ||
         "Terjadi kesalahan saat membuat pesanan.";
       alert(`Gagal: ${errorMessage}`);
-      console.error("Error Detail:", error);
     } finally {
       setIsLoading(false);
     }

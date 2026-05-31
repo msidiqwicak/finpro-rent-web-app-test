@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import type { AuthUser } from '../context/AuthContext';
+import type { AuthUser } from '../../context/AuthContext';
 
 interface NavDropdownProps {
   user:     AuthUser;

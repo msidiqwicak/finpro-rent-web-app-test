@@ -1,4 +1,5 @@
-import PropertyCard from './PropertyCard';
+import PropertyCard from '../shared/PropertyCard';
+
 
 const PROPERTIES = [
   { id: 1, name: 'The Mossy Cabin',       location: 'Bandung, Jawa Barat',      price: 185, rating: 4.9, ecoFeature: 'Solar Powered',    imageUrl: 'https://res.cloudinary.com/dpxovlms4/image/upload/v1779440989/finpro/assets/mossy_cabin.jpg' },

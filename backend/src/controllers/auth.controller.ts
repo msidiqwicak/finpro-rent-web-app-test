@@ -93,3 +93,18 @@ export const handleSocialLogin = async (req: Request, res: Response) => {
     res.status(401).json({ error: error.message ?? 'Social login failed.' });
   }
 };
+
+export const resendVerification = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body as { email: string };
+    if (!email) {
+      res.status(400).json({ error: 'Email wajib diisi.' });
+      return;
+    }
+    const result = await authService.resendVerificationEmail(email);
+    res.status(200).json(result);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+};
+

@@ -1,4 +1,3 @@
-import React from "react";
 
 // Mendefinisikan tipe data yang diterima dari Payment.tsx
 interface OrderSummaryProps {

@@ -1,9 +1,11 @@
+import jwt from 'jsonwebtoken';
 import { prisma } from "../utils/prisma.js";
 import { hashPassword, comparePassword } from "../utils/password.js";
 import {
   generateAccessToken,
   generateVerificationToken,
   generateResetToken,
+  verifyResetToken,
   verifyToken,
 } from "../utils/jwt.js";
 import {
@@ -66,12 +68,17 @@ export const login = async (
     include: { tenant: true },
   });
 
-  if (!user) throw new Error("Kredensial tidak valid");
+  if (!user) throw new Error("Invalid email or password.");
   if (!user.is_verified)
     throw new Error("Harap verifikasi email Anda terlebih dahulu");
 
+  if (!user.password_hash) {
+    throw new Error('Akun ini terdaftar via Google/Facebook. Silakan login menggunakan Social Login.');
+  }
+
   const isValid = await comparePassword(password, user.password_hash);
-  if (!isValid) throw new Error("Kredensial tidak valid");
+  if (!isValid) throw new Error("Invalid email or password.");
+
 
   if (requestedRole === "TENANT" && !user.tenant) {
     throw new Error("Akun ini tidak memiliki akses tenant");
@@ -92,31 +99,72 @@ export const login = async (
 
 export const requestPasswordReset = async (email: string) => {
   const user = await prisma.users.findUnique({ where: { email } });
-  if (!user) return; // Do not reveal if user exists or not for security
+
+  // Silent return if user not found
+  if (!user) {
+    return;
+  }
+
+  // Silent return for Social Login accounts (GOOGLE, FACEBOOK, etc.)
+  // These accounts do not have a local password, so reset password is not applicable.
+  // We return silently (no error) to maintain the same generic response on the frontend.
+  const isLocalAccount = !user.provider || user.provider === 'LOCAL';
+  if (!isLocalAccount) {
+    return;
+  }
 
   const actualRole = (await prisma.tenant.findUnique({
     where: { user_id: user.id },
   }))
-    ? "TENANT"
-    : "USER";
-  const token = generateResetToken({
-    id: user.id,
-    email: user.email,
-    role: actualRole,
-  });
+    ? 'TENANT'
+    : 'USER';
+
+  // Pass the current password hash so the token becomes invalid once the password changes (one-time use)
+  const token = generateResetToken(
+    { id: user.id, email: user.email, role: actualRole },
+    user.password_hash!,
+  );
+  
   await sendResetPasswordEmail(user.email, token);
+};
+
+export const resendVerificationEmail = async (email: string) => {
+  const user = await prisma.users.findUnique({ where: { email } });
+  if (!user) throw new Error('Email tidak ditemukan.');
+  if (user.is_verified) throw new Error('Akun ini sudah terverifikasi. Silakan langsung login.');
+
+  const token = generateVerificationToken({ id: user.id, email: user.email, role: 'USER' });
+  await sendVerificationEmail(user.email, token);
+  return { message: 'Email verifikasi baru telah dikirim. Silakan cek inbox Anda.' };
 };
 
 export const confirmPasswordReset = async (
   token: string,
   newPassword: string,
 ) => {
-  const decoded = verifyToken(token);
-  if (decoded.purpose !== "reset") throw new Error("Token tidak valid");
+  // Step 1: Decode without verification to get the user ID
+  const unverified = jwt.decode(token) as { id?: string; purpose?: string } | null;
+  if (!unverified?.id || unverified.purpose !== 'reset') {
+    throw new Error('Token tidak valid.');
+  }
 
+  // Step 2: Fetch the user's CURRENT password hash from database
+  const user = await prisma.users.findUnique({ where: { id: unverified.id } });
+  if (!user) throw new Error('User tidak ditemukan.');
+
+  if (!user.password_hash) {
+    throw new Error('Akun ini tidak memiliki password lokal (mungkin terdaftar via Social Login).');
+  }
+
+  // Step 3: Verify the token using the current hash as part of the secret
+  // This will throw an error if the password was already changed (one-time use)
+  const decoded = verifyResetToken(token, user.password_hash);
+  if (decoded.purpose !== 'reset') throw new Error('Token tidak valid.');
+
+  // Step 4: Hash the new password and update the database
   const hashed = await hashPassword(newPassword);
   await prisma.users.update({
-    where: { id: decoded.id },
+    where: { id: user.id },
     data: { password_hash: hashed },
   });
 };

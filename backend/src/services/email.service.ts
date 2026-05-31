@@ -66,5 +66,9 @@ export const sendResetPasswordEmail = async (to: string, token: string) => {
     `,
   };
 
-  await transporter.sendMail(mailOptions);
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    throw error; // Biarkan error ditangkap oleh controller
+  }
 };

@@ -12,9 +12,11 @@ router.post('/register/tenant', authController.registerTenant);
 router.post('/login/tenant', authController.loginTenant);
 
 // General Auth Routes (Verification & Reset Password)
-router.post('/verify',          authController.verifyEmail);
-router.post('/reset-password',  authController.requestReset);
-router.post('/confirm-reset',   authController.confirmReset);
-router.post('/social-login',    authController.handleSocialLogin);
+router.post('/verify',               authController.verifyEmail);
+router.post('/resend-verification',  authController.resendVerification);
+router.post('/reset-password',       authController.requestReset);
+router.post('/confirm-reset',        authController.confirmReset);
+router.post('/social-login',         authController.handleSocialLogin);
+
 
 export default router;

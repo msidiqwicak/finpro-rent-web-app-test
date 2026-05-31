@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { signInWithPopup } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
-import { auth, googleProvider, facebookProvider } from '../config/firebase';
-import { useAuth } from '../context/AuthContext';
+import { auth, googleProvider, facebookProvider } from '../../config/firebase';
+import { useAuth } from '../../context/AuthContext';
 
 // ─── Types ────────────────────────────────────────────────────
 type SocialProvider = 'GOOGLE' | 'FACEBOOK';
@@ -49,14 +49,10 @@ export default function SocialLogin({ action, requestedRole, redirectTo = '/' }:
     setLoading(provider);
 
     try {
-      // 1. Sign in via Firebase popup (opens Google/Facebook auth window)
       const firebaseProvider = provider === 'GOOGLE' ? googleProvider : facebookProvider;
       const result           = await signInWithPopup(auth, firebaseProvider);
-
-      // 2. Get Firebase ID token to send to our backend for verification
       const idToken = await result.user.getIdToken();
 
-      // 3. Send token + context (action & role) to our backend
       const res  = await fetch('http://localhost:8000/api/auth/social-login', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -65,11 +61,9 @@ export default function SocialLogin({ action, requestedRole, redirectTo = '/' }:
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Social login failed.');
 
-      // 4. Store user in global auth context and redirect
       login({ ...data.user, token: data.token });
       navigate(redirectTo);
     } catch (err: any) {
-      // Ignore popup-closed-by-user (user simply cancelled the popup)
       if (err?.code !== 'auth/popup-closed-by-user') {
         setError(err.message ?? 'An error occurred. Please try again.');
       }
@@ -80,7 +74,6 @@ export default function SocialLogin({ action, requestedRole, redirectTo = '/' }:
 
   return (
     <div className="mt-6">
-      {/* Divider */}
       <div className="relative flex items-center justify-center mb-5">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-outline-variant" />
@@ -90,12 +83,10 @@ export default function SocialLogin({ action, requestedRole, redirectTo = '/' }:
         </span>
       </div>
 
-      {/* Error message */}
       {error && (
         <p className="text-[13px] text-red-600 text-center mb-3 font-semibold">{error}</p>
       )}
 
-      {/* Social buttons */}
       <div className="flex gap-3">
         <button
           type="button"

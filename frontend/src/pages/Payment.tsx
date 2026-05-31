@@ -42,7 +42,6 @@ export default function Payment() {
 
         setBookingData(response.data.data);
       } catch (error) {
-        console.error("Gagal mengambil data pesanan:", error);
         alert("Gagal memuat data pesanan. Pastikan ID pesanan valid.");
       } finally {
         setIsFetchingData(false);
@@ -78,7 +77,6 @@ export default function Payment() {
         },
       });
 
-      console.log("Upload Sukses:", response.data);
       alert("Pembayaran berhasil dikirim! Menunggu verifikasi host.");
 
       navigate("/");
@@ -86,7 +84,6 @@ export default function Payment() {
       const errorMessage =
         error.response?.data?.error || "Gagal mengunggah bukti pembayaran.";
       alert(`Error: ${errorMessage}`);
-      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -105,7 +102,6 @@ export default function Payment() {
 
       navigate("/");
     } catch (error: any) {
-      console.error("Gagal membatalkan pesanan:", error);
       alert("Gagal membatalkan pesanan. Silakan coba lagi.");
     } finally {
       setIsSubmitting(false);

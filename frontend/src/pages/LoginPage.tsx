@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import SocialLogin from '../components/SocialLogin';
+import SocialLogin from '../components/auth/SocialLogin';
+
 
 type LoginMode = 'USER' | 'TENANT';
 
@@ -51,6 +52,8 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMsg, setResendMsg]         = useState('');
 
   if (user) { navigate(user.role === 'TENANT' ? '/tenant/dashboard' : '/'); }
 
@@ -73,6 +76,21 @@ export default function LoginPage() {
     } catch (err: any) {
       setError(err.message.includes('Login gagal') ? 'Login failed. Please check your email and password.' : err.message);
     } finally { setLoading(false); }
+  };
+
+  const handleResend = async () => {
+    setResendLoading(true); setResendMsg('');
+    try {
+      const res  = await fetch('http://localhost:8000/api/auth/resend-verification', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal mengirim ulang email.');
+      setResendMsg(data.message);
+    } catch (err: any) {
+      setResendMsg(err.message);
+    } finally { setResendLoading(false); }
   };
 
   const isTenant = mode === 'TENANT';
@@ -102,9 +120,24 @@ export default function LoginPage() {
           <AuthInput id="password" label="Password"      icon="lock" type={showPass ? 'text' : 'password'} placeholder="Enter your password" value={form.password} onChange={handleChange} disabled={loading} togglePass={{ show: showPass, onClick: () => setShowPass(!showPass) }} />
 
           {error && (
-            <div className="flex items-start gap-2 px-4 py-3 rounded-xl text-[14px] font-semibold mb-6 bg-red-50 text-red-700 border border-red-200">
-              <span className="material-symbols-outlined text-[20px] shrink-0">error</span>
-              <span>{error}</span>
+            <div className="flex flex-col gap-2 px-4 py-3 rounded-xl text-[14px] font-semibold mb-6 bg-red-50 text-red-700 border border-red-200">
+              <div className="flex items-start gap-2">
+                <span className="material-symbols-outlined text-[20px] shrink-0">error</span>
+                <span>{error}</span>
+              </div>
+              {error.toLowerCase().includes('verifikasi') && (
+                <div className="pl-7">
+                  {resendMsg ? (
+                    <p className="text-[13px] text-green-700 font-semibold">{resendMsg}</p>
+                  ) : (
+                    <button type="button" onClick={handleResend} disabled={resendLoading || !form.email}
+                      className="text-[13px] font-bold text-red-800 underline underline-offset-2 hover:text-red-900 disabled:opacity-60 cursor-pointer bg-transparent border-none"
+                    >
+                      {resendLoading ? 'Mengirim...' : '→ Kirim ulang link verifikasi'}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
