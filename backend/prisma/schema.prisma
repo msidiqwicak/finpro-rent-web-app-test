@@ -146,13 +146,13 @@ model users {
   name          String    @db.VarChar(255)
   email         String    @unique @db.VarChar(255)
   password_hash String?   @db.VarChar(255)
-  provider      String?   @default("LOCAL") @db.VarChar(50)
-  provider_id   String?   @db.VarChar(255)
   is_verified   Boolean?  @default(false)
   phone         String?   @db.VarChar(50)
   avatar_url    String?
   created_at    DateTime  @default(now()) @db.Timestamptz(6)
   updated_at    DateTime  @default(now()) @db.Timestamptz(6)
+  provider      String?   @default("LOCAL") @db.VarChar(50)
+  provider_id   String?   @db.VarChar(255)
   booking       booking[]
   review        review[]
   tenant        tenant?

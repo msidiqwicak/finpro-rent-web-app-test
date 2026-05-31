@@ -5,8 +5,9 @@ interface OrderCardProps {
   date: string;
   orderId: string;
   price: string;
-  status: string; // Tetap gunakan string agar bisa merespons semua status DB
+  status: string;
   image: string;
+  onActionClick?: () => void; // 👈
 }
 
 export default function OrderCard({
@@ -17,6 +18,7 @@ export default function OrderCard({
   price,
   status,
   image,
+  onActionClick,
 }: OrderCardProps) {
   // Fungsi penentu warna dan ikon badge di sudut gambar
   const getStatusConfig = () => {
@@ -102,10 +104,11 @@ export default function OrderCard({
             </span>
           </div>
           <button
+            onClick={onActionClick}
             className={`flex items-center gap-1 text-sm font-body font-semibold px-4 py-2 rounded-lg transition-all duration-300 ${
               isPending
-                ? "bg-surface-white text-primary border border-outline-variant shadow-sm hover:shadow-md hover:bg-surface-low" // Super bersih dan halus
-                : "bg-primary/10 text-primary hover:bg-primary/20"
+                ? "bg-surface-white text-primary border border-outline-variant shadow-sm hover:shadow-md hover:bg-surface-low"
+                : "bg-secondary-container text-on-secondary-container hover:opacity-80 border-none"
             }`}
           >
             {isPending ? "Complete Payment" : "View Details"}

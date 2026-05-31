@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { uploadPaymentProof as uploadPaymentProofController } from "../controllers/payment.controller.js";
+import {
+  createSnapToken,
+  handleMidtransNotification,
+  uploadPaymentProof as uploadPaymentProofController,
+} from "../controllers/payment.controller.js";
 import { uploadPaymentProof } from "../middlewares/upload.middleware.js";
 import { authenticate, authorizeRole } from "../middlewares/auth.middleware.js";
 
@@ -24,4 +28,6 @@ router.post(
   uploadPaymentProofController,
 );
 
+router.post("/snap/:orderId", createSnapToken);
+router.post("/webhook", handleMidtransNotification);
 export default router;
