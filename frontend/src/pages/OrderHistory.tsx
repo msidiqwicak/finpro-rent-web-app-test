@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import api from "../api/axiosConfig";
 import OrderCard from "../components/booking/OrderCard";
 import Navbar from "../components/layout/Navbar";
+import { useNavigate } from "react-router-dom";
 
 export default function OrderHistory() {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [dateQuery, setDateQuery] = useState(""); // State baru untuk filter tanggal
@@ -18,9 +20,9 @@ export default function OrderHistory() {
         return "Pending Payment";
       case "WAITING_FOR_CONFIRMATION":
         return "Waiting Confirmation";
-      case "CONFIRMED": // Sesuaikan dengan enum di Prismamu
+      case "CONFIRMED":
         return "Confirmed";
-      case "CANCELED": // Sesuaikan dengan enum di Prismamu
+      case "CANCELED":
         return "Canceled";
       default:
         return dbStatus;
@@ -62,6 +64,16 @@ export default function OrderHistory() {
       return ["CANCELED", "CONFIRMED"].includes(order.status);
     }
   });
+
+  const handleCardAction = (orderId: string, status: string) => {
+    if (status === "WAITING_FOR_PAYMENT") {
+      // Jika butuh bayar, arahkan ke halaman payment (Sesuaikan path URL-nya dengan route kamu)
+      navigate(`/payment/${orderId}`);
+    } else {
+      // Jika status lain, arahkan ke halaman detail pesanan
+      navigate(`/checkout/${orderId}`);
+    }
+  };
   return (
     <div className="bg-surface min-h-screen font-body text-on-surface pb-24 md:pb-0">
       <Navbar />
@@ -188,6 +200,7 @@ export default function OrderHistory() {
                   }).format(Number(order.total_price))}
                   status={formatStatus(order.status)}
                   image="https://images.unsplash.com/photo-1542718610-a1d656d1884c?q=80&w=600&auto=format&fit=crop"
+                  onActionClick={() => handleCardAction(order.id, order.status)}
                 />
               ))
             ) : (

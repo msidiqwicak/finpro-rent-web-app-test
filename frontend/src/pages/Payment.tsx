@@ -1,193 +1,275 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import api from "../api/axiosConfig";
-import PaymentTimerBanner from "../components/payment/PaymentTimerBanner";
-import BankDetailsCard from "../components/payment/BankDetailsCard";
-import PaymentUploadCard from "../components/payment/PaymentUploadCard";
-import OrderSummarySidebar from "../components/payment/OrderSummarySidebar";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import api from "../api/axiosConfig"; // Sesuaikan path-nya
+
+// Memberi tahu TypeScript bahwa window.snap itu ada (bawaan script Midtrans)
+declare global {
+  interface Window {
+    snap: any;
+  }
+}
 
 export default function Payment() {
+  const { id } = useParams();
+  const orderId = id;
   const navigate = useNavigate();
-  const { id } = useParams(); // Mengambil Booking ID dari URL (/payment/:id)
-  const [bookingData, setBookingData] = useState<any>(null);
-  const [isFetchingData, setIsFetchingData] = useState(true);
 
+  // State untuk Midtrans
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // State untuk Manual Upload
   const [file, setFile] = useState<File | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isExpired, setIsExpired] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  // useEffect untuk mengecek waktu secara realtime
+  // 1. INJEKSI SCRIPT MIDTRANS SAAT HALAMAN DIBUKA
   useEffect(() => {
-    if (!bookingData?.expires_at) return;
+    // Gunakan URL Sandbox untuk testing. Jika production, hapus kata 'sandbox.'
+    const midtransScriptUrl = "https://app.sandbox.midtrans.com/snap/snap.js";
+    const myMidtransClientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
 
-    const checkExpiration = () => {
-      // Bandingkan waktu tenggat dengan waktu saat ini
-      const timeIsUp =
-        new Date(bookingData.expires_at).getTime() <= new Date().getTime();
-      setIsExpired(timeIsUp);
+    let scriptTag = document.createElement("script");
+    scriptTag.src = midtransScriptUrl;
+    scriptTag.setAttribute("data-client-key", myMidtransClientKey);
+    scriptTag.async = true;
+
+    document.body.appendChild(scriptTag);
+
+    return () => {
+      document.body.removeChild(scriptTag);
     };
+  }, []);
 
-    checkExpiration(); // Cek langsung saat komponen di-render
-    const intervalId = setInterval(checkExpiration, 1000); // Cek ulang setiap 1 detik
-
-    return () => clearInterval(intervalId); // Bersihkan interval saat pindah halaman
-  }, [bookingData]);
-
-  // Ambil data booking saat halaman pertama kali dimuat
-  useEffect(() => {
-    const fetchBookingDetails = async () => {
-      try {
-        // Asumsi backend-mu punya endpoint GET /api/bookings/:id
-        const response = await api.get(`/bookings/${id}`);
-
-        setBookingData(response.data.data);
-      } catch (error) {
-        alert("Gagal memuat data pesanan. Pastikan ID pesanan valid.");
-      } finally {
-        setIsFetchingData(false);
-      }
-    };
-
-    if (id) {
-      fetchBookingDetails();
-    }
-  }, [id]);
-
-  const handleSubmit = async () => {
-    // Tambahkan proteksi: pastikan file, id, dan bookingData sudah tersedia
-    if (!file || !id || !bookingData) return;
-    setIsSubmitting(true);
-
+  // 2. FUNGSI UNTUK MEMANGGIL POP-UP MIDTRANS
+  const handleMidtransPayment = async () => {
     try {
-      const formData = new FormData();
+      setIsProcessing(true);
+      // Panggil backend yang tadi kita buat untuk minta Token
+      const response = await api.post(`/payments/snap/${orderId}`);
+      const snapToken = response.data.token;
 
-      formData.append("bookingId", id);
-
-      formData.append("amount", bookingData.total_price.toString());
-
-      formData.append("method", "TRANSFER_BANK");
-
-      // 1. Gunakan "image" sesuai dengan uploadProof.single("image")
-      formData.append("image", file);
-
-      // 2. Tambahkan "/upload" di akhir URL
-      const response = await api.post("/payments/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
+      // Panggil Pop-up Snap Midtrans
+      window.snap.pay(snapToken, {
+        onSuccess: function (result: any) {
+          alert("Payment Success!");
+          // Arahkan user ke halaman sukses atau order history
+          navigate("/bookings");
+        },
+        onPending: function (result: any) {
+          alert("Waiting for your payment!");
+          navigate("/bookings");
+        },
+        onError: function (result: any) {
+          alert("Payment failed!");
+          console.error(result);
+        },
+        onClose: function () {
+          alert("You closed the popup without finishing the payment");
         },
       });
-
-      alert("Pembayaran berhasil dikirim! Menunggu verifikasi host.");
-
-      navigate("/");
-    } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.error || "Gagal mengunggah bukti pembayaran.";
-      alert(`Error: ${errorMessage}`);
+    } catch (error) {
+      console.error("Gagal memanggil Midtrans:", error);
+      alert("Terjadi kesalahan saat memuat payment gateway.");
     } finally {
-      setIsSubmitting(false);
+      setIsProcessing(false);
     }
   };
-  const handleCancel = async () => {
-    // Berikan konfirmasi dialog agar user tidak tidak sengaja menekan tombol batal
-    const confirmCancel = window.confirm(
-      "Apakah kamu yakin ingin membatalkan pesanan ini?",
-    );
-    if (!confirmCancel) return;
 
-    setIsSubmitting(true);
-    try {
-      await api.put(`/bookings/${id}/cancel`);
-      alert("Pesanan berhasil dibatalkan.");
+  // --- Fungsi untuk Manual Upload ---
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
 
-      navigate("/");
-    } catch (error: any) {
-      alert("Gagal membatalkan pesanan. Silakan coba lagi.");
-    } finally {
-      setIsSubmitting(false);
+    if (!["image/jpeg", "image/png"].includes(selectedFile.type)) {
+      setErrorMsg("Invalid file type. Please upload a JPG or PNG.");
+      setFile(null);
+      return;
     }
+    if (selectedFile.size > 1048576) {
+      setErrorMsg("File is too large. Maximum size is 1MB.");
+      setFile(null);
+      return;
+    }
+    setErrorMsg("");
+    setFile(selectedFile);
   };
+
+  const handleManualSubmit = () => {
+    if (!file) return;
+    alert("Ini nanti disambung ke API /payments/upload milikmu!");
+    // Logika upload FormData ke backend ditaruh di sini
+  };
+
   return (
-    <div className="bg-surface min-h-screen font-body-md text-on-surface pb-12">
+    <div className="bg-surface text-on-surface font-body-md text-body-md min-h-screen flex flex-col antialiased">
       {/* Header */}
-      <header className="bg-surface-container-lowest/80 sticky top-0 backdrop-blur-md shadow-sm flex justify-between items-center w-full px-6 md:px-16 h-16 z-50 border-b border-outline-variant">
+      <header className="bg-surface/80 docked full-width top-0 sticky backdrop-blur-md shadow-sm flex justify-between items-center w-full px-6 md:px-16 h-16 z-50 border-b border-outline-variant/30">
         <div className="flex items-center gap-4">
-          <button
+          <span
+            className="material-symbols-outlined text-primary cursor-pointer hover:bg-surface-container-high transition-colors p-2 rounded-full"
             onClick={() => navigate(-1)}
-            className="material-symbols-outlined text-primary hover:bg-surface-container-low p-2 rounded-full transition-colors"
           >
             arrow_back
-          </button>
-          <div className="font-headline-md text-lg text-primary">
-            Evergreen Escapes
+          </span>
+          <div className="font-headline-sm text-headline-sm font-semibold text-primary">
+            Finpro Escapes
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto w-full px-6 md:px-16 py-8 md:py-12">
+      <main className="flex-grow max-w-[1280px] mx-auto w-full px-6 md:px-16 py-8 md:py-12">
         <div className="mb-8">
-          <h1 className="font-headline-md text-3xl text-primary">
+          <h1 className="text-3xl font-bold text-primary">
             Complete Your Payment
           </h1>
-          <p className="text-on-surface-variant font-body-md mt-2">
-            Please transfer the funds and upload your proof to confirm the
-            booking.
+          <p className="text-on-surface-variant mt-2">
+            Please choose a payment method to confirm the booking.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* KIRI: Metode Pembayaran */}
           <div className="lg:col-span-7 flex flex-col gap-6">
-            {bookingData?.expires_at && (
-              <PaymentTimerBanner expiresAt={bookingData.expires_at} />
-            )}
-            <BankDetailsCard />
+            {/* OPSI 1: MIDTRANS */}
+            <section className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-primary/20 bg-primary/[0.02]">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-primary text-on-primary p-2 rounded-full flex items-center justify-center">
+                  <span className="material-symbols-outlined">payments</span>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-primary">
+                    Pay with Midtrans
+                  </h2>
+                  <p className="text-on-surface-variant">
+                    Fast and secure payment with cards, e-wallets, or QRIS.
+                  </p>
+                </div>
+              </div>
 
-            {/* RENDER KONDISIONAL BERDASARKAN isExpired */}
-            {!isExpired ? (
-              <>
-                <PaymentUploadCard file={file} onFileSelect={setFile} />
-                <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-4 mt-2">
-                  <button
-                    onClick={handleCancel}
-                    disabled={isSubmitting}
-                    className="w-full sm:w-auto px-6 py-3 rounded-full font-label-md text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
-                  >
-                    Cancel Booking
-                  </button>
-                  <button
-                    onClick={handleSubmit}
-                    disabled={!file || isSubmitting}
-                    className="w-full sm:w-auto px-8 py-3 rounded-full font-label-md bg-primary text-on-primary disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-colors shadow-sm"
-                  >
-                    {isSubmitting ? "Mengunggah..." : "Submit Proof"}
+              {/* TOMBOL TRIGGER MIDTRANS */}
+              <button
+                onClick={handleMidtransPayment}
+                disabled={isProcessing}
+                className="w-full py-4 rounded-full font-bold bg-primary text-on-primary hover:opacity-90 transition-all shadow-md flex items-center justify-center gap-2 group disabled:opacity-50"
+              >
+                <span>
+                  {isProcessing
+                    ? "Loading Pop-up..."
+                    : "Proceed to Secure Payment"}
+                </span>
+                {!isProcessing && (
+                  <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
+                    arrow_forward
+                  </span>
+                )}
+              </button>
+            </section>
+
+            <div className="relative flex items-center py-2">
+              <div className="flex-grow border-t border-outline-variant/30"></div>
+              <span className="mx-4 text-sm font-bold text-on-surface-variant uppercase">
+                OR USE MANUAL TRANSFER
+              </span>
+              <div className="flex-grow border-t border-outline-variant/30"></div>
+            </div>
+
+            {/* OPSI 2: MANUAL TRANSFER & UPLOAD */}
+            <section className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant/30">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-primary-fixed text-on-primary-fixed p-2 rounded-full flex items-center justify-center">
+                  <span className="material-symbols-outlined">
+                    account_balance
+                  </span>
+                </div>
+                <h2 className="text-xl font-bold text-primary">
+                  Bank Transfer Details
+                </h2>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                <div className="flex justify-between py-3 border-b border-surface-variant">
+                  <span className="text-on-surface-variant">Bank Name</span>
+                  <span className="font-bold text-primary">
+                    BCA (Bank Central Asia)
+                  </span>
+                </div>
+                <div className="flex justify-between py-3 border-b border-surface-variant">
+                  <span className="text-on-surface-variant">
+                    Account Number
+                  </span>
+                  <span className="font-bold text-primary tracking-wide">
+                    8492 0019 3321
+                  </span>
+                </div>
+              </div>
+
+              <h2 className="text-lg font-bold text-primary mb-4">
+                Upload Payment Proof
+              </h2>
+              <div className="border-2 border-dashed border-outline-variant hover:border-primary bg-surface-container-low transition-colors rounded-xl p-8 flex flex-col items-center justify-center text-center relative">
+                <span className="material-symbols-outlined text-4xl text-on-surface-variant mb-3">
+                  cloud_upload
+                </span>
+                <p className="font-bold text-primary mb-1">
+                  Click to upload image
+                </p>
+                <p className="text-sm text-on-surface-variant">
+                  JPG, PNG. Max: 1MB.
+                </p>
+                <input
+                  type="file"
+                  accept=".jpg, .jpeg, .png"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  onChange={handleFileChange}
+                />
+              </div>
+
+              {/* Status Upload Manual */}
+              {errorMsg && (
+                <div className="mt-4 bg-error-container text-error rounded-lg p-3 text-sm flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px]">
+                    error
+                  </span>{" "}
+                  {errorMsg}
+                </div>
+              )}
+              {file && (
+                <div className="mt-4 bg-primary-fixed/30 border border-primary-fixed text-primary rounded-lg p-3 flex justify-between items-center">
+                  <span className="text-sm font-bold truncate">
+                    {file.name}
+                  </span>
+                  <button onClick={() => setFile(null)} className="text-error">
+                    <span className="material-symbols-outlined">close</span>
                   </button>
                 </div>
-              </>
-            ) : (
-              <div className="bg-surface-low rounded-xl p-8 text-center border border-outline-variant flex flex-col items-center mt-4">
-                <span className="material-symbols-outlined text-4xl text-outline mb-3">
-                  event_busy
-                </span>
-                <h4 className="font-headline-sm text-primary mb-2 text-lg font-bold">
-                  Pemesanan Dibatalkan
-                </h4>
-                <p className="font-body-md text-on-surface-variant text-sm max-w-md">
-                  Batas waktu pembayaran telah terlewati. Sistem telah otomatis
-                  membatalkan pesanan ini. Silakan kembali ke beranda untuk
-                  membuat pesanan baru.
-                </p>
-                <button
-                  onClick={() => navigate("/")}
-                  className="mt-6 px-6 py-3 rounded-full font-label-md border border-primary text-primary hover:bg-surface-dim transition-colors"
-                >
-                  Kembali ke Beranda
-                </button>
-              </div>
-            )}
+              )}
+
+              <button
+                onClick={handleManualSubmit}
+                disabled={!file}
+                className="w-full mt-6 py-3 rounded-full font-bold bg-secondary-container text-on-secondary-container hover:opacity-90 disabled:opacity-50 transition-colors"
+              >
+                Submit Manual Proof
+              </button>
+            </section>
           </div>
+
+          {/* KANAN: Order Summary (Disederhanakan untuk contoh) */}
           <div className="lg:col-span-5">
-            <OrderSummarySidebar bookingData={bookingData} />
+            <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/30 overflow-hidden sticky top-24 p-6">
+              <h3 className="text-xl font-bold text-primary mb-4">
+                Order Summary
+              </h3>
+              <p className="text-sm text-on-surface-variant mb-6">
+                Booking ID: {orderId}
+              </p>
+
+              <div className="flex justify-between items-center border-t border-surface-variant pt-4">
+                <span className="font-bold text-primary">Total Amount</span>
+                <span className="text-xl font-bold text-primary">
+                  Rp 500.000
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </main>

@@ -11,9 +11,8 @@ export const createBooking = async (
   res: Response,
 ): Promise<void> => {
   try {
-    // Asumsi: userId didapatkan dari token JWT via middleware auth
-    const userId = req.body.userId;
-    // const userId = (req as any).user?.id;
+    // userId diambil dari JWT token yang sudah diverifikasi oleh middleware authenticate
+    const userId = req.user?.id;
     const { roomTypeId, checkIn, checkOut } = req.body;
 
     if (!userId) {

@@ -5,15 +5,35 @@ import {
   getBookingById,
   cancelBookingProcess,
 } from "../controllers/booking.controller.js";
-import { authenticate, authorizeRole } from "../middlewares/auth.middleware.js";
+import {
+  authenticate,
+  authorizeRole,
+  verifyBookingOwnership,
+} from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-// Hanya USER yang sudah login yang bisa membuat pemesanan (bukan TENANT)
+// POST /api/bookings — Buat pemesanan baru, hanya USER yang login
 router.post("/", authenticate, authorizeRole("USER"), createBooking);
-// sementara tanpa validasi
-// router.get("/:id", authenticate, authorizeRole("USER"), getBookingById);
-router.get("/", getBookings);
-router.get("/:id", getBookingById);
-router.put("/:id/cancel", cancelBookingProcess);
+
+// GET /api/bookings
+router.get("/", authenticate, authorizeRole("USER"), getBookings);
+// GET /api/bookings/:id — Lihat detail booking milik sendiri
+router.get(
+  "/:id",
+  authenticate,
+  authorizeRole("USER"),
+  verifyBookingOwnership,
+  getBookingById,
+);
+
+// PUT /api/bookings/:id/cancel — Batalkan booking milik sendiri
+router.put(
+  "/:id/cancel",
+  authenticate,
+  authorizeRole("USER"),
+  verifyBookingOwnership,
+  cancelBookingProcess,
+);
+
 export default router;
