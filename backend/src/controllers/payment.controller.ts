@@ -100,7 +100,7 @@ export const handleMidtransNotification = async (
     );
 
     const orderId = statusResponse.order_id;
-    // ✅ PERBAIKAN 1: Nama properti disesuaikan dengan format Midtrans
+    // Nama properti disesuaikan dengan format Midtrans
     const transactionStatus = statusResponse.transaction_status;
     const fraudStatus = statusResponse.fraud_status;
 
@@ -109,10 +109,9 @@ export const handleMidtransNotification = async (
     console.log("👉 Mencari pesanan di database dengan ID:", realBookingId);
     console.log("👉 Status transaksi dari Midtrans:", transactionStatus);
 
-    // ✅ PERBAIKAN 2: Tipe data disamakan persis dengan skema Enum Prisma milikmu
-    let newStatus: any = "PENDING";
+    // Pastikan pakai "any" supaya TypeScript tidak rewel
+    let newStatus: any = "WAITING_FOR_PAYMENT";
 
-    // ✅ PERBAIKAN 3: Logika if-else disejajarkan agar tidak tumpang tindih
     if (transactionStatus === "capture" || transactionStatus === "settlement") {
       if (fraudStatus === "accept" || !fraudStatus) {
         newStatus = "CONFIRMED";
@@ -122,12 +121,12 @@ export const handleMidtransNotification = async (
       transactionStatus === "deny" ||
       transactionStatus === "expire"
     ) {
-      newStatus = "REJECTED";
+      newStatus = "CANCELED"; // Sesuaikan dengan booking_status_enum
     } else if (transactionStatus === "pending") {
-      newStatus = "PENDING";
+      newStatus = "WAITING_FOR_PAYMENT"; // Sesuaikan dengan booking_status_enum
     }
 
-    // ✅ PERBAIKAN 4: Update diletakkan di LUAR pengecekan, agar selalu tereksekusi
+    // Lakukan update ke prisma (ini akan berhasil karena string-nya valid)
     await prisma.booking.update({
       where: { id: realBookingId },
       data: { status: newStatus },

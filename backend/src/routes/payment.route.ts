@@ -5,29 +5,41 @@ import {
   uploadPaymentProof as uploadPaymentProofController,
 } from "../controllers/payment.controller.js";
 import { uploadPaymentProof } from "../middlewares/upload.middleware.js";
-import { authenticate, authorizeRole } from "../middlewares/auth.middleware.js";
+import {
+  authenticate,
+  authorizeRole,
+  verifyBookingOwnership,
+} from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-// Endpoint: POST /api/payments/upload
-// Alur middleware: authenticate → authorizeRole('USER') → uploadProof → controller
-// Hanya USER yang sudah login (bukan TENANT) yang bisa upload bukti pembayaran
-
-// sementara tanpa validasi
-// router.post(
-//   "/upload",
-//   authenticate,
-//   authorizeRole("USER"),
-//   uploadPaymentProof.single("image"),
-//   uploadPaymentProofController
-// );
-
+// POST /api/payments/upload
+// Hanya USER pemilik booking yang bisa upload bukti pembayaran
 router.post(
   "/upload",
+  authenticate,
+  authorizeRole("USER"),
+  verifyBookingOwnership,
   uploadPaymentProof.single("image"),
   uploadPaymentProofController,
 );
 
-router.post("/snap/:orderId", createSnapToken);
+// POST /api/payments/snap/:orderId
+// Hanya USER pemilik booking yang bisa membuat snap token
+router.post(
+  "/snap/:orderId",
+  authenticate,
+  authorizeRole("USER"),
+  (req, res, next) => {
+    // Mapping orderId → id agar verifyBookingOwnership bisa membaca req.params.id
+    req.params.id = req.params.orderId as string;
+    next();
+  },
+  verifyBookingOwnership,
+  createSnapToken,
+);
+
+// POST /api/payments/webhook — Dipanggil oleh Midtrans, tanpa auth
 router.post("/webhook", handleMidtransNotification);
+
 export default router;

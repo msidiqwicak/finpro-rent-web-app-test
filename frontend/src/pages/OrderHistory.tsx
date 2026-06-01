@@ -20,9 +20,9 @@ export default function OrderHistory() {
         return "Pending Payment";
       case "WAITING_FOR_CONFIRMATION":
         return "Waiting Confirmation";
-      case "CONFIRMED": // Sesuaikan dengan enum di Prismamu
+      case "CONFIRMED":
         return "Confirmed";
-      case "CANCELED": // Sesuaikan dengan enum di Prismamu
+      case "CANCELED":
         return "Canceled";
       default:
         return dbStatus;

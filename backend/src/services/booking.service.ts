@@ -142,6 +142,23 @@ export const cancelBookingById = async (id: string) => {
   });
 };
 
+// Fungsi Ownership: Verifikasi bahwa booking milik user yang sedang login
+export const verifyBookingOwnership = async (
+  bookingId: string,
+  userId: string,
+): Promise<boolean> => {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    select: { user_id: true },
+  });
+
+  if (!booking) {
+    throw new Error("Pesanan tidak ditemukan");
+  }
+
+  return booking.user_id === userId;
+};
+
 export const getAllBookings = async (search?: string, date?: string) => {
   const whereClause: any = {};
 
