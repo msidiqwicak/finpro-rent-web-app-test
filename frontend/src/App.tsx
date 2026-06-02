@@ -12,22 +12,18 @@ import OrderHistory from "./pages/users/OrderHistory";
 import LoginPage from "./pages/LoginPage";
 import RegisterUserPage from "./pages/RegisterUserPage";
 import RegisterTenantPage from "./pages/RegisterTenantPage";
-import VerifyPage         from "./pages/VerifyPage";
+import VerifyPage         from "./components/auth/VerifyPage";
 import ForgotPassword     from "./pages/ForgotPassword";
 import ResetPassword      from "./pages/ResetPassword";
+import OrderDetail from "./pages/users/OrderDetail";
+import VerifyEmailUpdatePage from "./components/profile/VerifyEmailUpdatePage";
+import TenantTransaction from "./pages/tenant/TransactionManagement";
+import TenantDashboardPage from "./pages/tenant/Dashboard";
+import UserProfilePage from "./pages/users/UserProfilePage";
 
-// ======== PLACEHOLDERS ========
-const UserProfilePage = () => (
-  <div style={{ padding: "2rem", textAlign: "center" }}>
-    User Profile Page (Work in Progress)
-  </div>
-);
 
-const TenantDashboardPage = () => (
-  <div style={{ padding: "2rem", textAlign: "center" }}>
-    Tenant Dashboard Page (Work in Progress)
-  </div>
-);
+
+  
 
 // ============================================================
 // KOMPONEN APP (ROUTING UTAMA)

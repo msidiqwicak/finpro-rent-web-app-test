@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useAuth }        from '../context/AuthContext';
-import Navbar             from '../components/layout/Navbar';
-import ProfileHeader      from '../components/profile/ProfileHeader';
-import ProfileInfoCard    from '../components/profile/ProfileInfoCard';
-import EmailCard          from '../components/profile/EmailCard';
-import PasswordForm       from '../components/profile/PasswordForm';
+import { useAuth }        from '../../context/AuthContext';
+import Navbar             from '../../components/layout/Navbar';
+import ProfileHeader      from '../../components/profile/ProfileHeader';
+import ProfileInfoCard    from '../../components/profile/ProfileInfoCard';
+import EmailCard          from '../../components/profile/EmailCard';
+import PasswordForm       from '../../components/profile/PasswordForm';
 
 const API = 'http://localhost:8000/api/users';
 
