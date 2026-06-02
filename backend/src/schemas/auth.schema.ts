@@ -23,3 +23,7 @@ export const confirmResetSchema = z.object({
   token: z.string().min(1, 'Token wajib diisi'),
   newPassword: z.string().min(6, 'Password minimal 6 karakter'),
 });
+
+export const verifyEmailUpdateSchema = z.object({
+  token: z.string().min(1, 'Token wajib diisi'),
+});

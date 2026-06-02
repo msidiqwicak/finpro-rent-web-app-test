@@ -108,3 +108,13 @@ export const resendVerification = async (req: Request, res: Response) => {
   }
 };
 
+export const verifyEmailUpdate = async (req: Request, res: Response) => {
+  try {
+    const { token } = authSchema.verifyEmailUpdateSchema.parse(req.body);
+    const result    = await authService.verifyEmailUpdate(token);
+    res.status(200).json(result);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+};
+

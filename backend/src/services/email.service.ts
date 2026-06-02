@@ -72,3 +72,37 @@ export const sendResetPasswordEmail = async (to: string, token: string) => {
     throw error; // Biarkan error ditangkap oleh controller
   }
 };
+
+// ── Konfirmasi Perubahan Email ─────────────────────────────────
+export const sendEmailChangeVerificationEmail = async (to: string, token: string) => {
+  const confirmLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email-update/${token}`;
+
+  if (!transporter) {
+    console.log('\n📬 ========================================================');
+    console.log('📧 [MOCK EMAIL - Email Change Confirmation]');
+    console.log(`Tujuan: ${to}`);
+    console.log(`Konfirmasi Link: ${confirmLink}`);
+    console.log('========================================================\n');
+    return;
+  }
+
+  const mailOptions = {
+    from: `"Evergreen Escapes" <${process.env.SMTP_USER}>`,
+    to,
+    subject: 'Konfirmasi Perubahan Email - Evergreen Escapes',
+    html: `
+      <h2>Konfirmasi Perubahan Email</h2>
+      <p>Kami menerima permintaan untuk mengubah alamat email akun Anda ke alamat ini.</p>
+      <p>Klik tombol di bawah untuk mengonfirmasi perubahan email Anda:</p>
+      <a href="${confirmLink}" style="display:inline-block;padding:12px 24px;background-color:#061b0e;color:white;text-decoration:none;border-radius:8px;font-weight:bold;">
+        Konfirmasi Email Baru
+      </a>
+      <p style="margin-top:16px;color:#666;font-size:14px;">
+        Tautan ini hanya berlaku selama 1 jam.<br/>
+        Jika Anda tidak melakukan perubahan ini, abaikan email ini — email Anda tidak akan berubah.
+      </p>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+};

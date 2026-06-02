@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import NavDropdown from "./NavDropdown";
@@ -19,11 +19,27 @@ function Toast({ msg }: { msg: string }) {
 }
 
 export default function Navbar() {
-  const [open, setOpen] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [open,      setOpen]     = useState(false);
+  const [toast,     setToast]    = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const { user, login, logout }  = useAuth();
+  const navigate  = useNavigate();
+  const location  = useLocation();
+
+  // Sync avatar from API when user logs in or token changes
+  useEffect(() => {
+    if (!user?.token) return;
+    fetch('http://localhost:8000/api/users/profile', {
+      headers: { Authorization: `Bearer ${user.token}` },
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        const url = d?.data?.avatar_url ?? null;
+        setAvatarUrl(url);
+        if (url !== user.avatar_url) login({ ...user, avatar_url: url });
+      })
+      .catch(() => {});
+  }, [user?.token]);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -150,11 +166,19 @@ export default function Navbar() {
                   aria-label="Profile menu"
                   onClick={() => setOpen((o) => !o)}
                   title={`Logged in as ${user.name} (${user.role})`}
-                  className="w-10 h-10 rounded-full border-2 border-primary bg-transparent flex items-center justify-center hover:bg-surface-low transition-colors cursor-pointer"
+                  className="w-10 h-10 rounded-full border-2 border-primary bg-transparent flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer overflow-hidden"
                 >
-                  <span className="material-symbols-outlined text-[22px] text-primary">
-                    account_circle
-                  </span>
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt={user.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="material-symbols-outlined text-[22px] text-primary">
+                      account_circle
+                    </span>
+                  )}
                 </button>
                 {open && (
                   <NavDropdown

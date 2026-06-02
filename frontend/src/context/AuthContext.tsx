@@ -6,11 +6,12 @@ import type { ReactNode } from 'react';
 // ============================================================
 // Mendefinisikan struktur data user yang akan disimpan di state global
 export interface AuthUser {
-  id: string;
-  name: string;
-  email: string;
-  role: 'USER' | 'TENANT';
-  token: string;
+  id:         string;
+  name:       string;
+  email:      string;
+  role:       'USER' | 'TENANT';
+  token:      string;
+  avatar_url?: string | null;
 }
 
 interface AuthContextType {

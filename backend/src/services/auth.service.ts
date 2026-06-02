@@ -11,7 +11,8 @@ import {
 import {
   sendVerificationEmail,
   sendResetPasswordEmail,
-} from "./email.service.js";
+  sendEmailChangeVerificationEmail,
+} from './email.service.js';
 
 export const registerUser = async (
   name: string,
@@ -134,8 +135,30 @@ export const resendVerificationEmail = async (email: string) => {
   if (user.is_verified) throw new Error('Akun ini sudah terverifikasi. Silakan langsung login.');
 
   const token = generateVerificationToken({ id: user.id, email: user.email, role: 'USER' });
-  await sendVerificationEmail(user.email, token);
+
+  // User with password_hash is changing email; use the dedicated confirmation email
+  if (user.password_hash) {
+    await sendEmailChangeVerificationEmail(user.email, token);
+  } else {
+    await sendVerificationEmail(user.email, token);
+  }
+
   return { message: 'Email verifikasi baru telah dikirim. Silakan cek inbox Anda.' };
+};
+
+export const verifyEmailUpdate = async (token: string) => {
+  const decoded = verifyToken(token);
+  if (decoded.purpose !== 'verification') throw new Error('Token tidak valid.');
+
+  const user = await prisma.users.findUnique({ where: { id: decoded.id } });
+  if (!user) throw new Error('User tidak ditemukan.');
+
+  await prisma.users.update({
+    where: { id: user.id },
+    data:  { is_verified: true },
+  });
+
+  return { message: 'Email berhasil diverifikasi.' };
 };
 
 export const confirmPasswordReset = async (

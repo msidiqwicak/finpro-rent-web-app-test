@@ -46,7 +46,7 @@ const createUploader = (folder: string) => {
 
       return {
         folder,                           // Folder tujuan di Cloudinary
-        allowed_formats: ["jpg", "jpeg", "png", "webp"], // Format yang diizinkan
+        allowed_formats: ["jpg", "jpeg", "png", "gif"],         // Format yang diizinkan
         public_id: `${folder.split("/").pop()}-${Date.now()}.${ext}`, // Nama file unik
         transformation: [{ quality: "auto", fetch_format: "auto" }],  // Auto-optimize
       };
@@ -56,7 +56,7 @@ const createUploader = (folder: string) => {
   // Kembalikan instance Multer yang siap pakai dengan batas 5MB
   return multer({
     storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    limits: { fileSize: 1 * 1024 * 1024 }, // 1MB
   });
 };
 
