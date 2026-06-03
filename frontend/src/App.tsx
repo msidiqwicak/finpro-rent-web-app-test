@@ -12,18 +12,14 @@ import OrderHistory from "./pages/users/OrderHistory";
 import LoginPage from "./pages/LoginPage";
 import RegisterUserPage from "./pages/RegisterUserPage";
 import RegisterTenantPage from "./pages/RegisterTenantPage";
-import VerifyPage         from "./components/auth/VerifyPage";
-import ForgotPassword     from "./pages/ForgotPassword";
-import ResetPassword      from "./pages/ResetPassword";
+import VerifyPage from "./components/auth/VerifyPage";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import OrderDetail from "./pages/users/OrderDetail";
 import VerifyEmailUpdatePage from "./components/profile/VerifyEmailUpdatePage";
 import TenantTransaction from "./pages/tenant/TransactionManagement";
 import TenantDashboardPage from "./pages/tenant/Dashboard";
 import UserProfilePage from "./pages/users/UserProfilePage";
-
-
-
-  
 
 // ============================================================
 // KOMPONEN APP (ROUTING UTAMA)
@@ -39,15 +35,13 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterUserPage />} />
           <Route path="/tenant/register" element={<RegisterTenantPage />} />
-          <Route path="/verify/:token"      element={<VerifyPage />} />
-          <Route path="/verify-email-update/:token" element={<VerifyEmailUpdatePage />} />
-          <Route path="/forgot-password"      element={<ForgotPassword />} />
-          <Route path="/reset-password/:token"      element={<ResetPassword />} />
-          {/* ======== RUTE TRANSAKSI & BOOKING ======== */}
-          <Route path="/checkout/:id" element={<Checkout />} />
-          <Route path="/payment/:id" element={<Payment />} />
-          <Route path="/bookings" element={<OrderHistory />} />
-          <Route path="/order/:id" element={<OrderDetail />} />
+          <Route path="/verify/:token" element={<VerifyPage />} />
+          <Route
+            path="/verify-email-update/:token"
+            element={<VerifyEmailUpdatePage />}
+          />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* ======== RUTE TERPROTEKSI: USER ======== */}
           <Route
@@ -58,6 +52,41 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* ======== RUTE TRANSAKSI & BOOKING ======== */}
+          <Route
+            path="/checkout/:id"
+            element={
+              <ProtectedRoute requiredRole="USER">
+                <Checkout />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payment/:id"
+            element={
+              <ProtectedRoute requiredRole="USER">
+                <Payment />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bookings"
+            element={
+              <ProtectedRoute requiredRole="USER">
+                <OrderHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/order/:id"
+            element={
+              <ProtectedRoute requiredRole="USER">
+                <OrderDetail />
+              </ProtectedRoute>
+            }
+          />
+
           {/* ======== RUTE TERPROTEKSI: TENANT ======== */}
           <Route
             path="/tenant/dashboard"

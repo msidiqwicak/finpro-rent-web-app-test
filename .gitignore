@@ -1,1 +1,4 @@
 GIT_MERGE_GUIDE.md
+
+# Keep environment variables out of version control
+.env

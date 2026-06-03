@@ -208,3 +208,63 @@ export const getAllBookings = async (
     },
   });
 };
+
+export const getBookingsByTenant = async (
+  tenantId: string,
+  search?: string,
+  status?: string,
+) => {
+  // 1. KUNCI UTAMA KEPEMILIKAN: Memfilter lewat relasi table dari Booking sampai ke Properti Tenant
+  const whereClause: any = {
+    room_unit: {
+      room_type: {
+        property: {
+          tenant_id: tenantId, // 👈 Catatan: Sesuaikan jika di model properti milikmu nama kolomnya 'user_id' atau 'tenantId'
+        },
+      },
+    },
+  };
+
+  // 2. Filter berdasarkan Status jika Tenant memilih filter tertentu (selain "Semua")
+  if (status && status.trim() !== "" && status !== "Semua") {
+    whereClause.status = status;
+  }
+
+  // 3. Filter berdasarkan Pencarian Nama Tamu (jika ada input text)
+  if (search && search.trim() !== "") {
+    whereClause.users = {
+      name: {
+        contains: search,
+        mode: "insensitive", // Ignore huruf besar/kecil
+      },
+    };
+  }
+
+  return await prisma.booking.findMany({
+    where: whereClause,
+    orderBy: {
+      created_at: "desc",
+    },
+    include: {
+      users: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+      room_unit: {
+        include: {
+          room_type: {
+            include: {
+              property: true, // Untuk menampilkan nama properti di tabel tenant
+            },
+          },
+        },
+      },
+      payment: {
+        orderBy: { confirmed_at: "desc" },
+        take: 1, // Mengambil data payment terakhir untuk ditampilkan foto bukti transfernya di modal
+      },
+    },
+  });
+};
