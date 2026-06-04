@@ -16,22 +16,10 @@ import {
 const router = Router();
 
 // POST /api/bookings — Buat pemesanan baru, hanya USER yang login
-router.post(
-  "/",
-  authenticate,
-  authorizeRole("USER"),
-  verifyBookingOwnership,
-  createBooking,
-);
+router.post("/", authenticate, authorizeRole("USER"), createBooking);
 
 // GET /api/bookings
-router.get(
-  "/",
-  authenticate,
-  authorizeRole("USER"),
-  verifyBookingOwnership,
-  getBookings,
-);
+router.get("/", authenticate, authorizeRole("USER"), getBookings);
 
 // GET /api/bookings/:id — Lihat detail booking milik sendiri
 router.get(
@@ -51,7 +39,6 @@ router.put(
   cancelBookingProcess,
 );
 
-// GET /api/bookings/tenant/bookings — Lihat daftar pesanan masuk
 // Belum aktif, karena belum ada data booking dari tenant terbaru
 router.get(
   "/tenant/bookings",
