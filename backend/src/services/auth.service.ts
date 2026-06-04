@@ -19,8 +19,18 @@ export const registerUser = async (
   email: string,
   role: "USER" | "TENANT",
 ) => {
-  const existingUser = await prisma.users.findUnique({ where: { email } });
-  if (existingUser) throw new Error("Email sudah terdaftar");
+  const existingUser = await prisma.users.findUnique({
+    where:   { email },
+    include: { user_providers: { select: { provider: true } } },
+  });
+  if (existingUser) {
+    const hasSocialOnly = existingUser.user_providers.length > 0 && !existingUser.password_hash;
+    if (hasSocialOnly) {
+      const p = existingUser.user_providers[0]?.provider ?? 'Social Login';
+      throw new Error(`Email ini sudah terdaftar via ${p}. Silakan login menggunakan tombol ${p}.`);
+    }
+    throw new Error('Email sudah terdaftar. Silakan login menggunakan password.');
+  }
 
   // Create user with dummy password (will be overwritten upon verification)
   const dummyHash = await hashPassword(Math.random().toString(36));
@@ -109,7 +119,7 @@ export const requestPasswordReset = async (email: string) => {
   // Silent return for Social Login accounts (GOOGLE, FACEBOOK, etc.)
   // These accounts do not have a local password, so reset password is not applicable.
   // We return silently (no error) to maintain the same generic response on the frontend.
-  const isLocalAccount = !user.provider || user.provider === 'LOCAL';
+  const isLocalAccount = !!user.password_hash;
   if (!isLocalAccount) {
     return;
   }
@@ -192,17 +202,44 @@ export const confirmPasswordReset = async (
   });
 };
 
+// ── Helper: find user by provider_id ─────────────────────────
+const findUserByProvider = async (provider: string, providerId: string) => {
+  const record = await prisma.user_providers.findUnique({
+    where: { provider_provider_id: { provider, provider_id: providerId } },
+    include: { users: { include: { tenant: true } } },
+  });
+  return record?.users ?? null;
+};
+
+// ── Helper: create a brand-new social user ────────────────────
+const createSocialUser = async (
+  name: string, email: string, provider: string, providerId: string,
+) => {
+  const user = await prisma.users.create({
+    data: { name, email, is_verified: true },
+    include: { tenant: true },
+  });
+  await prisma.user_providers.create({
+    data: { user_id: user.id, provider, provider_id: providerId },
+  });
+  return user;
+};
+
+// ── Helper: build JWT and response payload ────────────────────
+const buildTokenResponse = (user: { id: string; email: string; name: string; tenant: unknown }) => {
+  const actualRole = user.tenant ? 'TENANT' : 'USER';
+  const token      = generateAccessToken({ id: user.id, email: user.email, role: actualRole });
+  return { token, user: { id: user.id, name: user.name, email: user.email, role: actualRole } };
+};
+
 /**
- * Handles Social Login/Register (Google / Facebook via Firebase).
+ * Handles Social Login/Register with Strict Provider Isolation.
  *
- * Action = "REGISTER":
- *   - Creates a new user if not already exists.
- *   - If requestedRole is TENANT, also creates a record in the tenant table.
- *   - If user already exists (email or provider_id match), just logs them in.
- *
- * Action = "LOGIN":
- *   - USER: Finds or creates user, returns token.
- *   - TENANT: Finds user, but REJECTS if they are not registered as a Tenant.
+ * Rules:
+ *  - Only a user whose exact (provider + providerId) pair exists in user_providers may proceed.
+ *  - If the email exists under a different method (LOCAL password or different OAuth provider),
+ *    the request is rejected with a clear, descriptive error message.
+ *  - No automatic account linking.
  */
 export const socialLogin = async (
   email:         string,
@@ -212,69 +249,64 @@ export const socialLogin = async (
   action:        'LOGIN' | 'REGISTER',
   requestedRole: 'USER' | 'TENANT',
 ) => {
-  // 1. Try to find existing user by provider_id (most accurate) or email
-  let user = await prisma.users.findFirst({
-    where: { provider_id: providerId },
-    include: { tenant: true },
+  // Step 1: Check for exact provider match first (happy path)
+  let user = await findUserByProvider(provider, providerId);
+  if (user) return buildTenantAwareResponse(user, name, requestedRole, action);
+
+  // Step 2: Email exists — check if legacy account or real conflict
+  const byEmail = await prisma.users.findUnique({
+    where:   { email },
+    include: { tenant: true, user_providers: { select: { provider: true } } },
   });
-
-  if (!user) {
-    user = await prisma.users.findUnique({
-      where: { email },
-      include: { tenant: true },
-    });
-
-    // Link this social provider to the existing email-based account
-    if (user) {
-      user = await prisma.users.update({
-        where: { id: user.id },
-        data: { provider, provider_id: providerId, is_verified: true },
-        include: { tenant: true },
+  if (byEmail) {
+    // Legacy account: existed before user_providers table, has no password and no providers yet
+    const isLegacySocial = !byEmail.password_hash && byEmail.user_providers.length === 0;
+    if (isLegacySocial) {
+      await prisma.user_providers.create({
+        data: { user_id: byEmail.id, provider, provider_id: providerId },
       });
+      return buildTenantAwareResponse(byEmail, name, requestedRole, action);
     }
+    // True conflict — different auth method owns this email
+    return rejectEmailConflict(byEmail);
   }
 
-  // ── REGISTER flow ────────────────────────────────────────────────────────
-  if (action === 'REGISTER') {
-    if (!user) {
-      // Create the base user account
-      user = await prisma.users.create({
-        data: { name, email, provider, provider_id: providerId, is_verified: true },
-        include: { tenant: true },
-      });
-    }
-
-    // If registering as TENANT and not yet a tenant, create tenant record
-    if (requestedRole === 'TENANT' && !user.tenant) {
-      await prisma.tenant.create({ data: { user_id: user.id, name } });
-      // Reload user with tenant relation
-      user = await prisma.users.findUnique({
-        where: { id: user.id },
-        include: { tenant: true },
-      });
-    }
-  }
-
-  // ── LOGIN flow ───────────────────────────────────────────────────────────
+  // Step 3: Email not found — only REGISTER may create a new account
   if (action === 'LOGIN') {
-    if (!user) {
-      // For login, we don't auto-create accounts — email must already be registered
-      throw new Error('Akun dengan email ini belum terdaftar. Silakan registrasi terlebih dahulu.');
-    }
-
-    // Strict role validation: Tenant login MUST have a tenant record
-    if (requestedRole === 'TENANT' && !user.tenant) {
-      throw new Error('Akun ini tidak terdaftar sebagai Tenant. Silakan gunakan akun Tenant yang valid.');
-    }
+    throw new Error('Akun dengan email ini belum terdaftar. Silakan registrasi terlebih dahulu.');
   }
 
-  // Determine actual role from database (source of truth)
-  const actualRole = user!.tenant ? 'TENANT' : 'USER';
-  const token      = generateAccessToken({ id: user!.id, email: user!.email, role: actualRole });
+  user = await createSocialUser(name, email, provider, providerId);
+  return buildTenantAwareResponse(user, name, requestedRole, action);
+};
 
-  return {
-    token,
-    user: { id: user!.id, name: user!.name, email: user!.email, role: actualRole },
-  };
+// ── Helper: reject when email belongs to a different auth method ──
+const rejectEmailConflict = (existing: {
+  password_hash: string | null;
+  user_providers: { provider: string }[];
+}): never => {
+  if (existing.password_hash) {
+    throw new Error('Email ini sudah terdaftar secara Lokal. Silakan login menggunakan password.');
+  }
+  const otherProvider = existing.user_providers[0]?.provider ?? 'metode lain';
+  throw new Error(`Email ini sudah terdaftar via ${otherProvider}. Silakan gunakan metode login tersebut.`);
+};
+
+// ── Helper: handle tenant role + build final response ────────────
+const buildTenantAwareResponse = async (
+  user:          { id: string; email: string; name: string; tenant: unknown },
+  name:          string,
+  requestedRole: 'USER' | 'TENANT',
+  action:        'LOGIN' | 'REGISTER',
+) => {
+  const typedUser = user as { id: string; email: string; name: string; tenant: object | null };
+  if (requestedRole === 'TENANT' && !typedUser.tenant) {
+    if (action !== 'REGISTER') {
+      throw new Error('Akun ini tidak terdaftar sebagai Tenant.');
+    }
+    await prisma.tenant.create({ data: { user_id: typedUser.id, name } });
+    typedUser.tenant = await prisma.tenant.findUnique({ where: { user_id: typedUser.id } });
+  }
+  return buildTokenResponse(typedUser);
 };
 

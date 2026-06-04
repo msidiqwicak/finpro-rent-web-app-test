@@ -13,7 +13,7 @@ export interface ProfileData {
   email:       string;
   phone:       string;
   avatar_url:  string | null;
-  provider:    string | null;
+  providers:   string[];
   is_verified: boolean;
 }
 
@@ -59,7 +59,7 @@ export default function UserProfilePage() {
 
   if (isLoading) return <LoadingScreen />;
 
-  const isLocal = !profile?.provider || profile.provider === 'LOCAL';
+  const isLocal = profile?.providers?.includes('LOCAL') ?? false;
 
   return (
     <>
@@ -84,7 +84,7 @@ export default function UserProfilePage() {
                 <ProfileHeader
                   name={profile.name}
                   email={profile.email}
-                  provider={profile.provider}
+                  providers={profile.providers}
                   avatarUrl={profile.avatar_url}
                   onAvatarChange={(url) => setProfile((p) => p ? { ...p, avatar_url: url } : p)}
                 />
@@ -108,6 +108,7 @@ export default function UserProfilePage() {
                 <EmailCard
                   initialEmail={profile.email}
                   isVerified={profile.is_verified}
+                  isLocal={isLocal}
                   onSuccess={(email) =>
                     setProfile((p) => p ? { ...p, email, is_verified: false } : p)
                   }

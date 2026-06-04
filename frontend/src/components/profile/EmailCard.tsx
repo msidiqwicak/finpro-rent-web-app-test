@@ -10,6 +10,7 @@ const INPUT_CLS =
 export interface EmailCardProps {
   initialEmail: string;
   isVerified:   boolean;
+  isLocal:      boolean;
   onSuccess:    (newEmail: string) => void;
 }
 
@@ -32,7 +33,7 @@ function VerificationBadge({ email, onResend, resending }: {
   );
 }
 
-export default function EmailCard({ initialEmail, isVerified, onSuccess }: EmailCardProps) {
+export default function EmailCard({ initialEmail, isVerified, isLocal, onSuccess }: EmailCardProps) {
   const { user } = useAuth();
 
   const [isEditing, setEdit]    = useState(false);
@@ -93,7 +94,7 @@ export default function EmailCard({ initialEmail, isVerified, onSuccess }: Email
             <p className="text-on-surface-variant text-[12px]">Used for login and important notifications.</p>
           </div>
         </div>
-        {!isEditing && (
+        {!isEditing && isLocal && (
           <button onClick={() => setEdit(true)}
             className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline bg-transparent border-none cursor-pointer shrink-0">
             <span className="material-symbols-outlined text-[18px]">edit</span>Change
