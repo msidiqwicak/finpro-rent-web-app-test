@@ -157,6 +157,8 @@ model users {
   user_providers user_providers[]
 }
 
+/// Tabel ini menyimpan daftar OAuth providers yang terhubung ke satu akun user.
+/// Memungkinkan satu user memiliki banyak metode login (LOCAL + GOOGLE + FACEBOOK, dst).
 model user_providers {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user_id     String   @db.Uuid
