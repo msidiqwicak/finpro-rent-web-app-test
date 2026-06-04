@@ -95,6 +95,12 @@ export const createSnapToken = async (
       return;
     }
 
+    // 🚨 OWNERSHIP CHECK: hanya pemilik pesanan yang boleh membuat token pembayaran
+    if (booking.user_id !== userId) {
+      res.status(403).json({ message: "Akses ditolak. Pesanan ini bukan milik Anda." });
+      return;
+    }
+
     if (booking.status !== "WAITING_FOR_PAYMENT") {
       res
         .status(400)

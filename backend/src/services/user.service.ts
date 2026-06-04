@@ -3,15 +3,17 @@ import { comparePassword, hashPassword } from '../utils/password.js';
 import { generateVerificationToken }     from '../utils/jwt.js';
 import { sendEmailChangeVerificationEmail } from './email.service.js';
 
+// Select fields for the base user query (password_hash used locally only, not returned to client)
 const USER_SELECT = {
-  id:          true,
-  name:        true,
-  email:       true,
-  phone:       true,
-  avatar_url:  true,
-  provider:    true,
-  is_verified: true,
-  created_at:  true,
+  id:             true,
+  name:           true,
+  email:          true,
+  phone:          true,
+  avatar_url:     true,
+  is_verified:    true,
+  created_at:     true,
+  password_hash:  true,   // needed to detect LOCAL provider — stripped before response
+  user_providers: { select: { provider: true } },
 };
 
 export const getUserProfile = async (userId: string) => {
@@ -20,8 +22,16 @@ export const getUserProfile = async (userId: string) => {
     select: USER_SELECT,
   });
   if (!user) throw new Error('User tidak ditemukan.');
-  return user;
+
+  // Build providers array — include 'LOCAL' if account has a password
+  const providers: string[] = user.user_providers.map((p) => p.provider);
+  if (user.password_hash) providers.unshift('LOCAL');
+
+  // Omit password_hash before returning to client
+  const { password_hash, user_providers, ...safeUser } = user;
+  return { ...safeUser, providers };
 };
+
 
 // ── helpers ──────────────────────────────────────────────────
 
