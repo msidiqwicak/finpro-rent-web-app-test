@@ -17,7 +17,8 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
 export const updateProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, phone, email } = req.body as { name?: string; phone?: string; email?: string };
-    const data = await userService.updateUserProfile(req.user!.id, { name, phone, email });
+    const cleanData = Object.fromEntries(Object.entries({ name, phone, email }).filter(([_, v]) => v !== undefined));
+    const data = await userService.updateUserProfile(req.user!.id, cleanData);
     res.status(200).json({ message: 'Profil berhasil diperbarui.', data });
   } catch (error: any) {
     res.status(400).json({ error: error.message });
