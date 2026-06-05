@@ -4,7 +4,6 @@ import {
   getBookings,
   getBookingById,
   cancelBookingProcess,
-  getTenantBookings,
 } from "../controllers/booking.controller.js";
 
 import { authenticate, authorizeRole } from "../middlewares/auth.middleware.js";
@@ -26,13 +25,6 @@ router.put(
   authenticate,
   authorizeRole("USER"),
   cancelBookingProcess,
-);
-
-router.get(
-  "/tenant/bookings",
-  authenticate,
-  authorizeRole("TENANT"),
-  getTenantBookings,
 );
 
 export default router;

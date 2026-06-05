@@ -1,8 +1,5 @@
 import type { Request, Response } from "express";
-import {
-  processPaymentUpload,
-  verifyPaymentOwnership,
-} from "../services/payment.service.js";
+import { processPaymentUpload } from "../services/payment.service.js";
 import { prisma } from "../utils/prisma.js";
 import { snap } from "../utils/midtrans.js";
 
@@ -27,19 +24,21 @@ export const uploadPaymentProof = async (
     }
 
     // ==========================================
-    // 🚨 PENGECEKAN OWNERSHIP (KEPEMILIKAN) 🚨
+    // 🚨 INLINE OWNERSHIP CHECK 🚨
     // ==========================================
-    try {
-      const isOwner = await verifyPaymentOwnership(bookingId, userId);
-      if (!isOwner) {
-        res.status(403).json({
-          error: "Forbidden. Akses ditolak karena ini bukan pesanan Anda.",
-        });
-        return;
-      }
-    } catch (error: any) {
-      // Akan menangkap error "Pesanan tidak ditemukan" dari service
-      res.status(404).json({ error: error.message });
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
+
+    if (!booking) {
+      res.status(404).json({ error: "Pesanan tidak ditemukan" });
+      return;
+    }
+
+    if (booking.user_id !== userId) {
+      res.status(403).json({
+        error: "Forbidden. Akses ditolak karena ini bukan pesanan Anda.",
+      });
       return;
     }
     // ==========================================
@@ -79,6 +78,12 @@ export const createSnapToken = async (
       return;
     }
 
+    // 2. Validasi ID pesanan dipindah ke atas agar lebih efisien
+    if (!orderId || orderId === "undefined") {
+      res.status(400).json({ message: "Order ID tidak valid." });
+      return;
+    }
+
     const booking = await prisma.booking.findUnique({
       where: { id: orderId as string },
       include: {
@@ -86,20 +91,21 @@ export const createSnapToken = async (
       },
     });
 
-    if (!orderId || orderId === "undefined") {
-      res.status(400).json({ message: "Order ID tidak valid." });
-      return;
-    }
     if (!booking) {
       res.status(404).json({ message: "Booking tidak ditemukan." });
       return;
     }
 
-    // 🚨 OWNERSHIP CHECK: hanya pemilik pesanan yang boleh membuat token pembayaran
+    // ==========================================
+    // 🚨 INLINE OWNERSHIP CHECK 🚨
+    // ==========================================
     if (booking.user_id !== userId) {
-      res.status(403).json({ message: "Akses ditolak. Pesanan ini bukan milik Anda." });
+      res.status(403).json({
+        message: "Forbidden. Akses ditolak karena ini bukan pesanan Anda.",
+      });
       return;
     }
+    // ==========================================
 
     if (booking.status !== "WAITING_FOR_PAYMENT") {
       res
@@ -143,7 +149,6 @@ export const handleMidtransNotification = async (
     );
 
     const orderId = statusResponse.order_id;
-    // Nama properti disesuaikan dengan format Midtrans
     const transactionStatus = statusResponse.transaction_status;
     const fraudStatus = statusResponse.fraud_status;
 
@@ -163,12 +168,11 @@ export const handleMidtransNotification = async (
       transactionStatus === "deny" ||
       transactionStatus === "expire"
     ) {
-      newStatus = "CANCELED"; // Sesuaikan dengan booking_status_enum
+      newStatus = "CANCELED";
     } else if (transactionStatus === "pending") {
-      newStatus = "WAITING_FOR_PAYMENT"; // Sesuaikan dengan booking_status_enum
+      newStatus = "WAITING_FOR_PAYMENT";
     }
 
-    // Lakukan update ke prisma (ini akan berhasil karena string-nya valid)
     await prisma.booking.update({
       where: { id: realBookingId },
       data: { status: newStatus },
@@ -184,3 +188,97 @@ export const handleMidtransNotification = async (
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const syncPaymentStatus = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { orderId } = req.body;
+    if (!orderId) {
+      res.status(400).json({ error: "Order ID wajib dikirim." });
+      return;
+    }
+
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized. Harap login." });
+      return;
+    }
+
+    const realBookingId = orderId.length > 36 ? orderId.substring(0, 36) : orderId;
+
+    // Ambil data booking untuk pengecekan kepemilikan
+    const booking = await prisma.booking.findUnique({
+      where: { id: realBookingId },
+      include: {
+        room_unit: {
+          include: {
+            room_type: {
+              include: {
+                property: {
+                  include: {
+                    tenant: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!booking) {
+      res.status(404).json({ error: "Pesanan tidak ditemukan." });
+      return;
+    }
+
+    const isUserOwner = booking.user_id === userId;
+    const isTenantOwner = booking.room_unit?.room_type?.property?.tenant?.user_id === userId;
+
+    if (!isUserOwner && !isTenantOwner) {
+      res.status(403).json({ error: "Akses ditolak. Anda tidak memiliki hak atas pesanan ini." });
+      return;
+    }
+
+    console.log("🔔 SINKRONISASI STATUS DIMINTA! Order ID:", orderId);
+
+    // Ambil status dari Midtrans secara resmi menggunakan SDK
+    const statusResponse = await (snap as any).transaction.status(orderId);
+    const transactionStatus = statusResponse.transaction_status;
+    const fraudStatus = statusResponse.fraud_status;
+
+    console.log("👉 Hasil check Midtrans. Booking ID:", realBookingId, "Status:", transactionStatus);
+
+    let newStatus: any = "WAITING_FOR_PAYMENT";
+
+    if (transactionStatus === "capture" || transactionStatus === "settlement") {
+      if (fraudStatus === "accept" || !fraudStatus) {
+        newStatus = "CONFIRMED";
+      }
+    } else if (
+      transactionStatus === "cancel" ||
+      transactionStatus === "deny" ||
+      transactionStatus === "expire"
+    ) {
+      newStatus = "CANCELED";
+    } else if (transactionStatus === "pending") {
+      newStatus = "WAITING_FOR_PAYMENT";
+    }
+
+    await prisma.booking.update({
+      where: { id: realBookingId },
+      data: { status: newStatus },
+    });
+
+    console.log(
+      `✅ Status pesanan ${realBookingId} berhasil disinkronkan menjadi ${newStatus}`,
+    );
+
+    res.status(200).json({ status: newStatus });
+  } catch (error: any) {
+    console.error("❌ Gagal menyinkronkan status pembayaran:", error);
+    res.status(500).json({ error: error.message || "Internal server error" });
+  }
+};
+

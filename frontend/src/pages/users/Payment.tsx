@@ -50,12 +50,22 @@ export default function Payment() {
 
       // Panggil Pop-up Snap Midtrans
       window.snap.pay(snapToken, {
-        onSuccess: function (result: any) {
+        onSuccess: async function (result: any) {
+          try {
+            await api.post("/payments/sync-status", { orderId: result.order_id });
+          } catch (err) {
+            console.error("Gagal sinkronisasi status pembayaran:", err);
+          }
           alert("Payment Success!");
           // Arahkan user ke halaman sukses atau order history
           navigate("/bookings");
         },
-        onPending: function (result: any) {
+        onPending: async function (result: any) {
+          try {
+            await api.post("/payments/sync-status", { orderId: result.order_id });
+          } catch (err) {
+            console.error("Gagal sinkronisasi status pembayaran:", err);
+          }
           alert("Waiting for your payment!");
           navigate("/bookings");
         },

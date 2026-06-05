@@ -3,13 +3,10 @@ import {
   createSnapToken,
   handleMidtransNotification,
   uploadPaymentProof as uploadPaymentProofController,
+  syncPaymentStatus,
 } from "../controllers/payment.controller.js";
 import { uploadPaymentProof } from "../middlewares/upload.middleware.js";
-import {
-  authenticate,
-  authorizeRole,
-  verifyBookingOwnership,
-} from "../middlewares/auth.middleware.js";
+import { authenticate, authorizeRole } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -19,7 +16,6 @@ router.post(
   "/upload",
   authenticate,
   authorizeRole("USER"),
-  verifyBookingOwnership,
   uploadPaymentProof.single("image"),
   uploadPaymentProofController,
 );
@@ -35,11 +31,14 @@ router.post(
     req.params.id = req.params.orderId as string;
     next();
   },
-  verifyBookingOwnership,
   createSnapToken,
 );
 
+// POST /api/payments/sync-status — Sinkronisasi status dari Midtrans manually
+router.post("/sync-status", authenticate, syncPaymentStatus);
+
 // POST /api/payments/webhook — Dipanggil oleh Midtrans, tanpa auth
 router.post("/webhook", handleMidtransNotification);
+
 
 export default router;

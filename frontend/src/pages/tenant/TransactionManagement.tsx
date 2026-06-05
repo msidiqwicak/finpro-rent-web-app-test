@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import TenantLayout from "../../components/layout/TenantLayout"; // Sesuaikan path layout kamu
 import api from "../../api/axiosConfig"; // Sesuaikan path axios kamu
 
@@ -54,20 +54,20 @@ export default function BookingManagement() {
   // 1. Setujui Pembayaran Manual Tamu
   const handleApprovePayment = async (bookingId: string) => {
     try {
-      await api.patch(`/tenant/bookings/${bookingId}/approve`);
+      await api.patch(`/tenant/${bookingId}/approve`); // 👈 Pastikan URL ini
       setShowConfirmModal(false);
-      fetchTenantBookings(); // Refresh data tabel
+      fetchTenantBookings();
     } catch (error) {
       alert("Gagal menyetujui pembayaran.");
     }
   };
 
-  // 2. Tolak Pembayaran Manual Tamu (Kembalikan ke status Menunggu Pembayaran)
+  // 2. Tolak Pembayaran Manual Tamu
   const handleRejectPayment = async (bookingId: string) => {
     try {
-      await api.patch(`/tenant/bookings/${bookingId}/reject`);
+      await api.patch(`/tenant/${bookingId}/reject`); // 👈 Pastikan URL ini
       setShowConfirmModal(false);
-      fetchTenantBookings(); // Refresh data tabel
+      fetchTenantBookings();
     } catch (error) {
       alert("Gagal menolak pembayaran.");
     }
@@ -76,9 +76,9 @@ export default function BookingManagement() {
   // 3. Batalkan Pesanan secara Sepihak oleh Tenant
   const handleCancelBooking = async (bookingId: string) => {
     try {
-      await api.patch(`/bookings/${bookingId}/cancel`); // Menggunakan service pembatalan id yang sudah ada
+      await api.patch(`/tenant/${bookingId}/cancel-by-tenant`); // 👈 Pastikan URL ini
       setShowCancelModal(false);
-      fetchTenantBookings(); // Refresh data tabel
+      fetchTenantBookings();
     } catch (error) {
       alert("Gagal membatalkan pesanan.");
     }
