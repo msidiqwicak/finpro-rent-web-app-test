@@ -19,7 +19,7 @@ const ProtectedRoute = ({ children, requiredRole }: Props) => {
   const { user, isLoading } = useAuth();
 
   if (isLoading)                                  return <LoadingScreen />;
-  if (!user)                                      return <Navigate to="/" replace />;
+  if (!user)                                      return <Navigate to="/login" replace />;
   if (requiredRole && user.role !== requiredRole)  return <Navigate to="/" replace />;
 
   return <>{children}</>;

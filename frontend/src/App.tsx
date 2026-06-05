@@ -6,6 +6,8 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 // ======== PAGES ========
 import LandingPage from "./pages/users/LandingPage";
+import ExplorePage from "./pages/users/ExplorePage";
+import PropertyDetailPage from "./pages/users/PropertyDetailPage";
 import Checkout from "./pages/users/Checkout";
 import Payment from "./pages/users/Payment";
 import OrderHistory from "./pages/users/OrderHistory";
@@ -31,6 +33,8 @@ function App() {
         <Routes>
           {/* ======== RUTE PUBLIK ======== */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/explore" element={<ExplorePage />} />
+          <Route path="/property/:id" element={<PropertyDetailPage />} />
           {/* ======== RUTE AUTH ======== */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterUserPage />} />

@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import SearchWidget from './SearchWidget';
 
 const SLIDES = [
   { url: 'https://res.cloudinary.com/dpxovlms4/image/upload/v1779440991/finpro/assets/waterfall_sanctuary.jpg', title: 'Escape into the Heart of Nature',  sub: 'Discover sustainable stays that connect you with the outdoors.' },
@@ -40,7 +39,7 @@ export default function Hero() {
       </div>
 
       {/* Content overlay */}
-      <div className="absolute inset-0 flex flex-col items-center justify-end pb-20 text-center px-5">
+      <div className="absolute inset-0 flex flex-col items-center justify-end text-center px-5 pb-70">
         <div className="inline-flex items-center gap-1.5 text-[11px] font-bold tracking-[0.1em] uppercase px-3.5 py-1.5 rounded-full bg-primary-fixed/20 border border-primary-fixed/35 text-primary-fixed mb-5">
           <span className="material-symbols-outlined text-[14px] [font-variation-settings:'FILL'_1,'wght'_400,'GRAD'_0,'opsz'_20]">eco</span>
           Eco-Certified Stays
@@ -48,8 +47,7 @@ export default function Hero() {
         <h1 className="font-display font-bold text-[clamp(36px,5vw,48px)] leading-[1.17] tracking-[-0.02em] text-on-primary mb-4 max-w-[720px]">
           {SLIDES[current].title}
         </h1>
-        <p className="text-white/82 text-[17px] leading-relaxed max-w-[520px] mb-12">{SLIDES[current].sub}</p>
-        <SearchWidget />
+        <p className="text-white/82 text-[17px] leading-relaxed max-w-[520px]">{SLIDES[current].sub}</p>
       </div>
 
       <HeroNavBtn dir="prev" onClick={prev} />

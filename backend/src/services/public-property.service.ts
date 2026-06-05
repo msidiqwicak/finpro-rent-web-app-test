@@ -19,11 +19,21 @@ const calcAdjustedPrice = (
 };
 
 // ── Public: List all properties ───────────────────────────────
-export const listProperties = async (city?: string) => {
+interface ListFilters {
+  city?:     string | undefined;
+  search?:   string | undefined;
+  category?: string | undefined;
+}
+
+export const listProperties = async (filters: ListFilters = {}) => {
+  const { city, search, category } = filters;
+
   return prisma.property.findMany({
     where: {
       deleted_at: null,
-      ...(city ? { city: { contains: city, mode: 'insensitive' } } : {}),
+      ...(city     ? { city: { contains: city, mode: 'insensitive' as const } } : {}),
+      ...(search   ? { name: { contains: search, mode: 'insensitive' as const } } : {}),
+      ...(category ? { property_category: { name: { equals: category, mode: 'insensitive' as const } } } : {}),
     },
     include: { property_category: true, room_type: { select: { id: true, name: true, price_per_night: true, image_urls: true } } },
     orderBy: { created_at: 'desc' },
