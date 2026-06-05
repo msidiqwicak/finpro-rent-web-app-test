@@ -3,29 +3,8 @@ import {
   createBookingProcess,
   getBookingDetails,
   cancelBookingById,
-  getBookingsByTenant,
   getAllBookings,
-  verifyBookingOwnership,
 } from "../services/booking.service.js";
-
-// ── Helper: verify ownership and respond if check fails ──────────────
-const checkOwnership = async (
-  bookingId: string,
-  userId: string,
-  res: Response,
-): Promise<boolean> => {
-  try {
-    const isOwner = await verifyBookingOwnership(bookingId, userId);
-    if (!isOwner) {
-      res.status(403).json({ error: "Akses ditolak. Ini bukan pesanan Anda." });
-      return false;
-    }
-    return true;
-  } catch (err: any) {
-    res.status(404).json({ error: err.message ?? "Pesanan tidak ditemukan." });
-    return false;
-  }
-};
 
 export const createBooking = async (
   req: Request,
@@ -169,40 +148,5 @@ export const getBookings = async (
     res
       .status(500)
       .json({ error: "Terjadi kesalahan saat mengambil riwayat pesanan." });
-  }
-};
-
-export const getTenantBookings = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  try {
-    // 1. Ambil ID Tenant dari token JWT (disuntikkan oleh middleware authenticate)
-    const tenantId = req.user?.id;
-    const { search, status } = req.query;
-
-    if (!tenantId) {
-      res
-        .status(401)
-        .json({ error: "Unauthorized. Harap login terlebih dahulu." });
-      return;
-    }
-
-    const searchQuery = typeof search === "string" ? search : undefined;
-    const statusQuery = typeof status === "string" ? status : undefined;
-
-    // 2. Panggil service dengan parameter ter-kunci tenantId
-    const bookings = await getBookingsByTenant(
-      tenantId,
-      searchQuery,
-      statusQuery,
-    );
-
-    res.status(200).json({ data: bookings });
-  } catch (error: any) {
-    console.error("Error fetching tenant bookings:", error);
-    res.status(500).json({
-      error: "Terjadi kesalahan pada server saat mengambil data pesanan.",
-    });
   }
 };

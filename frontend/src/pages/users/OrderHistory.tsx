@@ -3,7 +3,6 @@ import api from "../../api/axiosConfig";
 import OrderCard from "../../components/booking/OrderCard";
 import Navbar from "../../components/layout/Navbar";
 import { useNavigate } from "react-router-dom";
-import OrderDetail from "./OrderDetail"; // Sesuaikan folder tempat kamu menyimpannya
 
 export default function OrderHistory() {
   const navigate = useNavigate();
@@ -139,6 +138,7 @@ export default function OrderHistory() {
                 {/* Tombol Clear (X) - Hanya muncul jika ada teks yang diketik */}
                 {searchQuery && (
                   <button
+                    type="button"
                     onClick={() => setSearchQuery("")} // Otomatis mengosongkan state
                     className="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-on-surface-variant hover:text-red-600 transition-colors bg-surface-white"
                     title="Clear search"

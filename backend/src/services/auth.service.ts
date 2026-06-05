@@ -138,7 +138,7 @@ export const requestPasswordReset = async (email: string) => {
 
   const token = generateResetToken(
     { id: user.id, email: user.email, role: actualRole },
-    user.password_hash,
+    user.password_hash!,
   );
 
   await sendResetPasswordEmail(user.email, token);
