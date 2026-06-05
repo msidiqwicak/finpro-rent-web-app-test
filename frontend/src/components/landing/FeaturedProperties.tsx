@@ -1,20 +1,58 @@
-import PropertyCard from '../shared/PropertyCard';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import api from '../../api/axiosConfig';
+import PropertyCard, { type PropertyCardProps } from '../shared/PropertyCard';
 
+// ── Skeleton Loader ───────────────────────────────────────────────────
+function PropertySkeleton() {
+  return (
+    <div className="rounded-2xl overflow-hidden border border-outline-variant/40 animate-pulse">
+      <div className="w-full aspect-[4/3] bg-surface-container-high" />
+      <div className="p-5 flex flex-col gap-3">
+        <div className="h-5 w-3/4 bg-surface-container-high rounded-md" />
+        <div className="h-4 w-1/2 bg-surface-container-high rounded-md" />
+        <div className="h-px w-full bg-surface-container-high mt-2" />
+        <div className="flex justify-between items-center">
+          <div className="h-6 w-1/3 bg-surface-container-high rounded-md" />
+          <div className="h-8 w-20 bg-surface-container-high rounded-lg" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
-const PROPERTIES = [
-  { id: 1, name: 'The Mossy Cabin',       location: 'Bandung, Jawa Barat',      price: 185, rating: 4.9, ecoFeature: 'Solar Powered',    imageUrl: 'https://res.cloudinary.com/dpxovlms4/image/upload/v1779440989/finpro/assets/mossy_cabin.jpg' },
-  { id: 2, name: 'Pine Grove Villa',      location: 'Bali, Indonesia',           price: 240, rating: 4.8, ecoFeature: 'Zero Waste',        imageUrl: 'https://res.cloudinary.com/dpxovlms4/image/upload/v1779440989/finpro/assets/pine_grove.jpg' },
-  { id: 3, name: 'Waterfall Sanctuary',   location: 'Lombok, NTB',              price: 310, rating: 5.0, ecoFeature: 'Water Positive',    imageUrl: 'https://res.cloudinary.com/dpxovlms4/image/upload/v1779440991/finpro/assets/waterfall_sanctuary.jpg' },
-  { id: 4, name: 'Jungle Treehouse',      location: 'Yogyakarta, Jawa Tengah',  price: 165, rating: 4.7, ecoFeature: 'Off-Grid',          imageUrl: 'https://res.cloudinary.com/dpxovlms4/image/upload/v1779440992/finpro/assets/jungle_treehouse.jpg' },
-  { id: 5, name: 'Riverside Bamboo Pod',  location: 'Flores, NTT',              price: 195, rating: 4.8, ecoFeature: 'Carbon Neutral',    imageUrl: 'https://res.cloudinary.com/dpxovlms4/image/upload/v1779440992/finpro/assets/riverside_pod.jpg' },
-  { id: 6, name: 'Mountain Eco Lodge',    location: 'Raja Ampat, Papua',         price: 420, rating: 5.0, ecoFeature: 'Marine Protected',  imageUrl: 'https://res.cloudinary.com/dpxovlms4/image/upload/v1779440993/finpro/assets/mountain_lodge.jpg' },
-];
-
+// ── Main Component ────────────────────────────────────────────────────
 export default function FeaturedProperties() {
+  const [properties, setProperties] = useState<PropertyCardProps[]>([]);
+  const [isLoading, setIsLoading]   = useState(true);
+  const [error, setError]           = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await api.get('/properties');
+        const data = response.data.data ?? response.data;
+        setProperties(Array.isArray(data) ? data : []);
+      } catch (err: any) {
+        const message = err.response?.data?.error ?? err.message ?? 'Gagal memuat data properti.';
+        setError(message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProperties();
+  }, []);
+
+  const displayed = properties.slice(0, 6);
+
   return (
     <section aria-label="Featured properties">
       <div className="max-w-[1280px] mx-auto px-5 py-16 md:px-8 lg:px-16">
 
+        {/* ── Section Header ── */}
         <div className="flex items-end justify-between mb-10">
           <div>
             <div className="flex items-center gap-1.5 mb-2">
@@ -25,15 +63,47 @@ export default function FeaturedProperties() {
               Featured Eco-Retreats
             </h2>
           </div>
-          <a href="#" className="font-body text-[14px] font-semibold text-primary flex items-center gap-1 hover:underline transition-all">
+          <Link
+            to="/explore"
+            className="font-body text-[14px] font-semibold text-primary flex items-center gap-1 hover:underline transition-all"
+          >
             View all
             <span className="material-symbols-outlined text-[16px] font-light">arrow_forward</span>
-          </a>
+          </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {PROPERTIES.map(p => <PropertyCard key={p.id} {...p} />)}
-        </div>
+        {/* ── Loading State ── */}
+        {isLoading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => <PropertySkeleton key={i} />)}
+          </div>
+        )}
+
+        {/* ── Error State ── */}
+        {!isLoading && error && (
+          <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
+            <span className="material-symbols-outlined text-[48px] text-outline">cloud_off</span>
+            <p className="text-on-surface-variant text-sm max-w-xs">{error}</p>
+          </div>
+        )}
+
+        {/* ── Empty State ── */}
+        {!isLoading && !error && displayed.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
+            <span className="material-symbols-outlined text-[48px] text-outline">home_work</span>
+            <p className="text-on-surface-variant text-sm">Belum ada properti tersedia saat ini.</p>
+          </div>
+        )}
+
+        {/* ── Property Grid ── */}
+        {!isLoading && !error && displayed.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {displayed.map((property) => (
+              <PropertyCard key={property.id} {...property} />
+            ))}
+          </div>
+        )}
+
       </div>
     </section>
   );

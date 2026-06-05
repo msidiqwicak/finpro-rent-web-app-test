@@ -5,7 +5,12 @@ import * as publicService         from '../services/public-property.service.js';
 // ── Public ────────────────────────────────────────────────────
 export const listProperties = async (req: Request, res: Response): Promise<void> => {
   try {
-    const data = await publicService.listProperties(req.query.city as string | undefined);
+    const { city, search, category } = req.query;
+    const data = await publicService.listProperties({
+      city:     typeof city     === 'string' ? city     : undefined,
+      search:   typeof search   === 'string' ? search   : undefined,
+      category: typeof category === 'string' ? category : undefined,
+    });
     res.status(200).json({ data });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 };

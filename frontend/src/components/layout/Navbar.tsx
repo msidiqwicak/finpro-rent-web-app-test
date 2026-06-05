@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import NavDropdown from "./NavDropdown";
@@ -19,12 +19,26 @@ function Toast({ msg }: { msg: string }) {
 }
 
 export default function Navbar() {
-  const [open,      setOpen]     = useState(false);
-  const [toast,     setToast]    = useState<string | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const { user, login, logout }  = useAuth();
-  const navigate  = useNavigate();
-  const location  = useLocation();
+  const [open,        setOpen]     = useState(false);
+  const [mobileOpen,  setMobileOpen] = useState(false);
+  const [toast,       setToast]    = useState<string | null>(null);
+  const [avatarUrl,   setAvatarUrl] = useState<string | null>(null);
+  const { user, login, logout }    = useAuth();
+  const navigate     = useNavigate();
+  const location     = useLocation();
+  const dropdownRef  = useRef<HTMLDivElement>(null);
+
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
 
   // Sync avatar from API when user logs in or token changes
   useEffect(() => {
@@ -58,9 +72,11 @@ export default function Navbar() {
 
   // Array untuk menu navigasi utama
   const navItems = [
-    { name: "Explore", path: "/" },
-    { name: "Bookings", path: "/bookings" },
-    { name: "Favorites", path: "/favorites" },
+    { name: "Explore", path: "/explore" },
+    ...(isLoggedIn ? [
+      { name: "Bookings", path: "/bookings" },
+      { name: "Favorites", path: "/favorites" },
+    ] : []),
   ];
 
   // =========================================================
@@ -161,7 +177,7 @@ export default function Navbar() {
                 </span>
               </Link>
             ) : (
-              <div className="relative">
+              <div className="relative" ref={dropdownRef}>
                 <button
                   aria-label="Profile menu"
                   onClick={() => setOpen((o) => !o)}
@@ -194,18 +210,18 @@ export default function Navbar() {
             {/* Hamburger Menu (Mobile) */}
             <button
               aria-label="Toggle menu"
-              onClick={() => setOpen((o) => !o)}
+              onClick={() => setMobileOpen((o) => !o)}
               className="flex md:hidden w-10 h-10 rounded-full border border-outline-variant bg-transparent items-center justify-center text-primary hover:bg-surface-low transition-colors cursor-pointer"
             >
               <span className="material-symbols-outlined text-[20px]">
-                {open ? "close" : "menu"}
+                {mobileOpen ? "close" : "menu"}
               </span>
             </button>
           </div>
         </div>
 
         {/* Mobile Dropdown Menu */}
-        {open && (
+        {mobileOpen && (
           <nav className="md:hidden bg-surface-white border-t border-outline-variant py-2 shadow-md">
             <div className="max-w-[1280px] mx-auto px-5 flex flex-col">
               {!isTenant && (
@@ -219,7 +235,7 @@ export default function Navbar() {
                       <Link
                         key={item.name}
                         to={item.path}
-                        onClick={() => setOpen(false)}
+                        onClick={() => setMobileOpen(false)}
                         className={`block py-3 text-[15px] ${
                           isActive
                             ? "font-bold text-primary"
@@ -236,7 +252,7 @@ export default function Navbar() {
               {isLoggedIn && (
                 <Link
                   to="/notifications"
-                  onClick={() => setOpen(false)}
+                  onClick={() => setMobileOpen(false)}
                   className="block py-3 text-[15px] font-medium text-on-surface-variant flex items-center justify-between border-b border-surface-high"
                 >
                   <span>Notifications</span>
@@ -249,7 +265,7 @@ export default function Navbar() {
               {isUser && (
                 <Link
                   to="/profile"
-                  onClick={() => setOpen(false)}
+                  onClick={() => setMobileOpen(false)}
                   className="block py-3 text-[14px] font-semibold text-on-surface border-b border-surface-high"
                 >
                   My Profile
@@ -258,7 +274,7 @@ export default function Navbar() {
               {isTenant && (
                 <Link
                   to="/tenant/dashboard"
-                  onClick={() => setOpen(false)}
+                  onClick={() => setMobileOpen(false)}
                   className="block py-3 text-[14px] font-semibold text-on-surface border-b border-surface-high"
                 >
                   Tenant Dashboard
@@ -268,7 +284,7 @@ export default function Navbar() {
               {!isLoggedIn && (
                 <Link
                   to="/login"
-                  onClick={() => setOpen(false)}
+                  onClick={() => setMobileOpen(false)}
                   className="block py-3 text-[14px] font-bold text-primary"
                 >
                   Login / Register
