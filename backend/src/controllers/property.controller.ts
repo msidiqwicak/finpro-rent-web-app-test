@@ -3,6 +3,13 @@ import * as propertyService       from '../services/property.service.js';
 import * as publicService         from '../services/public-property.service.js';
 
 // ── Public ────────────────────────────────────────────────────
+export const getCategories = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const data = await publicService.getCategories();
+    res.status(200).json({ data });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+};
+
 export const listProperties = async (req: Request, res: Response): Promise<void> => {
   try {
     const { city, search, category } = req.query;
@@ -53,7 +60,7 @@ export const getMyProperties = async (req: Request, res: Response): Promise<void
 
 export const createProperty = async (req: Request, res: Response): Promise<void> => {
   try {
-    const data = await propertyService.createProperty(req.user!.id, req.body);
+    const data = await propertyService.createProperty(req.user!.id, req.body, req.files as Express.Multer.File[]);
     res.status(201).json({ message: 'Properti berhasil dibuat.', data });
   } catch (e: any) { res.status(400).json({ error: e.message }); }
 };
@@ -75,7 +82,12 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
 // ── Room Type CRUD ────────────────────────────────────────────
 export const createRoomType = async (req: Request, res: Response): Promise<void> => {
   try {
-    const data = await propertyService.createRoomType(req.user!.id, req.params.id as string, req.body);
+    const data = await propertyService.createRoomType(
+      req.user!.id, 
+      req.params.id as string, 
+      req.body,
+      req.files as Express.Multer.File[]
+    );
     res.status(201).json({ message: 'Tipe kamar berhasil dibuat.', data });
   } catch (e: any) { res.status(400).json({ error: e.message }); }
 };

@@ -44,10 +44,26 @@ export const getMyProperties = async (userId: string) => {
   });
 };
 
-export const createProperty = async (userId: string, data: CreatePropertyInput) => {
+export const createProperty = async (userId: string, data: CreatePropertyInput, files?: Express.Multer.File[]) => {
   const tenantId = await getTenantId(userId);
+  const image_urls = files?.map(f => f.path) || [];
+  
+  // Safely extract only the fields expected by Prisma to avoid "Unknown argument" errors
+  const { name, description, address, city, province, category_id, latitude, longitude } = data;
+
   return prisma.property.create({
-    data: { ...data, tenant_id: tenantId },
+    data: { 
+      name, 
+      description, 
+      address, 
+      city, 
+      province, 
+      category_id: category_id === '' ? undefined : category_id,
+      latitude: latitude ? parseFloat(String(latitude)) : undefined, 
+      longitude: longitude ? parseFloat(String(longitude)) : undefined,
+      tenant_id: tenantId, 
+      image_urls 
+    },
   });
 };
 
@@ -125,12 +141,20 @@ type CreateRoomTypeInput = {
 type UpdateRoomTypeInput = Partial<CreateRoomTypeInput>;
 
 export const createRoomType = async (
-  userId: string, propertyId: string, data: CreateRoomTypeInput,
+  userId: string, propertyId: string, data: CreateRoomTypeInput, files?: Express.Multer.File[]
 ) => {
   const tenantId = await getTenantId(userId);
   await assertPropertyOwner(propertyId, tenantId);
 
-  const totalUnits = data.total_units ?? 1;
+  // Parse numeric fields because FormData sends everything as strings
+  const price_per_night = data.price_per_night ? Number(data.price_per_night) : 0;
+  const capacity = data.capacity ? Number(data.capacity) : 1;
+  const totalUnits = data.total_units ? Number(data.total_units) : 1;
+  
+  // Extract URLs from uploaded files, fallback to text data if no files
+  const image_urls = files && files.length > 0 
+    ? files.map(f => f.path) 
+    : data.image_urls ?? [];
 
   // Use transaction: create room_type + auto-generate room_unit entries
   return prisma.$transaction(async (tx) => {
@@ -139,11 +163,11 @@ export const createRoomType = async (
         property_id:     propertyId,
         name:            data.name,
         description:     data.description ?? null,
-        price_per_night: data.price_per_night,
-        capacity:        data.capacity ?? 1,
+        price_per_night,
+        capacity,
         total_units:     totalUnits,
         amenities:       data.amenities ?? [],
-        image_urls:      data.image_urls ?? [],
+        image_urls,
       },
     });
 

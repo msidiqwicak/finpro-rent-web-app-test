@@ -21,7 +21,7 @@ interface PropertyDetail {
   id: string;
   name: string;
   description?: string;
-  image_url?: string;
+  image_urls?: string[];
   address: string;
   city: string;
   province: string;
@@ -93,7 +93,7 @@ export default function PropertyDetailPage() {
 
   // Collect all images from room types + property
   const allImages = [
-    property.image_url,
+    ...(property.image_urls || []),
     ...property.room_type.flatMap((rt) => rt.image_urls),
   ].filter(Boolean) as string[];
   if (allImages.length === 0) allImages.push(PLACEHOLDER);

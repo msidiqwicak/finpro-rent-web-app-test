@@ -11,6 +11,7 @@ const INITIAL = { name: '', description: '', price_per_night: '', capacity: '2',
 export default function CreateRoomTypeModal({ propertyId, propertyName, onSuccess, onClose }: Props) {
   const { user } = useAuth();
   const [form, setForm] = useState(INITIAL);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -18,17 +19,36 @@ export default function CreateRoomTypeModal({ propertyId, propertyName, onSucces
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); setLoading(true); setError('');
+    e.preventDefault(); 
+    setLoading(true); 
+    setError('');
+
+    const oversizedFiles = imageFiles.filter(f => f.size > 1048576);
+    if (oversizedFiles.length > 0) {
+      setError('Setiap gambar kamar tidak boleh lebih dari 1 MB.');
+      setLoading(false);
+      return;
+    }
+
+    if (imageFiles.length > 5) {
+      setError('Maksimal 5 foto kamar yang diizinkan.');
+      setLoading(false);
+      return;
+    }
+
     try {
+      const formData = new FormData();
+      Object.entries(form).forEach(([key, val]) => {
+        formData.append(key, val);
+      });
+      imageFiles.forEach(file => {
+        formData.append('images', file);
+      });
+
       const res = await fetch(`${API}/${propertyId}/room-types`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token}` },
-        body: JSON.stringify({
-          ...form,
-          price_per_night: Number(form.price_per_night),
-          capacity: Number(form.capacity),
-          total_units: Number(form.total_units),
-        }),
+        headers: { Authorization: `Bearer ${user?.token}` },
+        body: formData,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -70,6 +90,30 @@ export default function CreateRoomTypeModal({ propertyId, propertyName, onSucces
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Description (Optional)</label>
             <textarea name="description" value={form.description} onChange={handleChange} rows={2} className={INPUT} />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Room Photos (Max 5 images, Max 1MB each)</label>
+            <input 
+              type="file" 
+              accept="image/jpeg, image/png, image/gif" 
+              multiple
+              onChange={(e) => {
+                if (e.target.files) setImageFiles(Array.from(e.target.files));
+              }}
+              className="w-full text-[13px] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[13px] file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
+            />
+            {imageFiles.length > 0 && (
+              <div className="mt-2 space-y-1">
+                <p className="text-[11px] font-bold text-on-surface">Selected ({imageFiles.length}):</p>
+                {imageFiles.map((f, i) => (
+                  <p key={i} className="text-[11px] text-on-surface-variant flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[14px]">image</span>
+                    <span className="truncate max-w-[200px]">{f.name}</span> ({(f.size / 1024).toFixed(1)} KB)
+                  </p>
+                ))}
+              </div>
+            )}
           </div>
           
           {error && <p className="text-sm text-red-600 font-semibold">{error}</p>}

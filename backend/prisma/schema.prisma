@@ -58,7 +58,7 @@ model property {
   category_id       String?            @db.Uuid
   name              String             @db.VarChar(255)
   description       String?
-  image_url         String?
+  image_urls        String[]           @default([])
   address           String
   city              String             @db.VarChar(100)
   province          String             @db.VarChar(100)

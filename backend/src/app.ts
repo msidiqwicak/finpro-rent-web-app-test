@@ -32,7 +32,8 @@ app.use(
     res: express.Response,
     _next: express.NextFunction,
   ) => {
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("Global Error:", err);
+    res.status(500).json({ error: err.message || "Internal Server Error" });
   },
 );
 

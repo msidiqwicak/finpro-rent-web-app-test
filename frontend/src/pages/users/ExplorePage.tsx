@@ -9,7 +9,7 @@ import api from '../../api/axiosConfig';
 
 // ── Active Filter Pills ───────────────────────────────────────────────
 function ActiveFilters({ params, onClear }: { params: URLSearchParams; onClear: (key: string) => void }) {
-  const filters = ['search', 'city', 'category', 'guests']
+  const filters = ['search', 'city', 'categoryId', 'guests', 'checkIn', 'checkOut']
     .map((key) => ({ key, value: params.get(key) }))
     .filter((f) => f.value);
 
@@ -24,7 +24,7 @@ function ActiveFilters({ params, onClear }: { params: URLSearchParams; onClear: 
           onClick={() => onClear(f.key)}
           className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container text-[12px] font-semibold border-none cursor-pointer hover:opacity-80 transition-opacity"
         >
-          {f.key}: {f.value}
+          {f.key === 'categoryId' ? 'category' : f.key}: {f.value}
           <span className="material-symbols-outlined text-[14px]">close</span>
         </button>
       ))}
@@ -53,29 +53,65 @@ function PropertySkeleton() {
 // ── Main Page ─────────────────────────────────────────────────────────
 export default function ExplorePage() {
   const [properties, setProperties] = useState<PropertyCardProps[]>([]);
-  const [isLoading, setIsLoading]   = useState(true);
-  const [error, setError]           = useState<string | null>(null);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
+  const [isLoading,  setIsLoading]  = useState(true);
+  const [error,      setError]      = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const category = searchParams.get('category') ?? '';
-  const city     = searchParams.get('city')     ?? '';
-  const search   = searchParams.get('search')   ?? '';
+  // Extract all params
+  const categoryId = searchParams.get('categoryId') ?? '';
+  const city       = searchParams.get('city')       ?? '';
+  const search     = searchParams.get('search')     ?? '';
+  const checkIn    = searchParams.get('checkIn')    ?? '';
+  const checkOut   = searchParams.get('checkOut')   ?? '';
+  const page       = parseInt(searchParams.get('page') ?? '1', 10);
+  const sort       = searchParams.get('sort')       ?? 'name-asc'; // format: field-order
 
-  const hasFilters = !!(category || city || search);
+  const hasFilters = !!(categoryId || city || search || checkIn || checkOut);
 
   useEffect(() => {
     const fetchProperties = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        const params: Record<string, string> = {};
-        if (category) params.category = category;
-        if (city)     params.city     = city;
-        if (search)   params.search   = search;
+        
+        const [sortBy, sortOrder] = sort.split('-');
 
-        const response = await api.get('/properties', { params });
-        const data = response.data.data ?? response.data;
-        setProperties(Array.isArray(data) ? data : []);
+        const params: Record<string, string | number> = {
+          page,
+          limit: 9, // 9 items per page fits 3 columns perfectly
+          sortBy,
+          sortOrder
+        };
+
+        if (categoryId) params.categoryId = categoryId;
+        if (city)       params.city       = city;
+        if (search)     params.search     = search;
+        if (checkIn)    params.checkIn    = checkIn;
+        if (checkOut)   params.checkOut   = checkOut;
+
+        // Fetch from the new advanced search API
+        const response = await api.get('/properties/search', { params });
+        const { data, pagination: pagData } = response.data;
+        
+        // Map the flat API response to PropertyCardProps format seamlessly
+        const mappedProperties: PropertyCardProps[] = data.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          city: p.city,
+          province: p.province,
+          property_category: { name: p.category_name },
+          // Mock the room_type structure so PropertyCard can read price & image
+          room_type: [
+            { 
+              price_per_night: p.lowest_price, 
+              image_urls: p.image_urls || [] 
+            }
+          ]
+        }));
+
+        setProperties(mappedProperties);
+        if (pagData) setPagination(pagData);
       } catch (err: any) {
         setError(err.response?.data?.error ?? err.message ?? 'Gagal memuat data properti.');
       } finally {
@@ -84,21 +120,39 @@ export default function ExplorePage() {
     };
 
     fetchProperties();
-  }, [category, city, search]);
+  }, [categoryId, city, search, checkIn, checkOut, page, sort]);
 
   const handleClearFilter = (key: string) => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       next.delete(key);
+      next.delete('page'); // Reset page when changing filters
       return next;
     });
   };
 
   const handleClearAll = () => setSearchParams(new URLSearchParams());
 
-  // Build dynamic heading
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('sort', e.target.value);
+      next.set('page', '1'); // Reset to page 1 on sort
+      return next;
+    });
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('page', newPage.toString());
+      return next;
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const heading = hasFilters
-    ? `${category || 'All'} Properties${city ? ` in ${city}` : ''}${search ? ` — "${search}"` : ''}`
+    ? `Filtered Results${city ? ` in ${city}` : ''}`
     : 'Explore All Properties';
 
   return (
@@ -114,12 +168,7 @@ export default function ExplorePage() {
             <span className="text-on-surface font-semibold">Explore</span>
           </nav>
 
-          {/* ── Search Widget (sticky below Navbar, anti-glitch wrapper) ── */}
-          {/*
-            Key insight: the outer sticky div has a FIXED height so it never
-            causes a layout shift when the inner widget collapses to a pill.
-            overflow-visible lets the backdrop overlay extend outside this box.
-          */}
+          {/* ── Search Widget ── */}
           <div className="sticky top-[72px] z-40 -mx-5 md:-mx-8 lg:-mx-16">
             <div className="bg-surface-low border-b border-outline-variant/30 px-5 md:px-8 lg:px-16 py-4">
               <div className="flex justify-center w-full min-h-[56px] items-center">
@@ -135,8 +184,8 @@ export default function ExplorePage() {
             <CategoryFilter />
           </div>
 
-          {/* ── Header ── */}
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+          {/* ── Header & Sorting ── */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
             <div>
               <div className="flex items-center gap-1.5 mb-2">
                 <span className="material-symbols-outlined text-[15px] text-secondary [font-variation-settings:'FILL'_0,'wght'_300,'GRAD'_0,'opsz'_20]">
@@ -151,18 +200,35 @@ export default function ExplorePage() {
               </h1>
               {!isLoading && (
                 <p className="text-[14px] text-on-surface-variant mt-1">
-                  {properties.length} {properties.length === 1 ? 'property' : 'properties'} found
+                  {pagination.total} {pagination.total === 1 ? 'property' : 'properties'} found
                 </p>
               )}
             </div>
-            {hasFilters && (
-              <button
-                onClick={handleClearAll}
-                className="self-start sm:self-auto px-5 py-2 rounded-full border border-outline-variant text-on-surface text-[13px] font-semibold bg-transparent hover:bg-surface-container-low cursor-pointer transition-colors"
-              >
-                Clear all filters
-              </button>
-            )}
+            
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              {hasFilters && (
+                <button
+                  onClick={handleClearAll}
+                  className="px-5 py-2.5 rounded-full border border-outline-variant text-on-surface text-[13px] font-semibold bg-transparent hover:bg-surface-container-low cursor-pointer transition-colors"
+                >
+                  Clear all filters
+                </button>
+              )}
+              {/* Sort Dropdown */}
+              <div className="flex items-center gap-2 bg-white border border-outline-variant rounded-full px-4 py-2 shadow-sm">
+                <span className="material-symbols-outlined text-[18px] text-on-surface-variant">sort</span>
+                <select 
+                  value={sort} 
+                  onChange={handleSortChange}
+                  className="bg-transparent border-none text-[13px] font-semibold text-on-surface focus:outline-none cursor-pointer pr-4"
+                >
+                  <option value="name-asc">Name (A-Z)</option>
+                  <option value="name-desc">Name (Z-A)</option>
+                  <option value="price-asc">Lowest Price</option>
+                  <option value="price-desc">Highest Price</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           {/* ── Active Filter Pills ── */}
@@ -170,7 +236,7 @@ export default function ExplorePage() {
 
           {/* ── Loading State ── */}
           {isLoading && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
               {Array.from({ length: 9 }).map((_, i) => <PropertySkeleton key={i} />)}
             </div>
           )}
@@ -205,14 +271,37 @@ export default function ExplorePage() {
 
           {/* ── Property Grid ── */}
           {!isLoading && !error && properties.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
               {properties.map((property) => (
                 <PropertyCard key={property.id} {...property} />
               ))}
             </div>
           )}
 
-          {/* Pagination placeholder — will be added here later */}
+          {/* ── Pagination ── */}
+          {!isLoading && !error && pagination.totalPages > 1 && (
+            <div className="flex justify-center items-center gap-4 pt-8 border-t border-outline-variant/30">
+              <button 
+                disabled={pagination.page <= 1}
+                onClick={() => handlePageChange(pagination.page - 1)}
+                className="w-10 h-10 rounded-full flex items-center justify-center border border-outline-variant text-on-surface hover:bg-surface-container-low disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
+              >
+                <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+              </button>
+              
+              <span className="text-[14px] font-semibold text-on-surface">
+                Page {pagination.page} of {pagination.totalPages}
+              </span>
+              
+              <button 
+                disabled={pagination.page >= pagination.totalPages}
+                onClick={() => handlePageChange(pagination.page + 1)}
+                className="w-10 h-10 rounded-full flex items-center justify-center border border-outline-variant text-on-surface hover:bg-surface-container-low disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
+              >
+                <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+              </button>
+            </div>
+          )}
 
         </div>
       </main>

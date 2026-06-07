@@ -1,5 +1,11 @@
 import { prisma } from '../utils/prisma.js';
 import { Prisma } from '../generated/prisma/index.js';
+// ── Public: Categories ────────────────────────────────────────
+export const getCategories = async () => {
+  return prisma.property_category.findMany({
+    orderBy: { name: 'asc' },
+  });
+};
 
 // ── Dynamic Price Calculator ──────────────────────────────────
 const calcAdjustedPrice = (
@@ -90,7 +96,7 @@ interface SearchResult {
     id:            string;
     name:          string;
     description:   string | null;
-    image_url:     string | null;
+    image_urls:    string[];
     address:       string;
     city:          string;
     province:      string;
@@ -174,7 +180,7 @@ export const searchProperties = async (params: SearchParams): Promise<SearchResu
       p.id,
       p.name,
       p.description,
-      p.image_url,
+      p.image_urls,
       p.address,
       p.city,
       p.province,
@@ -188,14 +194,14 @@ export const searchProperties = async (params: SearchParams): Promise<SearchResu
       AND ($3::text IS NULL OR p.name ILIKE '%' || $3 || '%')
       AND ($4::uuid IS NULL OR p.category_id = $4::uuid)
       AND ($5::text IS NULL OR p.city ILIKE '%' || $5 || '%')
-    GROUP BY p.id, p.name, p.description, p.image_url, p.address, p.city, p.province, pc.name
+    GROUP BY p.id, p.name, p.description, p.image_urls, p.address, p.city, p.province, pc.name
     ORDER BY ${sortColumn} ${sortDir}
     LIMIT $6 OFFSET $7;
   `;
 
   const rows = await prisma.$queryRawUnsafe<Array<{
     id: string; name: string; description: string | null;
-    image_url: string | null; address: string; city: string; province: string;
+    image_urls: string[]; address: string; city: string; province: string;
     category_name: string | null; lowest_price: number;
     total_count: bigint;
   }>>(query, checkIn, checkOut, search, categoryId, city, limit, offset);
@@ -208,7 +214,7 @@ export const searchProperties = async (params: SearchParams): Promise<SearchResu
       id:            r.id,
       name:          r.name,
       description:   r.description,
-      image_url:     r.image_url,
+      image_urls:    r.image_urls,
       address:       r.address,
       city:          r.city,
       province:      r.province,
