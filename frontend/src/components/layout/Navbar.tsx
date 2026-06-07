@@ -19,31 +19,34 @@ function Toast({ msg }: { msg: string }) {
 }
 
 export default function Navbar() {
-  const [open,        setOpen]     = useState(false);
-  const [mobileOpen,  setMobileOpen] = useState(false);
-  const [toast,       setToast]    = useState<string | null>(null);
-  const [avatarUrl,   setAvatarUrl] = useState<string | null>(null);
-  const { user, login, logout }    = useAuth();
-  const navigate     = useNavigate();
-  const location     = useLocation();
-  const dropdownRef  = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const { user, login, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close profile dropdown on outside click
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
   // Sync avatar from API when user logs in or token changes
   useEffect(() => {
     if (!user?.token) return;
-    fetch('http://localhost:8000/api/users/profile', {
+    fetch("http://localhost:8000/api/users/profile", {
       headers: { Authorization: `Bearer ${user.token}` },
     })
       .then((r) => r.json())
@@ -73,10 +76,12 @@ export default function Navbar() {
   // Array untuk menu navigasi utama
   const navItems = [
     { name: "Explore", path: "/explore" },
-    ...(isLoggedIn ? [
-      { name: "Bookings", path: "/bookings" },
-      { name: "Favorites", path: "/favorites" },
-    ] : []),
+    ...(isLoggedIn
+      ? [
+          { name: "Bookings", path: "/bookings" },
+          { name: "Favorites", path: "/favorites" },
+        ]
+      : []),
   ];
 
   // =========================================================

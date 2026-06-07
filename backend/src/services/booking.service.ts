@@ -150,121 +150,123 @@ export const cancelBookingById = async (id: string) => {
   });
 };
 
-// Fungsi Ownership: Verifikasi bahwa booking milik user yang sedang login
-export const verifyBookingOwnership = async (
-  bookingId: string,
-  userId: string,
-): Promise<boolean> => {
-  const booking = await prisma.booking.findUnique({
-    where: { id: bookingId },
-    select: { user_id: true },
-  });
-
-  if (!booking) {
-    throw new Error("Pesanan tidak ditemukan");
-  }
-
-  return booking.user_id === userId;
-};
-
-// 1. Tambahkan parameter userId (bertipe string) di paling depan
 export const getAllBookings = async (
   userId: string,
   search?: string,
   date?: string,
 ) => {
-  // 2. KUNCI UTAMANYA DI SINI: Pastikan Prisma selalu memfilter berdasarkan user_id
+  // 1. Siapkan kondisi awal: Wajib milik user yang sedang login
   const whereClause: any = {
     user_id: userId,
   };
 
-  if (search && search.trim() !== "") {
-    const matchingRecords = await prisma.$queryRaw<Array<{ id: string }>>`
-      SELECT id FROM "booking" WHERE id::text ILIKE ${"%" + search + "%"}
-    `;
-    const matchedIds = matchingRecords.map((record) => record.id);
-    whereClause.id = { in: matchedIds };
-  }
-
+  // 2. Filter Tanggal Check-in di Database
   if (date && date.trim() !== "") {
-    const targetDate = new Date(date);
-    whereClause.check_in = {
-      gte: new Date(targetDate.setHours(0, 0, 0, 0)),
-      lte: new Date(targetDate.setHours(23, 59, 59, 999)),
-    };
+    // Prisma akan mencari tanggal yang persis sama di database
+    whereClause.check_in = new Date(date);
   }
 
-  return await prisma.booking.findMany({
-    where: whereClause,
-    orderBy: { created_at: "desc" },
-    include: {
-      room_unit: {
-        include: {
-          room_type: {
-            include: { property: true },
-          },
-        },
-      },
-    },
-  });
-};
-
-export const getBookingsByTenant = async (
-  tenantId: string,
-  search?: string,
-  status?: string,
-) => {
-  // 1. KUNCI UTAMA KEPEMILIKAN: Memfilter lewat relasi table dari Booking sampai ke Properti Tenant
-  const whereClause: any = {
-    room_unit: {
-      room_type: {
-        property: {
-          tenant_id: tenantId, // 👈 Catatan: Sesuaikan jika di model properti milikmu nama kolomnya 'user_id' atau 'tenantId'
-        },
-      },
-    },
-  };
-
-  // 2. Filter berdasarkan Status jika Tenant memilih filter tertentu (selain "Semua")
-  if (status && status.trim() !== "" && status !== "Semua") {
-    whereClause.status = status;
-  }
-
-  // 3. Filter berdasarkan Pencarian Nama Tamu (jika ada input text)
-  if (search && search.trim() !== "") {
-    whereClause.users = {
-      name: {
-        contains: search,
-        mode: "insensitive", // Ignore huruf besar/kecil
-      },
-    };
-  }
-
-  return await prisma.booking.findMany({
+  // 3. Tarik data dari PostgreSQL
+  let bookings = await prisma.booking.findMany({
     where: whereClause,
     orderBy: {
       created_at: "desc",
     },
     include: {
-      users: {
-        select: {
-          name: true,
-          email: true,
-        },
-      },
       room_unit: {
         include: {
           room_type: {
             include: {
-              property: true, // Untuk menampilkan nama properti di tabel tenant
+              property: true,
             },
           },
         },
       },
-      payment: {
-        orderBy: { confirmed_at: "desc" },
-        take: 1, // Mengambil data payment terakhir untuk ditampilkan foto bukti transfernya di modal
+    },
+  });
+
+  // 4. Pencarian Order ID (Search)
+  /* 📝 Catatan Teknis Penting: 
+   Tipe data ID kamu di schema adalah UUID. 
+   Database PostgreSQL TIDAK MENGIZINKAN pencarian teks parsial (seperti "contains") pada tipe data UUID secara bawaan di Prisma. 
+   
+   Karena jumlah pesanan milik satu user secara spesifik biasanya tidak banyak (skala kecil),
+   memfilternya di level JavaScript (setelah ditarik dari DB) adalah cara paling aman, cepat, dan anti-error.
+  */
+  if (search && search.trim() !== "") {
+    const keyword = search.toLowerCase();
+    bookings = bookings.filter(
+      (booking) =>
+        booking.id.toLowerCase().includes(keyword) || // Cari berdasarkan No Order
+        booking.room_unit?.room_type?.property?.name
+          .toLowerCase()
+          .includes(keyword), // Bonus: Bisa sekalian cari nama Propertinya!
+    );
+  }
+
+  return bookings;
+};
+
+// Tambahan: Helper untuk mengecek ownership (mencegah akses ilegal)
+export const verifyBookingOwnership = async (bookingId: string, userId: string) => {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId }
+  });
+  if (!booking) throw new Error("Pesanan tidak ditemukan.");
+  return booking.user_id === userId;
+};
+
+// Tambahan: Mengambil pesanan khusus tenant
+export const getBookingsByTenant = async (
+  tenantId: string,
+  search?: string,
+  status?: string,
+) => {
+  const whereClause: any = {
+    room_unit: {
+      room_type: {
+        property: {
+          tenant_id: tenantId,
+        },
+      },
+    },
+  };
+
+  if (status && status.trim() !== "") {
+    whereClause.status = status;
+  }
+
+  let bookings = await prisma.booking.findMany({
+    where: whereClause,
+    orderBy: {
+      created_at: "desc",
+    },
+    include: {
+      users: { select: { id: true, name: true, email: true } },
+      room_unit: {
+        include: {
+          room_type: {
+            include: {
+              property: true,
+            },
+          },
+        },
       },
     },
   });
+
+  // Filter pencarian
+  if (search && search.trim() !== "") {
+    const keyword = search.toLowerCase();
+    bookings = bookings.filter(
+      (booking) =>
+        booking.id.toLowerCase().includes(keyword) ||
+        booking.users.name.toLowerCase().includes(keyword) ||
+        booking.room_unit?.room_type?.property?.name
+          .toLowerCase()
+          .includes(keyword)
+    );
+  }
+
+  return bookings;
 };

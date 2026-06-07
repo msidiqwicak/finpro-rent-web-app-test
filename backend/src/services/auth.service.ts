@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 import { prisma } from "../utils/prisma.js";
 import { hashPassword, comparePassword } from "../utils/password.js";
 import {
@@ -12,7 +12,7 @@ import {
   sendVerificationEmail,
   sendResetPasswordEmail,
   sendEmailChangeVerificationEmail,
-} from './email.service.js';
+} from "./email.service.js";
 
 export const registerUser = async (
   name: string,
@@ -20,16 +20,21 @@ export const registerUser = async (
   role: "USER" | "TENANT",
 ) => {
   const existingUser = await prisma.users.findUnique({
-    where:   { email },
+    where: { email },
     include: { user_providers: { select: { provider: true } } },
   });
   if (existingUser) {
-    const hasSocialOnly = existingUser.user_providers.length > 0 && !existingUser.password_hash;
+    const hasSocialOnly =
+      existingUser.user_providers.length > 0 && !existingUser.password_hash;
     if (hasSocialOnly) {
-      const p = existingUser.user_providers[0]?.provider ?? 'Social Login';
-      throw new Error(`Email ini sudah terdaftar via ${p}. Silakan login menggunakan tombol ${p}.`);
+      const p = existingUser.user_providers[0]?.provider ?? "Social Login";
+      throw new Error(
+        `Email ini sudah terdaftar via ${p}. Silakan login menggunakan tombol ${p}.`,
+      );
     }
-    throw new Error('Email sudah terdaftar. Silakan login menggunakan password.');
+    throw new Error(
+      "Email sudah terdaftar. Silakan login menggunakan password.",
+    );
   }
 
   // Create user with dummy password (will be overwritten upon verification)
@@ -84,12 +89,13 @@ export const login = async (
     throw new Error("Harap verifikasi email Anda terlebih dahulu");
 
   if (!user.password_hash) {
-    throw new Error('Akun ini terdaftar via Google/Facebook. Silakan login menggunakan Social Login.');
+    throw new Error(
+      "Akun ini terdaftar via Google/Facebook. Silakan login menggunakan Social Login.",
+    );
   }
 
   const isValid = await comparePassword(password, user.password_hash);
   if (!isValid) throw new Error("Invalid email or password.");
-
 
   if (requestedRole === "TENANT" && !user.tenant) {
     throw new Error("Akun ini tidak memiliki akses tenant");
@@ -127,74 +133,79 @@ export const requestPasswordReset = async (email: string) => {
   const actualRole = (await prisma.tenant.findUnique({
     where: { user_id: user.id },
   }))
-    ? 'TENANT'
-    : 'USER';
+    ? "TENANT"
+    : "USER";
 
-  // Pass the current password hash so the token becomes invalid once the password changes (one-time use)
   const token = generateResetToken(
     { id: user.id, email: user.email, role: actualRole },
     user.password_hash!,
   );
-  
+
   await sendResetPasswordEmail(user.email, token);
 };
 
 export const resendVerificationEmail = async (email: string) => {
   const user = await prisma.users.findUnique({ where: { email } });
-  if (!user) throw new Error('Email tidak ditemukan.');
-  if (user.is_verified) throw new Error('Akun ini sudah terverifikasi. Silakan langsung login.');
+  if (!user) throw new Error("Email tidak ditemukan.");
+  if (user.is_verified)
+    throw new Error("Akun ini sudah terverifikasi. Silakan langsung login.");
 
-  const token = generateVerificationToken({ id: user.id, email: user.email, role: 'USER' });
+  const token = generateVerificationToken({
+    id: user.id,
+    email: user.email,
+    role: "USER",
+  });
 
-  // User with password_hash is changing email; use the dedicated confirmation email
   if (user.password_hash) {
     await sendEmailChangeVerificationEmail(user.email, token);
   } else {
     await sendVerificationEmail(user.email, token);
   }
 
-  return { message: 'Email verifikasi baru telah dikirim. Silakan cek inbox Anda.' };
+  return {
+    message: "Email verifikasi baru telah dikirim. Silakan cek inbox Anda.",
+  };
 };
 
 export const verifyEmailUpdate = async (token: string) => {
   const decoded = verifyToken(token);
-  if (decoded.purpose !== 'verification') throw new Error('Token tidak valid.');
+  if (decoded.purpose !== "verification") throw new Error("Token tidak valid.");
 
   const user = await prisma.users.findUnique({ where: { id: decoded.id } });
-  if (!user) throw new Error('User tidak ditemukan.');
+  if (!user) throw new Error("User tidak ditemukan.");
 
   await prisma.users.update({
     where: { id: user.id },
-    data:  { is_verified: true },
+    data: { is_verified: true },
   });
 
-  return { message: 'Email berhasil diverifikasi.' };
+  return { message: "Email berhasil diverifikasi." };
 };
 
 export const confirmPasswordReset = async (
   token: string,
   newPassword: string,
 ) => {
-  // Step 1: Decode without verification to get the user ID
-  const unverified = jwt.decode(token) as { id?: string; purpose?: string } | null;
-  if (!unverified?.id || unverified.purpose !== 'reset') {
-    throw new Error('Token tidak valid.');
+  const unverified = jwt.decode(token) as {
+    id?: string;
+    purpose?: string;
+  } | null;
+  if (!unverified?.id || unverified.purpose !== "reset") {
+    throw new Error("Token tidak valid.");
   }
 
-  // Step 2: Fetch the user's CURRENT password hash from database
   const user = await prisma.users.findUnique({ where: { id: unverified.id } });
-  if (!user) throw new Error('User tidak ditemukan.');
+  if (!user) throw new Error("User tidak ditemukan.");
 
   if (!user.password_hash) {
-    throw new Error('Akun ini tidak memiliki password lokal (mungkin terdaftar via Social Login).');
+    throw new Error(
+      "Akun ini tidak memiliki password lokal (mungkin terdaftar via Social Login).",
+    );
   }
 
-  // Step 3: Verify the token using the current hash as part of the secret
-  // This will throw an error if the password was already changed (one-time use)
   const decoded = verifyResetToken(token, user.password_hash);
-  if (decoded.purpose !== 'reset') throw new Error('Token tidak valid.');
+  if (decoded.purpose !== "reset") throw new Error("Token tidak valid.");
 
-  // Step 4: Hash the new password and update the database
   const hashed = await hashPassword(newPassword);
   await prisma.users.update({
     where: { id: user.id },
@@ -213,7 +224,10 @@ const findUserByProvider = async (provider: string, providerId: string) => {
 
 // ── Helper: create a brand-new social user ────────────────────
 const createSocialUser = async (
-  name: string, email: string, provider: string, providerId: string,
+  name: string,
+  email: string,
+  provider: string,
+  providerId: string,
 ) => {
   const user = await prisma.users.create({
     data: { name, email, is_verified: true },
@@ -226,10 +240,22 @@ const createSocialUser = async (
 };
 
 // ── Helper: build JWT and response payload ────────────────────
-const buildTokenResponse = (user: { id: string; email: string; name: string; tenant: unknown }) => {
-  const actualRole = user.tenant ? 'TENANT' : 'USER';
-  const token      = generateAccessToken({ id: user.id, email: user.email, role: actualRole });
-  return { token, user: { id: user.id, name: user.name, email: user.email, role: actualRole } };
+const buildTokenResponse = (user: {
+  id: string;
+  email: string;
+  name: string;
+  tenant: unknown;
+}) => {
+  const actualRole = user.tenant ? "TENANT" : "USER";
+  const token = generateAccessToken({
+    id: user.id,
+    email: user.email,
+    role: actualRole,
+  });
+  return {
+    token,
+    user: { id: user.id, name: user.name, email: user.email, role: actualRole },
+  };
 };
 
 /**
@@ -242,12 +268,12 @@ const buildTokenResponse = (user: { id: string; email: string; name: string; ten
  *  - No automatic account linking.
  */
 export const socialLogin = async (
-  email:         string,
-  name:          string,
-  provider:      string,
-  providerId:    string,
-  action:        'LOGIN' | 'REGISTER',
-  requestedRole: 'USER' | 'TENANT',
+  email: string,
+  name: string,
+  provider: string,
+  providerId: string,
+  action: "LOGIN" | "REGISTER",
+  requestedRole: "USER" | "TENANT",
 ) => {
   // Step 1: Check for exact provider match first (happy path)
   let user = await findUserByProvider(provider, providerId);
@@ -255,12 +281,13 @@ export const socialLogin = async (
 
   // Step 2: Email exists — check if legacy account or real conflict
   const byEmail = await prisma.users.findUnique({
-    where:   { email },
+    where: { email },
     include: { tenant: true, user_providers: { select: { provider: true } } },
   });
   if (byEmail) {
     // Legacy account: existed before user_providers table, has no password and no providers yet
-    const isLegacySocial = !byEmail.password_hash && byEmail.user_providers.length === 0;
+    const isLegacySocial =
+      !byEmail.password_hash && byEmail.user_providers.length === 0;
     if (isLegacySocial) {
       await prisma.user_providers.create({
         data: { user_id: byEmail.id, provider, provider_id: providerId },
@@ -272,8 +299,10 @@ export const socialLogin = async (
   }
 
   // Step 3: Email not found — only REGISTER may create a new account
-  if (action === 'LOGIN') {
-    throw new Error('Akun dengan email ini belum terdaftar. Silakan registrasi terlebih dahulu.');
+  if (action === "LOGIN") {
+    throw new Error(
+      "Akun dengan email ini belum terdaftar. Silakan registrasi terlebih dahulu.",
+    );
   }
 
   user = await createSocialUser(name, email, provider, providerId);
@@ -286,27 +315,37 @@ const rejectEmailConflict = (existing: {
   user_providers: { provider: string }[];
 }): never => {
   if (existing.password_hash) {
-    throw new Error('Email ini sudah terdaftar secara Lokal. Silakan login menggunakan password.');
+    throw new Error(
+      "Email ini sudah terdaftar secara Lokal. Silakan login menggunakan password.",
+    );
   }
-  const otherProvider = existing.user_providers[0]?.provider ?? 'metode lain';
-  throw new Error(`Email ini sudah terdaftar via ${otherProvider}. Silakan gunakan metode login tersebut.`);
+  const otherProvider = existing.user_providers[0]?.provider ?? "metode lain";
+  throw new Error(
+    `Email ini sudah terdaftar via ${otherProvider}. Silakan gunakan metode login tersebut.`,
+  );
 };
 
 // ── Helper: handle tenant role + build final response ────────────
 const buildTenantAwareResponse = async (
-  user:          { id: string; email: string; name: string; tenant: unknown },
-  name:          string,
-  requestedRole: 'USER' | 'TENANT',
-  action:        'LOGIN' | 'REGISTER',
+  user: { id: string; email: string; name: string; tenant: unknown },
+  name: string,
+  requestedRole: "USER" | "TENANT",
+  action: "LOGIN" | "REGISTER",
 ) => {
-  const typedUser = user as { id: string; email: string; name: string; tenant: object | null };
-  if (requestedRole === 'TENANT' && !typedUser.tenant) {
-    if (action !== 'REGISTER') {
-      throw new Error('Akun ini tidak terdaftar sebagai Tenant.');
+  const typedUser = user as {
+    id: string;
+    email: string;
+    name: string;
+    tenant: object | null;
+  };
+  if (requestedRole === "TENANT" && !typedUser.tenant) {
+    if (action !== "REGISTER") {
+      throw new Error("Akun ini tidak terdaftar sebagai Tenant.");
     }
     await prisma.tenant.create({ data: { user_id: typedUser.id, name } });
-    typedUser.tenant = await prisma.tenant.findUnique({ where: { user_id: typedUser.id } });
+    typedUser.tenant = await prisma.tenant.findUnique({
+      where: { user_id: typedUser.id },
+    });
   }
   return buildTokenResponse(typedUser);
 };
-

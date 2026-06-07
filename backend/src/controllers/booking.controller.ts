@@ -3,9 +3,9 @@ import {
   createBookingProcess,
   getBookingDetails,
   cancelBookingById,
-  getBookingsByTenant,
   getAllBookings,
   verifyBookingOwnership,
+  getBookingsByTenant,
 } from "../services/booking.service.js";
 
 // ── Helper: verify ownership and respond if check fails ──────────────

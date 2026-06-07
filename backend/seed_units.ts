@@ -1,5 +1,4 @@
-import pkg from '@prisma/client';
-const { PrismaClient } = pkg;
+import { PrismaClient } from './src/generated/prisma/index.js';
 const prisma = new PrismaClient();
 
 async function main() {
@@ -22,7 +21,8 @@ async function main() {
       await prisma.room_unit.create({
         data: {
           room_type_id: rt.id,
-          is_active: true
+          is_active: true,
+          unit_number: `UNIT-${Math.floor(Math.random() * 1000)}`
         }
       });
       count++;
