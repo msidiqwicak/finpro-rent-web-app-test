@@ -206,3 +206,67 @@ export const getAllBookings = async (
 
   return bookings;
 };
+
+// Tambahan: Helper untuk mengecek ownership (mencegah akses ilegal)
+export const verifyBookingOwnership = async (bookingId: string, userId: string) => {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId }
+  });
+  if (!booking) throw new Error("Pesanan tidak ditemukan.");
+  return booking.user_id === userId;
+};
+
+// Tambahan: Mengambil pesanan khusus tenant
+export const getBookingsByTenant = async (
+  tenantId: string,
+  search?: string,
+  status?: string,
+) => {
+  const whereClause: any = {
+    room_unit: {
+      room_type: {
+        property: {
+          tenant_id: tenantId,
+        },
+      },
+    },
+  };
+
+  if (status && status.trim() !== "") {
+    whereClause.status = status;
+  }
+
+  let bookings = await prisma.booking.findMany({
+    where: whereClause,
+    orderBy: {
+      created_at: "desc",
+    },
+    include: {
+      users: { select: { id: true, name: true, email: true } },
+      room_unit: {
+        include: {
+          room_type: {
+            include: {
+              property: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // Filter pencarian
+  if (search && search.trim() !== "") {
+    const keyword = search.toLowerCase();
+    bookings = bookings.filter(
+      (booking) =>
+        booking.id.toLowerCase().includes(keyword) ||
+        booking.users.name.toLowerCase().includes(keyword) ||
+        booking.room_unit?.room_type?.property?.name
+          .toLowerCase()
+          .includes(keyword)
+    );
+  }
+
+  return bookings;
+};

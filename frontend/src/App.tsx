@@ -21,6 +21,9 @@ import OrderDetail from "./pages/users/BookingDetail";
 import VerifyEmailUpdatePage from "./components/profile/VerifyEmailUpdatePage";
 import TenantTransaction from "./pages/tenant/Booking";
 import TenantDashboardPage from "./pages/tenant/Dashboard";
+import PropertyListPage from "./pages/tenant/PropertyListPage";
+import CreatePropertyPage from "./pages/tenant/CreatePropertyPage";
+import ManageRoomsPage from "./pages/tenant/ManageRoomsPage";
 import UserProfilePage from "./pages/users/UserProfilePage";
 import TenantBookingDetail from "./pages/tenant/BookingDetail";
 
@@ -107,6 +110,30 @@ function App() {
             element={
               <ProtectedRoute requiredRole="TENANT">
                 <TenantTransaction />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tenant/properties"
+            element={
+              <ProtectedRoute requiredRole="TENANT">
+                <PropertyListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tenant/properties/create"
+            element={
+              <ProtectedRoute requiredRole="TENANT">
+                <CreatePropertyPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tenant/properties/:id/rooms"
+            element={
+              <ProtectedRoute requiredRole="TENANT">
+                <ManageRoomsPage />
               </ProtectedRoute>
             }
           />

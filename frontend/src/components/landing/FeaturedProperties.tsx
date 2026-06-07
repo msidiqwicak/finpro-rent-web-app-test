@@ -32,9 +32,26 @@ export default function FeaturedProperties() {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await api.get('/properties');
-        const data = response.data.data ?? response.data;
-        setProperties(Array.isArray(data) ? data : []);
+        const response = await api.get('/properties/search', {
+          params: { limit: 6, sortBy: 'price', sortOrder: 'asc' }
+        });
+        const { data } = response.data;
+        
+        const mappedData: PropertyCardProps[] = data.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          city: p.city,
+          province: p.province,
+          property_category: { name: p.category_name },
+          room_type: [
+            { 
+              price_per_night: p.lowest_price, 
+              image_urls: p.image_urls || [] 
+            }
+          ]
+        }));
+        
+        setProperties(mappedData);
       } catch (err: any) {
         const message = err.response?.data?.error ?? err.message ?? 'Gagal memuat data properti.';
         setError(message);
@@ -46,7 +63,7 @@ export default function FeaturedProperties() {
     fetchProperties();
   }, []);
 
-  const displayed = properties.slice(0, 6);
+  const displayed = properties;
 
   return (
     <section aria-label="Featured properties">

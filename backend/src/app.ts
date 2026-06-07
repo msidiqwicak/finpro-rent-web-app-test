@@ -1,7 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import authRoutes from "./routes/auth.route.js";
+import authRoutes     from "./routes/auth.route.js";
 import { startBookingCron } from "./cron/cancelExpiredBookings.js";
 import bookingRoutes from "./routes/booking.route.js";
 import paymentRoutes from "./routes/payment.route.js";
@@ -32,7 +32,8 @@ app.use(
     res: express.Response,
     _next: express.NextFunction,
   ) => {
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error("Global Error:", err);
+    res.status(500).json({ error: err.message || "Internal Server Error" });
   },
 );
 

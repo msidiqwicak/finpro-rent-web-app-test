@@ -4,7 +4,28 @@ import {
   getBookingDetails,
   cancelBookingById,
   getAllBookings,
+  verifyBookingOwnership,
+  getBookingsByTenant,
 } from "../services/booking.service.js";
+
+// ── Helper: verify ownership and respond if check fails ──────────────
+const checkOwnership = async (
+  bookingId: string,
+  userId: string,
+  res: Response,
+): Promise<boolean> => {
+  try {
+    const isOwner = await verifyBookingOwnership(bookingId, userId);
+    if (!isOwner) {
+      res.status(403).json({ error: "Akses ditolak. Ini bukan pesanan Anda." });
+      return false;
+    }
+    return true;
+  } catch (err: any) {
+    res.status(404).json({ error: err.message ?? "Pesanan tidak ditemukan." });
+    return false;
+  }
+};
 
 export const createBooking = async (
   req: Request,
@@ -28,9 +49,7 @@ export const createBooking = async (
 
     res.status(201).json({ message: "Booking berhasil dibuat", data: booking });
   } catch (error: any) {
-    res
-      .status(400)
-      .json({ error: error.message || "Terjadi kesalahan pada server" });
+    res.status(400).json({ error: error.message || "Terjadi kesalahan pada server" });
   }
 };
 
@@ -39,35 +58,17 @@ export const getBookingById = async (
   res: Response,
 ): Promise<void> => {
   try {
-    // 1. Ambil userId dari token JWT
-    const userId = req.user?.id;
-    const { id } = req.params;
+    const { id }   = req.params;
+    const userId   = req.user?.id;
 
-    if (!userId) {
-      res.status(401).json({ error: "Unauthorized. Harap login." });
-      return;
-    }
+    if (!userId) { res.status(401).json({ error: "Unauthorized. Harap login." }); return; }
+    if (!id || typeof id !== "string") { res.status(400).json({ error: "ID pesanan tidak valid." }); return; }
 
-    if (!id || typeof id !== "string") {
-      res.status(400).json({ error: "ID pesanan tidak valid" });
-      return;
-    }
+    const passed = await checkOwnership(id, userId, res);
+    if (!passed) return;
 
-    // 2. Panggil Service
     const booking = await getBookingDetails(id);
-
-    if (!booking) {
-      res.status(404).json({ error: "Pesanan tidak ditemukan" });
-      return;
-    }
-
-    // 3. 🚨 INLINE OWNERSHIP CHECK: Pastikan pesanan milik user yang sedang login
-    if (booking.user_id !== userId) {
-      res.status(403).json({
-        error: "Forbidden. Akses ditolak karena ini bukan pesanan Anda.",
-      });
-      return;
-    }
+    if (!booking) { res.status(404).json({ error: "Pesanan tidak ditemukan." }); return; }
 
     res.status(200).json({ data: booking });
   } catch (error: any) {
@@ -81,47 +82,20 @@ export const cancelBookingProcess = async (
   res: Response,
 ): Promise<void> => {
   try {
-    // 1. Ambil userId dari token JWT
-    const userId = req.user?.id;
-    const { id } = req.params;
+    const { id }   = req.params;
+    const userId   = req.user?.id;
 
-    if (!userId) {
-      res.status(401).json({ error: "Unauthorized. Harap login." });
-      return;
-    }
+    if (!userId) { res.status(401).json({ error: "Unauthorized. Harap login." }); return; }
+    if (!id || typeof id !== "string") { res.status(400).json({ error: "ID pesanan tidak valid." }); return; }
 
-    if (!userId) {
-      res.status(401).json({ error: "Unauthorized. Harap login." });
-      return;
-    }
-    if (!id || typeof id !== "string") {
-      res.status(400).json({ error: "ID pesanan tidak valid." });
-      return;
-    }
+    const passed = await checkOwnership(id, userId, res);
+    if (!passed) return;
 
-    // 2. 🚨 INLINE OWNERSHIP CHECK: Cek dulu datanya sebelum dibatalkan
-    const booking = await getBookingDetails(id);
-    if (!booking) {
-      res.status(404).json({ error: "Pesanan tidak ditemukan" });
-      return;
-    }
-
-    if (booking.user_id !== userId) {
-      res.status(403).json({
-        error:
-          "Forbidden. Anda tidak memiliki izin untuk membatalkan pesanan ini.",
-      });
-      return;
-    }
-
-    // 3. Lakukan proses update status
     await cancelBookingById(id);
     res.status(200).json({ message: "Pesanan berhasil dibatalkan." });
   } catch (error: any) {
     console.error("Error canceling booking:", error);
-    res
-      .status(500)
-      .json({ error: "Terjadi kesalahan saat membatalkan pesanan." });
+    res.status(500).json({ error: "Terjadi kesalahan saat membatalkan pesanan." });
   }
 };
 
@@ -131,7 +105,7 @@ export const getBookings = async (
 ): Promise<void> => {
   try {
     const { search, date } = req.query;
-    const userId = req.user?.id;
+    const userId           = req.user?.id;
 
     if (!userId) {
       res.status(401).json({ error: "Akses ditolak. Harap login." });
@@ -139,14 +113,47 @@ export const getBookings = async (
     }
 
     const searchQuery = typeof search === "string" ? search : undefined;
-    const dateQuery = typeof date === "string" ? date : undefined;
+    const dateQuery   = typeof date   === "string" ? date   : undefined;
 
     const bookings = await getAllBookings(userId, searchQuery, dateQuery);
     res.status(200).json({ data: bookings });
   } catch (error: any) {
     console.error("Error fetching bookings history:", error);
-    res
-      .status(500)
-      .json({ error: "Terjadi kesalahan saat mengambil riwayat pesanan." });
+    res.status(500).json({ error: "Terjadi kesalahan saat mengambil riwayat pesanan." });
+  }
+};
+
+export const getTenantBookings = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    // 1. Ambil ID Tenant dari token JWT (disuntikkan oleh middleware authenticate)
+    const tenantId = req.user?.id;
+    const { search, status } = req.query;
+
+    if (!tenantId) {
+      res
+        .status(401)
+        .json({ error: "Unauthorized. Harap login terlebih dahulu." });
+      return;
+    }
+
+    const searchQuery = typeof search === "string" ? search : undefined;
+    const statusQuery = typeof status === "string" ? status : undefined;
+
+    // 2. Panggil service dengan parameter ter-kunci tenantId
+    const bookings = await getBookingsByTenant(
+      tenantId,
+      searchQuery,
+      statusQuery,
+    );
+
+    res.status(200).json({ data: bookings });
+  } catch (error: any) {
+    console.error("Error fetching tenant bookings:", error);
+    res.status(500).json({
+      error: "Terjadi kesalahan pada server saat mengambil data pesanan.",
+    });
   }
 };

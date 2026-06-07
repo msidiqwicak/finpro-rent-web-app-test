@@ -2,14 +2,18 @@ import { useState, useEffect } from 'react';
 import { useAuth }              from '../../context/AuthContext';
 import CreatePropertyModal      from '../../components/tenant/CreatePropertyModal';
 import SetPriceModifierModal    from '../../components/tenant/SetPriceModifierModal';
+import CreateRoomTypeModal      from '../../components/tenant/CreateRoomTypeModal';
 
 const API = 'http://localhost:8000/api/properties';
 
 interface RoomType  { id: string; name: string; price_per_night: number; }
 interface Property  { id: string; name: string; city: string; province: string; address: string; room_type: RoomType[]; }
 
-function PropertyCard({ prop, onSetPrice, onDelete }: {
-  prop: Property; onSetPrice: (rt: RoomType[]) => void; onDelete: (id: string) => void;
+function PropertyCard({ prop, onAddRoom, onSetPrice, onDelete }: {
+  prop: Property; 
+  onAddRoom: (p: Property) => void;
+  onSetPrice: (rt: RoomType[]) => void; 
+  onDelete: (id: string) => void;
 }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-outline-variant/30 p-5">
@@ -19,6 +23,10 @@ function PropertyCard({ prop, onSetPrice, onDelete }: {
           <p className="text-on-surface-variant text-[13px]">{prop.address}, {prop.city}, {prop.province}</p>
         </div>
         <div className="flex gap-2 shrink-0">
+          <button onClick={() => onAddRoom(prop)}
+            className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors cursor-pointer border-none">
+            <span className="material-symbols-outlined text-[15px]">add_box</span>Add Room
+          </button>
           {prop.room_type.length > 0 && (
             <button onClick={() => onSetPrice(prop.room_type)}
               className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors cursor-pointer border-none">
@@ -34,7 +42,7 @@ function PropertyCard({ prop, onSetPrice, onDelete }: {
       {prop.room_type.length > 0 ? (
         <div className="mt-3 flex flex-wrap gap-2">
           {prop.room_type.map((rt) => (
-            <span key={rt.id} className="text-[12px] px-2.5 py-1 rounded-full bg-surface-low text-on-surface-variant font-medium">
+            <span key={rt.id} className="text-[12px] px-2.5 py-1 rounded-full bg-surface-low text-on-surface-variant font-medium border border-outline-variant/50">
               {rt.name} — Rp {Number(rt.price_per_night).toLocaleString('id-ID')}
             </span>
           ))}
@@ -50,7 +58,10 @@ export default function PropertyManagement() {
   const { user } = useAuth();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading,    setLoading]    = useState(true);
+  
+  // Modal states
   const [showCreate, setShowCreate] = useState(false);
+  const [addRoomProp, setAddRoomProp] = useState<Property | null>(null);
   const [priceRoomTypes, setPriceRoomTypes] = useState<RoomType[] | null>(null);
 
   const fetchProperties = async () => {
@@ -96,16 +107,37 @@ export default function PropertyManagement() {
       ) : (
         <div className="space-y-4">
           {properties.map((p) => (
-            <PropertyCard key={p.id} prop={p} onSetPrice={setPriceRoomTypes} onDelete={handleDelete} />
+            <PropertyCard 
+              key={p.id} 
+              prop={p} 
+              onAddRoom={setAddRoomProp}
+              onSetPrice={setPriceRoomTypes} 
+              onDelete={handleDelete} 
+            />
           ))}
         </div>
       )}
 
+      {/* Modals */}
       {showCreate && (
         <CreatePropertyModal onSuccess={() => { setShowCreate(false); fetchProperties(); }} onClose={() => setShowCreate(false)} />
       )}
+      
+      {addRoomProp && (
+        <CreateRoomTypeModal 
+          propertyId={addRoomProp.id} 
+          propertyName={addRoomProp.name}
+          onSuccess={() => { setAddRoomProp(null); fetchProperties(); }} 
+          onClose={() => setAddRoomProp(null)} 
+        />
+      )}
+
       {priceRoomTypes && (
-        <SetPriceModifierModal roomTypes={priceRoomTypes} onSuccess={() => { setPriceRoomTypes(null); }} onClose={() => setPriceRoomTypes(null)} />
+        <SetPriceModifierModal 
+          roomTypes={priceRoomTypes} 
+          onSuccess={() => { setPriceRoomTypes(null); fetchProperties(); }} 
+          onClose={() => setPriceRoomTypes(null)} 
+        />
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState }  from 'react';
+import { useState, useEffect }  from 'react';
 import { useAuth }   from '../../context/AuthContext';
 
 const API   = 'http://localhost:8000/api/properties';
@@ -6,15 +6,29 @@ const INPUT = 'w-full px-4 py-2.5 bg-surface-low border border-outline-variant r
 
 interface Props { onSuccess: () => void; onClose: () => void; }
 
-const INITIAL = { name:'', description:'', address:'', city:'', province:'' };
+const INITIAL = { name:'', description:'', address:'', city:'', province:'', category_id:'' };
 
 export default function CreatePropertyModal({ onSuccess, onClose }: Props) {
   const { user }          = useAuth();
   const [form, setForm]   = useState(INITIAL);
+  const [categories, setCategories] = useState<{id:string, name:string}[]>([]);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`${API}/categories`);
+        const data = await res.json();
+        if (data.data) setCategories(data.data);
+      } catch (err) {
+        console.error("Gagal memuat kategori", err);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,6 +66,15 @@ export default function CreatePropertyModal({ onSuccess, onClose }: Props) {
               <input name={name} type={type} value={(form as any)[name]} onChange={handleChange} required className={INPUT} />
             </div>
           ))}
+          <div>
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Category</label>
+            <select name="category_id" value={form.category_id} onChange={handleChange} required className={INPUT}>
+              <option value="" disabled>Select a category</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Description</label>
             <textarea name="description" value={form.description} onChange={handleChange} rows={3} className={INPUT} />
