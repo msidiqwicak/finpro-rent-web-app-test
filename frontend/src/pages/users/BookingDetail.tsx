@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api/axiosConfig";
 import Navbar from "../../components/layout/Navbar";
-import StatusHeader from "../../components/booking/StatusHeader";
-import PropertySummary from "../../components/booking/PropertySummary";
-import StayDetails from "../../components/booking/StayDetails";
-import PaymentBreakdown from "../../components/booking/PaymentBreakdown";
+import StatusHeader from "../../components/users/booking/StatusHeader";
+import PropertySummary from "../../components/users/booking/PropertySummary";
+import StayDetails from "../../components/users/booking/StayDetails";
+import PaymentBreakdown from "../../components/users/booking/PaymentBreakdown";
 
 export default function OrderDetail() {
   const navigate = useNavigate();

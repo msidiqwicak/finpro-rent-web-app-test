@@ -1,4 +1,6 @@
-import React from "react";
+import { useState, useRef, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
+import NavDropdown from "../layout/NavDropdown"; // Sesuaikan path import-nya
 
 interface TopNavBarProps {
   title: string;
@@ -6,6 +8,26 @@ interface TopNavBarProps {
 }
 
 export default function TopNavBar({ title, subtitle }: TopNavBarProps) {
+  const { user, logout } = useAuth();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Menutup dropdown jika klik di luar area
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  if (!user) return null;
+
   return (
     <header className="w-full sticky top-0 z-40 backdrop-blur-md bg-surface/80 shadow-sm flex justify-between items-center px-8 py-4">
       <div>
@@ -17,28 +39,33 @@ export default function TopNavBar({ title, subtitle }: TopNavBarProps) {
         </p>
       </div>
 
-      <div className="flex items-center gap-6">
-        <div className="relative group cursor-pointer">
-          <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">
-            notifications
-          </span>
-          <div className="w-2 h-2 bg-error rounded-full absolute right-0 top-0 border-2 border-surface"></div>
-        </div>
+      <div className="flex items-center gap-4">
+        <button className="p-2 rounded-full hover:bg-surface-variant transition-colors">
+          <span className="material-symbols-outlined">notifications</span>
+        </button>
 
-        <div className="flex items-center gap-3 pl-6 border-l border-outline-variant/30">
-          <div className="text-right">
-            <p className="font-label-md text-sm font-bold text-primary">
-              Sarah Jenkins
-            </p>
-            <p className="text-[11px] text-on-surface-variant uppercase tracking-wider">
-              Premium Host
-            </p>
-          </div>
-          <img
-            alt="Profile"
-            className="w-10 h-10 rounded-full object-cover border-2 border-secondary-container"
-            src="https://api.dicebear.com/7.x/initials/svg?seed=SarahJenkins&backgroundColor=56642b"
-          />
+        {/* Wrapper untuk Dropdown agar bisa deteksi klik di luar */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="flex items-center gap-3 pl-4 border-l border-outline-variant cursor-pointer"
+          >
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary border border-primary/20">
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+          </button>
+
+          {isDropdownOpen && (
+            <NavDropdown
+              user={user}
+              onLogout={() => {
+                setIsDropdownOpen(false);
+                logout();
+              }}
+              onClose={() => setIsDropdownOpen(false)}
+              onToast={(msg) => alert(msg)} // Ganti dengan sistem toast kamu
+            />
+          )}
         </div>
       </div>
     </header>
