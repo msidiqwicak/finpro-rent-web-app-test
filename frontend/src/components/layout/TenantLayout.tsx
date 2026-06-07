@@ -15,6 +15,7 @@ export default function TenantLayout({
 }: TenantLayoutProps) {
   return (
     <div className="flex min-h-screen bg-background font-body text-on-surface">
+      {/* Sidebar sekarang mengambil fungsi logout sendiri via useAuth, jadi tidak perlu props lagi */}
       <Sidebar />
       <main className="flex-1 ml-64 min-h-screen">
         <TopNavBar title={title} subtitle={subtitle} />
