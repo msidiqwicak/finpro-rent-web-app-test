@@ -1,9 +1,11 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Sidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
+  const { logout } = useAuth();
 
   const navItems = [
     { name: "Overview", icon: "dashboard", path: "/tenant/dashboard" },
@@ -67,11 +69,17 @@ export default function Sidebar() {
           </span>
           <span className="font-label-md text-sm">Support</span>
         </Link>
-        <button className="w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant/50 rounded-lg transition-all group">
-          <span className="material-symbols-outlined text-xl group-hover:text-error text-error transition-colors">
+        <button
+          onClick={logout}
+          className="w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-error-container/20 hover:text-error 
+             rounded-lg transition-all duration-200 ease-in-out active:scale-[0.98] active:opacity-80 group cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-xl transition-colors duration-200">
             logout
           </span>
-          <span className="font-label-md text-sm text-error">Logout</span>
+          <span className="font-label-md text-sm transition-colors duration-200">
+            Logout
+          </span>
         </button>
       </div>
     </aside>

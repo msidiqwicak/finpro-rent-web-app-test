@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../../api/axiosConfig";
-import OrderCard from "../../components/booking/OrderCard";
+import OrderCard from "../../components/users/booking/OrderCard";
 import Navbar from "../../components/layout/Navbar";
 import { useNavigate } from "react-router-dom";
 

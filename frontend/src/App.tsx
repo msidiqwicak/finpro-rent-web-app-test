@@ -10,18 +10,19 @@ import ExplorePage from "./pages/users/ExplorePage";
 import PropertyDetailPage from "./pages/users/PropertyDetailPage";
 import Checkout from "./pages/users/Checkout";
 import Payment from "./pages/users/Payment";
-import OrderHistory from "./pages/users/OrderHistory";
+import OrderHistory from "./pages/users/Booking";
 import LoginPage from "./pages/LoginPage";
 import RegisterUserPage from "./pages/RegisterUserPage";
 import RegisterTenantPage from "./pages/RegisterTenantPage";
 import VerifyPage from "./components/auth/VerifyPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import OrderDetail from "./pages/users/OrderDetail";
+import OrderDetail from "./pages/users/BookingDetail";
 import VerifyEmailUpdatePage from "./components/profile/VerifyEmailUpdatePage";
-import TenantTransaction from "./pages/tenant/TransactionManagement";
+import TenantTransaction from "./pages/tenant/Booking";
 import TenantDashboardPage from "./pages/tenant/Dashboard";
 import UserProfilePage from "./pages/users/UserProfilePage";
+import TenantBookingDetail from "./pages/tenant/BookingDetail";
 
 // ============================================================
 // KOMPONEN APP (ROUTING UTAMA)
@@ -35,6 +36,7 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/explore" element={<ExplorePage />} />
           <Route path="/property/:id" element={<PropertyDetailPage />} />
+
           {/* ======== RUTE AUTH ======== */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterUserPage />} />
@@ -105,6 +107,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="TENANT">
                 <TenantTransaction />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tenant/bookings/:id"
+            element={
+              <ProtectedRoute requiredRole="TENANT">
+                <TenantBookingDetail />
               </ProtectedRoute>
             }
           />
