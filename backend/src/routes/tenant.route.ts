@@ -6,27 +6,28 @@ import {
   cancelByTenant,
   getTenantBookings,
   getTenantBookingDetail,
+  sendReminderEmail,
 } from "../controllers/tenant.controller.js";
 
 const router = Router();
 
 // Rute Aksi Tenant terhadap Pesanan
 router.patch(
-  "/:id/approve",
+  "/bookings/:id/approve",
   authenticate,
   authorizeRole("TENANT"),
   approvePayment,
 );
 
 router.patch(
-  "/:id/reject",
+  "/bookings/:id/reject",
   authenticate,
   authorizeRole("TENANT"),
   rejectPayment,
 );
 
 router.patch(
-  "/:id/cancel-by-tenant",
+  "/bookings/:id/cancel",
   authenticate,
   authorizeRole("TENANT"),
   cancelByTenant,
@@ -45,4 +46,12 @@ router.get(
   authorizeRole("TENANT"),
   getTenantBookingDetail,
 );
+
+router.post(
+  "/bookings/:id/remind", // Pastikan tulisannya sama persis: /bookings/:id/remind
+  authenticate,
+  authorizeRole("TENANT"),
+  sendReminderEmail,
+);
+
 export default router;

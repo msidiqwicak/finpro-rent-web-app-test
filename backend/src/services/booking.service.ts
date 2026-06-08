@@ -208,9 +208,12 @@ export const getAllBookings = async (
 };
 
 // Tambahan: Helper untuk mengecek ownership (mencegah akses ilegal)
-export const verifyBookingOwnership = async (bookingId: string, userId: string) => {
+export const verifyBookingOwnership = async (
+  bookingId: string,
+  userId: string,
+) => {
   const booking = await prisma.booking.findUnique({
-    where: { id: bookingId }
+    where: { id: bookingId },
   });
   if (!booking) throw new Error("Pesanan tidak ditemukan.");
   return booking.user_id === userId;
@@ -264,7 +267,7 @@ export const getBookingsByTenant = async (
         booking.users.name.toLowerCase().includes(keyword) ||
         booking.room_unit?.room_type?.property?.name
           .toLowerCase()
-          .includes(keyword)
+          .includes(keyword),
     );
   }
 

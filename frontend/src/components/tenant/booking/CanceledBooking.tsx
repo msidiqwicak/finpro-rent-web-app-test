@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../../../api/axiosConfig";
+import PropertyCard from "./PropertyCard";
+import GuestCard from "./GuestCard";
+import PaymentProofViewer from "./PaymentProofViewer"; // <-- Import komponennya
 
 export default function CanceledBooking() {
   const { id } = useParams();
@@ -14,7 +17,7 @@ export default function CanceledBooking() {
         const response = await api.get(`/tenant/bookings/${id}`);
         setBookingData(response.data.data);
       } catch (error) {
-        console.error("Gagal mengambil detail pesanan:", error);
+        console.error("Failed to fetch order details:", error);
       } finally {
         setIsLoading(false);
       }
@@ -32,21 +35,27 @@ export default function CanceledBooking() {
     );
   }
 
-  if (!bookingData)
+  if (!bookingData) {
     return (
       <div className="w-full text-center py-20 text-on-surface-variant">
-        Data tidak ditemukan.
+        Order data not found.
       </div>
     );
+  }
 
   const shortId = id?.substring(0, 8).toUpperCase();
-  const guestName = bookingData.users?.name || "Tamu";
-  const guestInitials = guestName.substring(0, 2).toUpperCase();
+  const guestName = bookingData.users?.name || "Guest";
   const propertyName =
     bookingData.room_unit?.room_type?.property?.name || "Evergreen Property";
   const locationCity =
-    bookingData.room_unit?.room_type?.property?.city || "Lokasi";
+    bookingData.room_unit?.room_type?.property?.city || "Location";
   const basePrice = Number(bookingData.total_price);
+
+  // Ekstrak data payment
+  const paymentInfo =
+    bookingData.payment && bookingData.payment.length > 0
+      ? bookingData.payment[0]
+      : null;
 
   return (
     <div className="w-full">
@@ -83,49 +92,20 @@ export default function CanceledBooking() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          {/* Property Card */}
-          <section className="bg-surface-container-lowest rounded-[32px] p-8 shadow-[0_8px_24px_-4px_rgba(27,48,34,0.06)] border border-surface-container opacity-80">
-            <div className="flex flex-col md:flex-row gap-6">
-              <div className="w-full md:w-64 h-44 rounded-2xl overflow-hidden flex-shrink-0 bg-surface-container">
-                <img
-                  alt={propertyName}
-                  className="w-full h-full object-cover grayscale"
-                  src={
-                    bookingData.room_unit?.room_type?.property?.image_url ||
-                    "https://images.unsplash.com/photo-1542718610-a1d656d1884c?q=80&w=2070&auto=format&fit=crop"
-                  }
-                />
-              </div>
-              <div className="flex-grow flex flex-col justify-between">
-                <div>
-                  <h3 className="text-xl font-semibold text-on-surface-variant mb-1">
-                    {propertyName}
-                  </h3>
-                  <p className="text-on-surface-variant text-sm">
-                    {locationCity}
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-outline-variant">
-                  <div>
-                    <p className="text-xs text-on-surface-variant uppercase font-medium">
-                      Check-in
-                    </p>
-                    <p className="text-sm font-semibold">
-                      {bookingData.check_in}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-on-surface-variant uppercase font-medium">
-                      Check-out
-                    </p>
-                    <p className="text-sm font-semibold">
-                      {bookingData.check_out}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
+          <PropertyCard
+            propertyName={propertyName}
+            locationCity={locationCity}
+            imageUrl={bookingData.room_unit?.room_type?.property?.image_url}
+            createdAt={bookingData.created_at}
+            checkIn={bookingData.check_in}
+            checkOut={bookingData.check_out}
+            isCanceled={true}
+          />
+
+          <GuestCard
+            guestName={guestName}
+            guestEmail={bookingData.users?.email}
+          />
 
           {/* Canceled Notice Banner */}
           <section className="bg-surface-container-high rounded-[32px] p-6 border border-outline-variant flex items-center gap-4">
@@ -150,9 +130,22 @@ export default function CanceledBooking() {
         <div className="space-y-8">
           <section className="bg-surface-container-lowest rounded-[32px] p-8 shadow-[0_8px_24px_-4px_rgba(27,48,34,0.06)] border border-surface-container">
             <h3 className="text-sm font-semibold text-on-surface-variant uppercase tracking-widest mb-6">
-              Details
+              Payment Summary
             </h3>
-            <div className="flex justify-between items-center mb-8">
+
+            {/* Menampilkan bukti pembayaran jika ada, atau teks kosong jika batal sebelum bayar */}
+            {paymentInfo ? (
+              <PaymentProofViewer
+                method={paymentInfo.method}
+                proofUrl={paymentInfo.proof_url}
+              />
+            ) : (
+              <p className="text-sm text-on-surface-variant mb-6 italic">
+                No payment data recorded before cancellation.
+              </p>
+            )}
+
+            <div className="pt-6 border-t border-outline-variant flex justify-between items-center mb-8">
               <span className="text-xl font-semibold text-on-surface-variant">
                 Original Total
               </span>
@@ -163,13 +156,6 @@ export default function CanceledBooking() {
                   minimumFractionDigits: 0,
                 }).format(basePrice)}
               </span>
-            </div>
-
-            <div className="space-y-3">
-              <button className="w-full py-4 bg-transparent border border-outline text-on-surface rounded-2xl font-bold text-sm hover:bg-surface-container transition-colors cursor-pointer flex items-center justify-center gap-2">
-                <span className="material-symbols-outlined">archive</span>
-                Archive Order
-              </button>
             </div>
           </section>
         </div>

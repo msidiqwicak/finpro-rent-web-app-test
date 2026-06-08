@@ -76,6 +76,17 @@ export default function BookingManagement() {
     }
   };
 
+  const handleSendReminder = async (bookingId: string) => {
+    try {
+      // Opsional: Kamu bisa tambahkan state loading jika mau tombolnya disable saat loading
+      await api.post(`/tenant/bookings/${bookingId}/remind`);
+      alert("Reminder email sent successfully!");
+    } catch (error) {
+      console.error("Gagal mengirim pengingat:", error);
+      alert("Failed to send reminder email.");
+    }
+  };
+
   // --- Helper UI Formatter ---
   const formatStatusBadge = (status: string) => {
     switch (status) {
@@ -287,9 +298,7 @@ export default function BookingManagement() {
                           {bookingItem.status === "CONFIRMED" && (
                             <button
                               className="inline-flex items-center gap-2 px-4 py-2 bg-secondary text-white rounded-lg font-semibold text-[13px] hover:shadow-lg transition-all cursor-pointer border-none"
-                              onClick={() =>
-                                alert("Pengingat berhasil dikirim")
-                              }
+                              onClick={() => handleSendReminder(bookingItem.id)}
                             >
                               <span className="material-symbols-outlined text-[18px]">
                                 forward_to_inbox
@@ -298,7 +307,6 @@ export default function BookingManagement() {
                             </button>
                           )}
 
-                          {/* Tombol open_in_new untuk Navigasi Detail (Muncul jika status bukan CANCELED) */}
                           {/* Tombol Navigasi Detail (Berlaku untuk SEMUA status, termasuk CANCELED) */}
                           <Link
                             to={`/tenant/bookings/${bookingItem.id}`}

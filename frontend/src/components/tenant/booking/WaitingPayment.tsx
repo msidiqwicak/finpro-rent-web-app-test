@@ -1,19 +1,20 @@
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../../../api/axiosConfig"; // Sesuaikan path ini dengan lokasimu
+import PaymentTimer from "./PaymentTimer";
 
 export default function WaitingPayment() {
   const { id } = useParams(); // Ambil ID dari URL
   const [bookingData, setBookingData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(0);
 
   // 1. Fetch Data Detail Booking
   useEffect(() => {
     const fetchBookingDetail = async () => {
       try {
         setIsLoading(true);
+        // PASTIKAN API SUDAH MENGIRIM expires_at
         const response = await api.get(`/tenant/bookings/${id}`);
         setBookingData(response.data.data);
       } catch (error) {
@@ -22,49 +23,12 @@ export default function WaitingPayment() {
         setIsLoading(false);
       }
     };
-
     if (id) fetchBookingDetail();
   }, [id]);
 
-  // 2. Logika Countdown Timer Berdasarkan Waktu Dibuat (contoh: +24 jam)
-  useEffect(() => {
-    if (!bookingData?.created_at) return;
-
-    const calculateTimeLeft = () => {
-      // Asumsi batas waktu pembayaran adalah 24 jam setelah pesanan dibuat
-      const expirationTime =
-        new Date(bookingData.created_at).getTime() + 24 * 60 * 60 * 1000;
-      const now = new Date().getTime();
-      const differenceInSeconds = Math.floor((expirationTime - now) / 1000);
-
-      return differenceInSeconds > 0 ? differenceInSeconds : 0;
-    };
-
-    setTimeLeft(calculateTimeLeft());
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [bookingData]);
-
-  const formatTime = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-  };
-
   const handleCancelOrder = async () => {
     try {
-      await api.patch(`/tenant/${id}/cancel-by-tenant`);
+      await api.patch(`/tenant/${id}/cancel`);
       alert(
         `Order #${id?.substring(0, 8).toUpperCase()} has been successfully cancelled.`,
       );
@@ -148,7 +112,7 @@ export default function WaitingPayment() {
           </div>
           <div className="flex items-center gap-3">
             <span className="px-3 py-1 bg-secondary-container text-on-secondary-container text-xs rounded-full font-bold">
-              Menunggu Pembayaran
+              Pending Payment
             </span>
             <span className="text-on-surface-variant flex items-center gap-2 text-sm">
               <span className="material-symbols-outlined text-lg">
@@ -166,16 +130,18 @@ export default function WaitingPayment() {
             Cancel Order
           </button>
 
-          {/* Expired Time Indicator */}
-          <div className="px-6 py-2.5 rounded-full bg-[#ffdad6]/40 text-[#ba1a1a] text-sm font-semibold flex items-center gap-2 border border-[#ffdad6]">
-            <span className="material-symbols-outlined text-lg">timer</span>
-            Expires in
-            <span
-              className={`font-bold tabular-nums ${timeLeft > 0 && timeLeft < 3600 ? "animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]" : ""}`}
-            >
-              {timeLeft > 0 ? formatTime(timeLeft) : "EXPIRED"}
-            </span>
-          </div>
+          {/* Panggil komponen timer yang baru dibuat, pastikan field expires_at ada dari backend */}
+          {bookingData?.expires_at && (
+            <PaymentTimer
+              expiresAt={bookingData.expires_at}
+              onExpire={() => {
+                // (Opsional) Kamu bisa otomatis me-refresh halaman saat waktu habis
+                console.log(
+                  "Waktu habis! Menunggu cron backend mengubah status...",
+                );
+              }}
+            />
+          )}
         </div>
       </div>
 
