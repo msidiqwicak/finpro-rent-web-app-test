@@ -5,6 +5,7 @@ import {
   rejectPaymentProcess,
   cancelBookingByTenantProcess,
   getBookingsByTenant,
+  getBookingDetailByTenantProcess,
 } from "../services/tenant.service.js";
 
 // Helper untuk mengecek apakah booking ini benar milik tenant yang sedang login
@@ -139,5 +140,42 @@ export const getTenantBookings = async (
     res.status(500).json({
       error: "Terjadi kesalahan pada server saat mengambil data pesanan.",
     });
+  }
+};
+
+export const getTenantBookingDetail = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    // Pastikan req.params.id ada dan bertipe string
+    const id = req.params.id;
+
+    if (typeof id !== "string") {
+      res.status(400).json({ message: "ID pesanan tidak valid" });
+      return;
+    }
+
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ message: "Unauthorized. Harap login." });
+      return;
+    }
+
+    // Cari data tenant berdasarkan user_id
+    const tenant = await prisma.tenant.findUnique({
+      where: { user_id: userId },
+    });
+
+    if (!tenant) {
+      res.status(403).json({ message: "Anda tidak terdaftar sebagai tenant." });
+      return;
+    }
+
+    const bookingData = await getBookingDetailByTenantProcess(id, tenant.id);
+
+    res.status(200).json({ status: "success", data: bookingData });
+  } catch (error: any) {
+    res.status(404).json({ status: "error", message: error.message });
   }
 };

@@ -5,6 +5,7 @@ import {
   rejectPayment,
   cancelByTenant,
   getTenantBookings,
+  getTenantBookingDetail,
 } from "../controllers/tenant.controller.js";
 
 const router = Router();
@@ -38,4 +39,10 @@ router.get(
   getTenantBookings,
 );
 
+router.get(
+  "/bookings/:id",
+  authenticate,
+  authorizeRole("TENANT"),
+  getTenantBookingDetail,
+);
 export default router;

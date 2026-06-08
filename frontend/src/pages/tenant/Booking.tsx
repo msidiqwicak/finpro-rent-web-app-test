@@ -298,27 +298,19 @@ export default function BookingManagement() {
                             </button>
                           )}
 
-                          {bookingItem.status === "CANCELED" && (
-                            <button className="p-2 text-outline bg-transparent border-none cursor-default">
-                              <span className="material-symbols-outlined">
-                                more_horiz
-                              </span>
-                            </button>
-                          )}
-
                           {/* Tombol open_in_new untuk Navigasi Detail (Muncul jika status bukan CANCELED) */}
-                          {bookingItem.status !== "CANCELED" && (
-                            <Link
-                              to={`/tenant/bookings/${bookingItem.id}`}
-                              state={{ status: bookingItem.status }} // <-- PERUBAHAN DI SINI
-                              className="p-2 text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center"
-                              title="Detail Lengkap"
-                            >
-                              <span className="material-symbols-outlined text-[20px]">
-                                open_in_new
-                              </span>
-                            </Link>
-                          )}
+                          {/* Tombol Navigasi Detail (Berlaku untuk SEMUA status, termasuk CANCELED) */}
+                          <Link
+                            to={`/tenant/bookings/${bookingItem.id}`}
+                            state={{ status: bookingItem.status }}
+                            className="p-2 text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center"
+                            title="Detail Lengkap"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">
+                              {/* Kamu bisa pakai open_in_new, atau gunakan visibility agar terlihat sedikit beda */}
+                              open_in_new
+                            </span>
+                          </Link>
                         </div>
                       </td>
                     </tr>

@@ -1,17 +1,59 @@
 import { useState, useEffect } from "react";
+import { Link, useParams } from "react-router-dom";
+import api from "../../../api/axiosConfig"; // Sesuaikan path ini dengan lokasimu
 
 export default function WaitingPayment() {
+  const { id } = useParams(); // Ambil ID dari URL
+  const [bookingData, setBookingData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
 
-  // Simulasi waktu tersisa (contoh: 23 jam 54 menit 12 detik = 86052 detik)
-  const [timeLeft, setTimeLeft] = useState(86052);
-
-  // Logika Countdown Timer
+  // 1. Fetch Data Detail Booking
   useEffect(() => {
-    if (timeLeft <= 0) return;
-    const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
+    const fetchBookingDetail = async () => {
+      try {
+        setIsLoading(true);
+        const response = await api.get(`/tenant/bookings/${id}`);
+        setBookingData(response.data.data);
+      } catch (error) {
+        console.error("Gagal mengambil detail pesanan:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (id) fetchBookingDetail();
+  }, [id]);
+
+  // 2. Logika Countdown Timer Berdasarkan Waktu Dibuat (contoh: +24 jam)
+  useEffect(() => {
+    if (!bookingData?.created_at) return;
+
+    const calculateTimeLeft = () => {
+      // Asumsi batas waktu pembayaran adalah 24 jam setelah pesanan dibuat
+      const expirationTime =
+        new Date(bookingData.created_at).getTime() + 24 * 60 * 60 * 1000;
+      const now = new Date().getTime();
+      const differenceInSeconds = Math.floor((expirationTime - now) / 1000);
+
+      return differenceInSeconds > 0 ? differenceInSeconds : 0;
+    };
+
+    setTimeLeft(calculateTimeLeft());
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, [bookingData]);
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -20,253 +62,284 @@ export default function WaitingPayment() {
     return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
-  const handleCancelOrder = () => {
-    alert("Order #EE-2039 has been successfully cancelled.");
-    setIsCancelModalOpen(false);
-    // TODO: Panggil API pembatalan pesanan di sini
+  const handleCancelOrder = async () => {
+    try {
+      await api.patch(`/tenant/${id}/cancel-by-tenant`);
+      alert(
+        `Order #${id?.substring(0, 8).toUpperCase()} has been successfully cancelled.`,
+      );
+      setIsCancelModalOpen(false);
+      window.location.reload(); // Atau redirect/trigger re-fetch
+    } catch (error) {
+      alert("Gagal membatalkan pesanan.");
+      console.error(error);
+    }
   };
 
+  // Helper Formatter
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+  const formatDateShort = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
+  const formatDateFull = (dateString: string) => {
+    return new Date(dateString).toLocaleString("id-ID", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  };
+
+  // Tampilan Loading
+  if (isLoading) {
+    return (
+      <div className="w-full flex justify-center items-center py-32">
+        <span className="material-symbols-outlined animate-spin text-primary text-5xl">
+          autorenew
+        </span>
+      </div>
+    );
+  }
+
+  // Handle Jika Data Tidak Ditemukan
+  if (!bookingData) {
+    return (
+      <div className="w-full text-center py-20 text-on-surface-variant">
+        Data pesanan tidak ditemukan.
+      </div>
+    );
+  }
+
+  // Extract Data (Fallback jika kosong)
+  const shortId = id?.substring(0, 8).toUpperCase();
+  const guestName = bookingData.users?.name || "Tamu";
+  const guestInitials = guestName.substring(0, 2).toUpperCase();
+  const propertyName =
+    bookingData.room_unit?.room_type?.property?.name || "Evergreen Property";
+  const locationCity =
+    bookingData.room_unit?.room_type?.property?.city || "Lokasi";
+  const basePrice = Number(bookingData.total_price); // Nanti bisa dipisah ke base & tax kalau ada datanya
+
   return (
-    <>
-      <div className="max-w-5xl mx-auto space-y-5">
-        {/* Status Header Card (Compact) */}
-        <section className="bg-surface-container-lowest rounded-2xl p-5 shadow-sm border border-surface-container flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full mb-2">
-              <span className="material-symbols-outlined text-[16px] animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]">
-                pending
+    <div className="w-full">
+      {/* Order Detail Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <Link
+              to="/tenant/bookings"
+              className="text-on-surface-variant hover:text-primary transition-colors flex items-center"
+            >
+              <span className="material-symbols-outlined text-[24px]">
+                arrow_back
               </span>
-              <span className="font-label-md uppercase tracking-wider text-xs">
-                Menunggu Pembayaran
-              </span>
-            </div>
-            <h2 className="font-headline-md text-2xl font-semibold text-primary">
+            </Link>
+            <h2 className="font-headline-md text-3xl font-semibold text-primary">
               Waiting for Guest Payment
             </h2>
-            <p className="text-on-surface-variant mt-1 font-body-md text-xs">
-              Order placed on Oct 24, 2023 at 14:20 PM
-            </p>
           </div>
-          <div className="bg-surface-container rounded-xl p-3 min-w-[180px] text-center">
-            <p className="font-caption text-on-surface-variant uppercase tracking-widest mb-1 text-[10px] font-medium">
-              Time Remaining
-            </p>
-            <div className="font-headline-sm text-xl font-semibold text-primary flex items-center justify-center gap-2">
-              <span className="material-symbols-outlined text-[20px]">
-                timer
+          <div className="flex items-center gap-3">
+            <span className="px-3 py-1 bg-secondary-container text-on-secondary-container text-xs rounded-full font-bold">
+              Menunggu Pembayaran
+            </span>
+            <span className="text-on-surface-variant flex items-center gap-2 text-sm">
+              <span className="material-symbols-outlined text-lg">
+                receipt_long
               </span>
-              <span>{timeLeft > 0 ? formatTime(timeLeft) : "EXPIRED"}</span>
-            </div>
+              Order #{shortId}
+            </span>
           </div>
-        </section>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setIsCancelModalOpen(true)}
+            className="px-6 py-2.5 rounded-full border border-outline text-on-surface text-sm font-semibold hover:bg-surface-container transition-colors cursor-pointer bg-transparent"
+          >
+            Cancel Order
+          </button>
 
-        {/* 3-Column Grid for Compact View */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
-          {/* Main Info (Col 8) */}
-          <div className="col-span-12 lg:col-span-8 space-y-5">
-            {/* Property & Guest (Side by Side) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {/* Property Overview */}
-              <div className="bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm border border-surface-container flex flex-col">
+          {/* Expired Time Indicator */}
+          <div className="px-6 py-2.5 rounded-full bg-[#ffdad6]/40 text-[#ba1a1a] text-sm font-semibold flex items-center gap-2 border border-[#ffdad6]">
+            <span className="material-symbols-outlined text-lg">timer</span>
+            Expires in
+            <span
+              className={`font-bold tabular-nums ${timeLeft > 0 && timeLeft < 3600 ? "animate-[pulse_2s_cubic-bezier(0.4,0,0.6,1)_infinite]" : ""}`}
+            >
+              {timeLeft > 0 ? formatTime(timeLeft) : "EXPIRED"}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Balanced Wide View Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column: Property & Guest */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Property Card */}
+          <section className="bg-surface-container-lowest rounded-[32px] p-8 shadow-[0_8px_24px_-4px_rgba(27,48,34,0.06)] border border-surface-container">
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="w-full md:w-64 h-44 rounded-2xl overflow-hidden flex-shrink-0 bg-surface-container">
                 <img
-                  alt="Mossy Rock Retreat"
-                  className="h-32 w-full object-cover"
-                  src="https://images.unsplash.com/photo-1542718610-a1d656d1884c?q=80&w=2070&auto=format&fit=crop"
+                  alt={propertyName}
+                  className="w-full h-full object-cover"
+                  src={
+                    bookingData.room_unit?.room_type?.property?.image_url ||
+                    "https://images.unsplash.com/photo-1542718610-a1d656d1884c?q=80&w=2070&auto=format&fit=crop"
+                  }
                 />
-                <div className="p-4 flex flex-col flex-1">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span
-                      className="material-symbols-outlined text-secondary text-[16px]"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      eco
-                    </span>
-                    <span className="font-label-md text-secondary font-semibold text-xs">
-                      Eco-Certified Cabin
-                    </span>
-                  </div>
-                  <h3 className="font-headline-sm text-lg font-semibold text-primary mb-1">
-                    Mossy Rock Retreat
-                  </h3>
-                  <p className="text-on-surface-variant font-body-md text-xs flex items-center gap-1 mb-4">
-                    <span className="material-symbols-outlined text-[16px]">
-                      location_on
-                    </span>
-                    Olympia, WA
-                  </p>
-                  <div className="mt-auto pt-3 border-t border-surface-container flex justify-between">
-                    <div>
-                      <p className="text-on-surface-variant uppercase text-[10px] font-medium">
-                        Check-in
-                      </p>
-                      <p className="text-on-surface text-xs font-semibold">
-                        Nov 12, 2023
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-on-surface-variant uppercase text-[10px] font-medium">
-                        Check-out
-                      </p>
-                      <p className="text-on-surface text-xs font-semibold">
-                        Nov 15, 2023
-                      </p>
-                    </div>
-                  </div>
-                </div>
               </div>
-
-              {/* Guest Profile */}
-              <div className="bg-surface-container-lowest rounded-2xl p-4 shadow-sm border border-surface-container flex flex-col">
-                <h3 className="text-on-surface-variant uppercase tracking-widest mb-4 text-[10px] font-semibold">
-                  Guest Information
-                </h3>
-                <div className="flex items-center gap-3 mb-4">
-                  <img
-                    alt="Maya Indah"
-                    className="w-12 h-12 rounded-xl object-cover ring-2 ring-surface-container"
-                    src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format&fit=crop"
-                  />
-                  <div>
-                    <p className="text-base font-semibold text-primary">
-                      Maya Indah
-                    </p>
-                    <p className="text-on-surface-variant text-xs">
-                      2 Guests · 1 Child
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center gap-2 p-2 rounded-lg bg-surface-container-low">
-                    <span className="material-symbols-outlined text-primary text-[18px]">
-                      mail
-                    </span>
-                    <div className="overflow-hidden">
-                      <p className="text-on-surface-variant text-[10px] font-medium leading-tight">
-                        Email
-                      </p>
-                      <p className="text-xs font-semibold truncate">
-                        maya.indah@example.com
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 p-2 rounded-lg bg-surface-container-low">
-                    <span className="material-symbols-outlined text-primary text-[18px]">
-                      call
-                    </span>
+              <div className="flex-grow flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-start mb-4">
                     <div>
-                      <p className="text-on-surface-variant text-[10px] font-medium leading-tight">
-                        Phone
+                      <h3 className="text-xl font-semibold text-primary mb-1">
+                        {propertyName}
+                      </h3>
+                      <p className="text-on-surface-variant flex items-center gap-1 text-sm">
+                        <span className="material-symbols-outlined text-lg">
+                          location_on
+                        </span>
+                        {locationCity}
                       </p>
-                      <p className="text-xs font-semibold">+62 812-3456-7890</p>
                     </div>
+                    <span className="flex items-center gap-1 bg-primary-fixed px-3 py-1 rounded-full text-xs text-on-primary-fixed font-medium">
+                      <span
+                        className="material-symbols-outlined text-sm"
+                        style={{ fontVariationSettings: "'FILL' 1" }}
+                      >
+                        eco
+                      </span>
+                      Eco-Certified
+                    </span>
+                  </div>
+                  <p className="text-xs text-on-surface-variant mb-4">
+                    Dipesan pada: {formatDateFull(bookingData.created_at)}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-outline-variant">
+                  <div>
+                    <p className="text-xs text-on-surface-variant uppercase tracking-wider mb-1 font-medium">
+                      Check-in
+                    </p>
+                    <p className="text-sm font-semibold">
+                      {formatDateShort(bookingData.check_in)}
+                    </p>
+                    <p className="text-xs text-on-surface-variant mt-1">
+                      14:00 WIB
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-on-surface-variant uppercase tracking-wider mb-1 font-medium">
+                      Check-out
+                    </p>
+                    <p className="text-sm font-semibold">
+                      {formatDateShort(bookingData.check_out)}
+                    </p>
+                    <p className="text-xs text-on-surface-variant mt-1">
+                      12:00 WIB
+                    </p>
                   </div>
                 </div>
-                <button className="mt-auto w-full py-2.5 text-primary border border-primary-fixed rounded-lg text-xs font-semibold hover:bg-primary-fixed transition-colors flex items-center justify-center gap-1.5 cursor-pointer bg-transparent">
-                  <span className="material-symbols-outlined text-[16px]">
-                    chat_bubble
-                  </span>
-                  Contact Guest
-                </button>
               </div>
             </div>
+          </section>
 
-            {/* Payment Summary */}
-            <section className="bg-surface-container-lowest rounded-2xl p-5 shadow-sm border border-surface-container">
-              <h3 className="text-on-surface-variant uppercase tracking-widest mb-4 text-[10px] font-semibold">
-                Payment Summary
-              </h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-on-surface-variant text-sm">
-                    Base Rate (3 Nights x $240)
-                  </span>
-                  <span className="text-sm font-semibold">$720.00</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-on-surface-variant text-sm">
-                    Cleaning Fee
-                  </span>
-                  <span className="text-sm font-semibold">$45.00</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-on-surface-variant text-sm">
-                    Service Tax (8%)
-                  </span>
-                  <span className="text-sm font-semibold">$61.20</span>
-                </div>
-                <div className="pt-3 mt-1 border-t border-surface-container flex justify-between items-center">
-                  <span className="text-lg font-semibold text-primary">
-                    Total Amount
-                  </span>
-                  <span className="text-xl font-bold text-primary">
-                    $826.20
-                  </span>
-                </div>
+          {/* Guest Card */}
+          <section className="bg-surface-container-lowest rounded-[32px] p-6 shadow-[0_8px_24px_-4px_rgba(27,48,34,0.06)] border border-surface-container">
+            <h3 className="text-sm font-semibold text-on-surface-variant uppercase tracking-widest mb-6">
+              Guest Information
+            </h3>
+            <div className="flex items-center gap-6 mb-6">
+              <div className="w-16 h-16 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed text-2xl font-bold">
+                {guestInitials}
               </div>
-            </section>
-          </div>
-
-          {/* Right Column (Actions Only) */}
-          <div className="col-span-12 lg:col-span-4">
-            <section className="bg-surface-container-lowest rounded-2xl p-5 shadow-sm border border-surface-container sticky top-24">
-              <h3 className="text-on-surface-variant uppercase tracking-widest mb-4 text-[10px] font-semibold">
-                Management Actions
-              </h3>
-
-              <div className="bg-secondary-container text-on-primary-fixed-variant rounded-xl p-3 mb-5 flex gap-2 items-start border border-primary-fixed">
-                <span className="material-symbols-outlined text-[18px]">
-                  info
+              <div className="flex-grow">
+                <h4 className="text-xl font-semibold text-primary">
+                  {guestName}
+                </h4>
+                <p className="text-on-surface-variant text-sm">Main Guest</p>
+              </div>
+              <a
+                href={`mailto:${bookingData.users?.email}`}
+                className="px-6 py-3 bg-secondary-container text-on-secondary-container rounded-full text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity cursor-pointer no-underline"
+              >
+                <span className="material-symbols-outlined">mail</span>
+                Contact Guest
+              </a>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="p-4 rounded-2xl bg-surface-container-low flex items-center gap-4">
+                <span className="material-symbols-outlined text-secondary">
+                  alternate_email
                 </span>
-                <p className="text-[11px] leading-relaxed">
-                  Booking is reserved but not confirmed. Timer expiration will
-                  auto-cancel and release dates.
-                </p>
+                <div>
+                  <p className="text-xs text-on-surface-variant font-medium">
+                    Email Address
+                  </p>
+                  <p className="text-sm font-semibold">
+                    {bookingData.users?.email || "-"}
+                  </p>
+                </div>
               </div>
+              <div className="p-4 rounded-2xl bg-surface-container-low flex items-center gap-4">
+                <span className="material-symbols-outlined text-secondary">
+                  call
+                </span>
+                <div>
+                  <p className="text-xs text-on-surface-variant font-medium">
+                    Phone Number
+                  </p>
+                  <p className="text-sm font-semibold">-</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
 
-              <div className="space-y-2.5">
-                <button className="w-full flex items-center justify-between p-3 bg-surface hover:bg-surface-container transition-colors rounded-xl group active:scale-[0.98] cursor-pointer border border-outline-variant/30">
-                  <div className="flex items-center gap-2.5">
-                    <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary text-[20px]">
-                      edit
-                    </span>
-                    <span className="text-sm font-semibold text-on-surface">
-                      Edit Details
-                    </span>
-                  </div>
-                  <span className="material-symbols-outlined text-outline text-[18px]">
-                    chevron_right
-                  </span>
-                </button>
-                <button className="w-full flex items-center justify-between p-3 bg-surface hover:bg-surface-container transition-colors rounded-xl group active:scale-[0.98] cursor-pointer border border-outline-variant/30">
-                  <div className="flex items-center gap-2.5">
-                    <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary text-[20px]">
-                      print
-                    </span>
-                    <span className="text-sm font-semibold text-on-surface">
-                      Print Invoice
-                    </span>
-                  </div>
-                  <span className="material-symbols-outlined text-outline text-[18px]">
-                    chevron_right
-                  </span>
-                </button>
-                <button
-                  onClick={() => setIsCancelModalOpen(true)}
-                  className="w-full flex items-center justify-between p-3 bg-error-container/20 hover:bg-error-container/40 transition-colors rounded-xl group text-error active:scale-[0.98] cursor-pointer border border-error/20 mt-4"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="material-symbols-outlined text-[20px]">
-                      cancel
-                    </span>
-                    <span className="text-sm font-semibold">Cancel Order</span>
-                  </div>
-                  <span className="material-symbols-outlined text-[18px]">
-                    chevron_right
-                  </span>
-                </button>
+        {/* Right Column: Payment Summary */}
+        <div className="space-y-8">
+          <section className="bg-surface-container-lowest rounded-[32px] p-8 shadow-[0_8px_24px_-4px_rgba(27,48,34,0.06)] border border-surface-container">
+            <h3 className="text-sm font-semibold text-on-surface-variant uppercase tracking-widest mb-6">
+              Payment Summary
+            </h3>
+            <div className="space-y-4 mb-6">
+              <div className="flex justify-between text-sm">
+                <span className="text-on-surface-variant">Base Rate</span>
+                <span className="font-medium">{formatCurrency(basePrice)}</span>
               </div>
-            </section>
-          </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-on-surface-variant">Taxes & Fees</span>
+                <span className="font-medium">Rp 0</span>
+              </div>
+            </div>
+            <div className="pt-6 border-t border-outline-variant flex justify-between items-center mb-8">
+              <span className="text-xl font-semibold text-primary">
+                Total Amount
+              </span>
+              <span className="text-2xl font-bold text-primary">
+                {formatCurrency(basePrice)}
+              </span>
+            </div>
+            <div className="p-4 bg-[#c0c9ba] rounded-2xl flex gap-3 items-start">
+              <span className="material-symbols-outlined text-[#40493d] mt-0.5">
+                info
+              </span>
+              <p className="text-xs text-[#40493d] leading-relaxed">
+                The reservation timer ensures popular dates remain available. If
+                the guest fails to pay within the allotted time, the reservation
+                will be automatically cancelled and dates released.
+              </p>
+            </div>
+          </section>
         </div>
       </div>
 
@@ -277,29 +350,30 @@ export default function WaitingPayment() {
             className="absolute inset-0 bg-primary-container/40 backdrop-blur-sm"
             onClick={() => setIsCancelModalOpen(false)}
           ></div>
-          <div className="relative bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl p-6 text-center animate-[fadeIn_0.2s_ease-out]">
-            <div className="w-14 h-14 bg-error-container/40 rounded-full flex items-center justify-center text-error mx-auto mb-4">
-              <span className="material-symbols-outlined text-[28px]">
+          <div className="bg-surface rounded-[32px] w-full max-w-md p-8 relative shadow-2xl border border-surface-container animate-[fadeIn_0.3s_ease-out]">
+            <div className="w-16 h-16 bg-error-container rounded-full flex items-center justify-center mb-6">
+              <span className="material-symbols-outlined text-error text-[32px]">
                 warning
               </span>
             </div>
-            <h3 className="text-xl font-bold text-primary mb-2">
+            <h3 className="text-2xl font-semibold text-primary mb-2">
               Cancel this order?
             </h3>
-            <p className="text-sm text-on-surface-variant mb-6 leading-relaxed">
-              Are you sure you want to cancel order <strong>#EE-2039</strong>?
-              This will release the dates. This cannot be undone.
+            <p className="text-on-surface-variant mb-8 text-sm">
+              Are you sure you want to cancel order #{shortId}? This action will
+              notify {guestName} and release the dates for {propertyName}. This
+              cannot be undone.
             </p>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
               <button
                 onClick={handleCancelOrder}
-                className="w-full py-3 bg-error text-white rounded-xl font-bold text-sm hover:bg-error/90 transition-all cursor-pointer border-none"
+                className="w-full py-4 bg-error text-white rounded-2xl text-sm font-semibold transition-all hover:opacity-90 active:scale-95 cursor-pointer border-none"
               >
                 Yes, Cancel Order
               </button>
               <button
                 onClick={() => setIsCancelModalOpen(false)}
-                className="w-full py-3 text-outline bg-transparent border-none font-bold text-sm hover:bg-surface-container rounded-xl transition-all cursor-pointer"
+                className="w-full py-4 text-on-surface hover:bg-surface-container transition-colors rounded-2xl text-sm font-semibold cursor-pointer border-none bg-transparent"
               >
                 Go Back
               </button>
@@ -307,6 +381,6 @@ export default function WaitingPayment() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

@@ -5,6 +5,7 @@ import api from "../../api/axiosConfig";
 import WaitingPayment from "../../components/tenant/booking/WaitingPayment";
 import WaitingConfirmation from "../../components/tenant/booking/WaitingConfirmation";
 import ConfirmedBooking from "../../components/tenant/booking/ConfirmedBooking";
+import CanceledBooking from "../../components/tenant/booking/CanceledBooking";
 
 export default function BookingDetailPage() {
   const { id } = useParams();
@@ -50,6 +51,8 @@ export default function BookingDetailPage() {
         return <WaitingConfirmation />;
       case "CONFIRMED":
         return <ConfirmedBooking />;
+      case "CANCELED":
+        return <CanceledBooking />;
       default:
         return (
           <div className="text-center py-20 text-on-surface-variant">
