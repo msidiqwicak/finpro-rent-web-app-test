@@ -140,3 +140,29 @@ export const getBookingsByTenant = async (
     },
   });
 };
+
+// 4. Mengambil Detail Satu Pesanan (Berdasarkan ID & Milik Tenant Tersebut)
+export const getBookingDetailByTenantProcess = async (
+  bookingId: string,
+  tenantId: string,
+) => {
+  const booking = await prisma.booking.findFirst({
+    where: {
+      id: bookingId,
+      room_unit: {
+        room_type: {
+          property: {
+            tenant_id: tenantId,
+          },
+        },
+      },
+    },
+    include: {
+      users: { select: { name: true, email: true } },
+      room_unit: { include: { room_type: { include: { property: true } } } },
+      payment: true,
+    },
+  });
+
+  return booking;
+};
