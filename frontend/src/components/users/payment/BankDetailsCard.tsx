@@ -1,4 +1,3 @@
-
 export default function BankDetailsCard() {
   return (
     <section className="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant/50">

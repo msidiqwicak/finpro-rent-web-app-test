@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { prisma } from "../utils/prisma.js";
 
 // Buat transporter secara kondisional jika kredensial SMTP tersedia di .env
 const transporter =
@@ -180,14 +181,34 @@ export const sendConfirmationEmail = async (to: string, bookingData: any) => {
 };
 
 // ── Reminder H-1 Check-in (Untuk Cron Job) ─────────────────────────
-export const sendReminderEmail = async (to: string, bookingData: any) => {
-  const propertyName =
-    bookingData.room_unit?.room_type?.property?.name || "Properti Kami";
-  const checkInDate = new Date(bookingData.check_in).toLocaleDateString(
-    "id-ID",
-    { weekday: "long", year: "numeric", month: "long", day: "numeric" },
-  );
+export const executeSendReminder = async (
+  bookingId: string,
+): Promise<boolean> => {
+  // 1. Ambil data booking utuh dari DB
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: {
+      users: true,
+      room_unit: { include: { room_type: { include: { property: true } } } },
+    },
+  });
 
+  // 2. Validasi Ketat: Cek ketersediaan dan pastikan belum pernah dikirim
+  if (!booking || booking.status !== "CONFIRMED") return false;
+  if (!booking.users?.email) return false;
+  if (booking.is_reminder_sent) return false; // Cegah looping/duplikat!
+
+  const to = booking.users.email;
+  const propertyName =
+    booking.room_unit?.room_type?.property?.name || "Properti Kami";
+  const checkInDate = new Date(booking.check_in).toLocaleDateString("id-ID", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  // 3. Fallback Mock Email (Sesuai gaya kodemu)
   if (!transporter) {
     console.log(
       "\n📬 ========================================================",
@@ -198,27 +219,35 @@ export const sendReminderEmail = async (to: string, bookingData: any) => {
       `Subjek: Pengingat: Besok Waktunya Check-in di ${propertyName}!`,
     );
     console.log("========================================================\n");
-    return;
+  } else {
+    // 4. Kirim Email Asli
+    await transporter.sendMail({
+      from: `"Evergreen Escapes" <${process.env.SMTP_USER}>`,
+      to,
+      subject: `Pengingat: Besok Waktunya Check-in di ${propertyName}!`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 2px solid #bdce89; border-radius: 10px; padding: 20px;">
+          <h2 style="color: #3e4c16; text-align: center;">Sampai Jumpa Besok! 🎒</h2>
+          <p>Halo <strong>${booking.users?.name || "Guest"}</strong>,</p>
+          <p>Ini adalah pengingat bahwa jadwal menginap Anda di <strong>${propertyName}</strong> akan dimulai besok (<strong>${checkInDate}</strong>).</p>
+          
+          <p><strong>Alamat:</strong> ${booking.room_unit?.room_type?.property?.address || "-"}, ${booking.room_unit?.room_type?.property?.city || "-"}</p>
+          
+          <p>Pastikan Anda sudah menyiapkan barang bawaan Anda. Jika Anda membutuhkan bantuan rute atau memiliki pertanyaan sebelum kedatangan, jangan ragu untuk menghubungi pihak Host melalui aplikasi.</p>
+
+          <p style="text-align: center; margin-top: 30px;">
+            <a href="${APP_URL}/order/${booking.id}" style="padding: 12px 24px; background-color: #061b0e; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">Lihat Detail Pesanan</a>
+          </p>
+        </div>
+      `,
+    });
   }
 
-  await transporter.sendMail({
-    from: `"Evergreen Escapes" <${process.env.SMTP_USER}>`,
-    to,
-    subject: `Pengingat: Besok Waktunya Check-in di ${propertyName}!`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 2px solid #bdce89; border-radius: 10px; padding: 20px;">
-        <h2 style="color: #3e4c16; text-align: center;">Sampai Jumpa Besok! 🎒</h2>
-        <p>Halo <strong>${bookingData.users?.name}</strong>,</p>
-        <p>Ini adalah pengingat bahwa jadwal menginap Anda di <strong>${propertyName}</strong> akan dimulai besok (<strong>${checkInDate}</strong>).</p>
-        
-        <p><strong>Alamat:</strong> ${bookingData.room_unit?.room_type?.property?.address}, ${bookingData.room_unit?.room_type?.property?.city}</p>
-        
-        <p>Pastikan Anda sudah menyiapkan barang bawaan Anda. Jika Anda membutuhkan bantuan rute atau memiliki pertanyaan sebelum kedatangan, jangan ragu untuk menghubungi pihak Host melalui aplikasi.</p>
-
-        <p style="text-align: center; margin-top: 30px;">
-          <a href="${APP_URL}/order/${bookingData.id}" style="padding: 12px 24px; background-color: #061b0e; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">Lihat Detail Pesanan</a>
-        </p>
-      </div>
-    `,
+  // 5. Tandai DB bahwa email sudah sukses terkirim (Wajib!)
+  await prisma.booking.update({
+    where: { id: bookingId },
+    data: { is_reminder_sent: true },
   });
+
+  return true;
 };

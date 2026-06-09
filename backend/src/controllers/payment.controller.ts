@@ -206,7 +206,8 @@ export const syncPaymentStatus = async (
       return;
     }
 
-    const realBookingId = orderId.length > 36 ? orderId.substring(0, 36) : orderId;
+    const realBookingId =
+      orderId.length > 36 ? orderId.substring(0, 36) : orderId;
 
     // Ambil data booking untuk pengecekan kepemilikan
     const booking = await prisma.booking.findUnique({
@@ -234,10 +235,15 @@ export const syncPaymentStatus = async (
     }
 
     const isUserOwner = booking.user_id === userId;
-    const isTenantOwner = booking.room_unit?.room_type?.property?.tenant?.user_id === userId;
+    const isTenantOwner =
+      booking.room_unit?.room_type?.property?.tenant?.user_id === userId;
 
     if (!isUserOwner && !isTenantOwner) {
-      res.status(403).json({ error: "Akses ditolak. Anda tidak memiliki hak atas pesanan ini." });
+      res
+        .status(403)
+        .json({
+          error: "Akses ditolak. Anda tidak memiliki hak atas pesanan ini.",
+        });
       return;
     }
 
@@ -248,7 +254,12 @@ export const syncPaymentStatus = async (
     const transactionStatus = statusResponse.transaction_status;
     const fraudStatus = statusResponse.fraud_status;
 
-    console.log("👉 Hasil check Midtrans. Booking ID:", realBookingId, "Status:", transactionStatus);
+    console.log(
+      "👉 Hasil check Midtrans. Booking ID:",
+      realBookingId,
+      "Status:",
+      transactionStatus,
+    );
 
     let newStatus: any = "WAITING_FOR_PAYMENT";
 
@@ -281,4 +292,3 @@ export const syncPaymentStatus = async (
     res.status(500).json({ error: error.message || "Internal server error" });
   }
 };
-
