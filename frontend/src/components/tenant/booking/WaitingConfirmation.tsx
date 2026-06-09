@@ -1,14 +1,21 @@
 import { useState, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import api from "../../../api/axiosConfig";
 import GuestCard from "./GuestCard";
 import PropertyCard from "./PropertyCard";
-import PaymentProofViewer from "./PaymentProofViewer"; // <-- Import komponen baru
+import PaymentProofViewer from "./PaymentProofViewer";
+import ConfirmPaymentModal from "./ConfirmPaymentModal"; // <-- Import Modal-nya
 
 export default function WaitingConfirmation() {
   const { id } = useParams();
   const [bookingData, setBookingData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // State yang jauh lebih sederhana: hanya true (buka modal) atau false (tutup modal)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchBookingDetail = async () => {
@@ -22,31 +29,33 @@ export default function WaitingConfirmation() {
         setIsLoading(false);
       }
     };
-
     if (id) fetchBookingDetail();
   }, [id]);
 
-  const handleApprove = async () => {
+  // Handler diperbarui untuk menerima parameter bookingId dari dalam modal
+  const handleApprove = async (bookingId: string) => {
     try {
-      await api.patch(`/tenant/bookings/${id}/approve`);
-      alert("Payment successfully approved!");
-      window.location.reload();
+      setIsProcessing(true);
+      await api.patch(`/tenant/bookings/${bookingId}/approve`);
+      navigate("/tenant/bookings");
     } catch (error) {
       alert("Failed to approve payment.");
+      setIsProcessing(false);
     }
   };
 
-  const handleReject = async () => {
+  const handleReject = async (bookingId: string) => {
     try {
-      await api.patch(`/tenant/bookings/${id}/reject`);
-      alert("Payment has been rejected.");
-      window.location.reload();
+      setIsProcessing(true);
+      await api.patch(`/tenant/bookings/${bookingId}/reject`);
+      navigate("/tenant/bookings");
     } catch (error) {
       alert("Failed to reject payment.");
+      setIsProcessing(false);
     }
   };
 
-  if (isLoading) {
+  if (isLoading)
     return (
       <div className="w-full flex justify-center items-center py-32">
         <span className="material-symbols-outlined animate-spin text-primary text-5xl">
@@ -54,15 +63,12 @@ export default function WaitingConfirmation() {
         </span>
       </div>
     );
-  }
-
-  if (!bookingData) {
+  if (!bookingData)
     return (
       <div className="w-full text-center py-20 text-on-surface-variant">
         Order data not found.
       </div>
     );
-  }
 
   const shortId = id?.substring(0, 8).toUpperCase();
   const guestName = bookingData.users?.name || "Guest";
@@ -70,11 +76,7 @@ export default function WaitingConfirmation() {
     bookingData.room_unit?.room_type?.property?.name || "Evergreen Property";
   const locationCity =
     bookingData.room_unit?.room_type?.property?.city || "Location";
-
-  const paymentInfo =
-    bookingData.payment && bookingData.payment.length > 0
-      ? bookingData.payment[0]
-      : null;
+  const paymentInfo = bookingData.payment?.[0] || null;
 
   return (
     <div className="w-full relative">
@@ -117,7 +119,7 @@ export default function WaitingConfirmation() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
         <div className="lg:col-span-2 space-y-8">
           <PropertyCard
             propertyName={propertyName}
@@ -127,7 +129,6 @@ export default function WaitingConfirmation() {
             checkIn={bookingData.check_in}
             checkOut={bookingData.check_out}
           />
-
           <GuestCard
             guestName={guestName}
             guestEmail={bookingData.users?.email}
@@ -140,7 +141,6 @@ export default function WaitingConfirmation() {
               Payment Details
             </h3>
 
-            {/* PENGGUNAAN KOMPONEN PAYMENT PROOF */}
             {paymentInfo ? (
               <PaymentProofViewer
                 method={paymentInfo.method}
@@ -164,23 +164,32 @@ export default function WaitingConfirmation() {
                 }).format(Number(bookingData.total_price))}
               </span>
             </div>
+
             <div className="space-y-3">
               <button
-                onClick={handleApprove}
-                className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm hover:opacity-90 transition-all cursor-pointer border-none"
+                onClick={() => setIsModalOpen(true)}
+                className="w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm hover:opacity-90 transition-all cursor-pointer border-none flex items-center justify-center gap-2"
               >
-                Approve Payment
-              </button>
-              <button
-                onClick={handleReject}
-                className="w-full py-4 bg-surface-container-high text-on-surface rounded-2xl font-bold text-sm hover:bg-outline-variant transition-colors cursor-pointer border-none"
-              >
-                Reject Payment
+                <span className="material-symbols-outlined text-[18px]">
+                  visibility
+                </span>
+                Review Payment Receipt
               </button>
             </div>
           </section>
         </div>
       </div>
+
+      {/* MODAL MUNCUL KETIKA TOMBOL DIKLIK */}
+      {isModalOpen && (
+        <ConfirmPaymentModal
+          booking={bookingData}
+          onClose={() => setIsModalOpen(false)}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          isProcessing={isProcessing}
+        />
+      )}
     </div>
   );
 }

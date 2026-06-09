@@ -160,18 +160,6 @@ export default function ConfirmedBooking() {
                 }).format(basePrice)}
               </span>
             </div>
-
-            <div className="space-y-3">
-              <a
-                href={`mailto:${bookingData.users?.email}`}
-                className="flex items-center justify-center gap-2 w-full py-4 bg-primary text-white rounded-2xl font-bold text-sm hover:opacity-90 transition-colors cursor-pointer border-none no-underline"
-              >
-                <span className="material-symbols-outlined text-[20px]">
-                  mail
-                </span>
-                Contact Guest
-              </a>
-            </div>
           </section>
         </div>
       </div>

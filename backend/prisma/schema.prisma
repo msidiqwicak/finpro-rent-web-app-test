@@ -10,19 +10,20 @@ datasource db {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model booking {
-  id           String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id      String              @db.Uuid
-  room_unit_id String              @db.Uuid
-  check_in     DateTime            @db.Date
-  check_out    DateTime            @db.Date
-  total_price  Decimal             @db.Decimal(12, 2)
-  status       booking_status_enum @default(WAITING_FOR_PAYMENT)
-  expires_at   DateTime            @db.Timestamptz(6)
-  created_at   DateTime            @default(now()) @db.Timestamptz(6)
-  room_unit    room_unit           @relation(fields: [room_unit_id], references: [id], onUpdate: NoAction)
-  users        users               @relation(fields: [user_id], references: [id], onUpdate: NoAction)
-  payment      payment[]
-  review       review?
+  id               String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id          String              @db.Uuid
+  room_unit_id     String              @db.Uuid
+  check_in         DateTime            @db.Date
+  check_out        DateTime            @db.Date
+  total_price      Decimal             @db.Decimal(12, 2)
+  status           booking_status_enum @default(WAITING_FOR_PAYMENT)
+  expires_at       DateTime            @db.Timestamptz(6)
+  created_at       DateTime            @default(now()) @db.Timestamptz(6)
+  room_unit        room_unit           @relation(fields: [room_unit_id], references: [id], onUpdate: NoAction)
+  users            users               @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+  payment          payment[]
+  review           review?
+  is_reminder_sent Boolean             @default(false)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
