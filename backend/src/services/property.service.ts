@@ -54,13 +54,13 @@ export const createProperty = async (userId: string, data: CreatePropertyInput, 
   return prisma.property.create({
     data: { 
       name, 
-      description, 
+      description: description ?? null, 
       address, 
       city, 
       province, 
-      category_id: category_id === '' ? undefined : category_id,
-      latitude: latitude ? parseFloat(String(latitude)) : undefined, 
-      longitude: longitude ? parseFloat(String(longitude)) : undefined,
+      category_id: category_id === '' || !category_id ? null : category_id,
+      latitude: latitude ? parseFloat(String(latitude)) : null, 
+      longitude: longitude ? parseFloat(String(longitude)) : null,
       tenant_id: tenantId, 
       image_urls 
     },

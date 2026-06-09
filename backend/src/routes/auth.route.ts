@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as authController from '../controllers/auth.controller.js';
+import { authenticate } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
@@ -18,6 +19,9 @@ router.post('/resend-verification',  authController.resendVerification);
 router.post('/reset-password',       authController.requestReset);
 router.post('/confirm-reset',        authController.confirmReset);
 router.post('/social-login',         authController.handleSocialLogin);
+
+router.get('/me',                    authenticate, authController.getMe);
+router.post('/logout',               authController.logout);
 
 
 export default router;

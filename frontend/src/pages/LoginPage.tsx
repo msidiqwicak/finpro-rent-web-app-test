@@ -112,36 +112,28 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
-      const endpoint =
-        mode === "TENANT"
-          ? "http://localhost:8000/api/auth/login/tenant"
-          : "http://localhost:8000/api/auth/login";
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: form.email.trim(),
-          password: form.password,
-        }),
+      const { default: api } = await import('../api/axiosConfig');
+      const endpoint = mode === "TENANT" ? "/auth/login/tenant" : "/auth/login";
+      
+      const res = await api.post(endpoint, {
+        email: form.email.trim(),
+        password: form.password,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Login failed.");
-
-      localStorage.setItem("token", data.token);
+      
+      const data = res.data;
 
       login({
         id: data.user.id,
         name: data.user.name,
         email: data.user.email,
         role: data.user.role,
-        token: data.token,
       });
       navigate(data.user.role === "TENANT" ? "/tenant/dashboard" : "/");
     } catch (err: any) {
       setError(
-        err.message.includes("Login gagal")
+        err.response?.data?.error?.includes("Login gagal")
           ? "Login failed. Please check your email and password."
-          : err.message,
+          : (err.response?.data?.error || err.message || "Login failed.")
       );
     } finally {
       setLoading(false);

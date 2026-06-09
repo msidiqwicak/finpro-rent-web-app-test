@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { signInWithPopup } from 'firebase/auth';
+import { useState, useEffect } from 'react';
+import { signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { auth, googleProvider, facebookProvider } from '../../config/firebase';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../api/axiosConfig';
 
 // ─── Types ────────────────────────────────────────────────────
 type SocialProvider = 'GOOGLE' | 'FACEBOOK';
@@ -44,31 +45,70 @@ export default function SocialLogin({ action, requestedRole, redirectTo = '/' }:
   const [loading, setLoading]       = useState<SocialProvider | null>(null);
   const [error, setError]           = useState('');
 
+  const processAuthResult = async (firebaseUser: any, provider: SocialProvider, act: string, role: string) => {
+    try {
+      const idToken = await firebaseUser.getIdToken();
+      const res = await api.post('/auth/social-login', {
+        idToken,
+        provider,
+        action: act,
+        requestedRole: role
+      });
+
+      const data = res.data.data ?? res.data;
+      login({ ...data.user });
+      
+      sessionStorage.removeItem('social_login_state');
+      navigate(redirectTo);
+    } catch (err: any) {
+      setError(err.response?.data?.error ?? err.message ?? 'Social login failed.');
+      setLoading(null);
+    }
+  };
+
+  // Mengecek apakah user baru saja kembali dari redirect login (contoh di mobile browser)
+  useEffect(() => {
+    const checkRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+          const storedState = sessionStorage.getItem('social_login_state');
+          if (storedState) {
+            const { provider, action: storedAction, requestedRole: storedRole } = JSON.parse(storedState);
+            setLoading(provider);
+            await processAuthResult(result.user, provider, storedAction, storedRole);
+          }
+        }
+      } catch (err: any) {
+        setError(err.message ?? 'An error occurred during redirect login.');
+      }
+    };
+    checkRedirect();
+  }, []);
+
   const handleSocialLogin = async (provider: SocialProvider) => {
     setError('');
     setLoading(provider);
 
+    const firebaseProvider = provider === 'GOOGLE' ? googleProvider : facebookProvider;
+
     try {
-      const firebaseProvider = provider === 'GOOGLE' ? googleProvider : facebookProvider;
-      const result           = await signInWithPopup(auth, firebaseProvider);
-      const idToken = await result.user.getIdToken();
-
-      const res  = await fetch('http://localhost:8000/api/auth/social-login', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ idToken, provider, action, requestedRole }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Social login failed.');
-
-      login({ ...data.user, token: data.token });
-      navigate(redirectTo);
-    } catch (err: any) {
-      if (err?.code !== 'auth/popup-closed-by-user') {
-        setError(err.message ?? 'An error occurred. Please try again.');
+      const result = await signInWithPopup(auth, firebaseProvider);
+      if (result.user) {
+        await processAuthResult(result.user, provider, action, requestedRole);
       }
-    } finally {
-      setLoading(null);
+    } catch (err: any) {
+      if (err?.code === 'auth/popup-blocked') {
+        // Fallback jika popup diblokir oleh browser
+        sessionStorage.setItem('social_login_state', JSON.stringify({ provider, action, requestedRole }));
+        await signInWithRedirect(auth, firebaseProvider);
+      } else if (err?.code !== 'auth/popup-closed-by-user') {
+        setError(err.message ?? 'An error occurred. Please try again.');
+        setLoading(null);
+      } else {
+        // User menutup popup secara manual
+        setLoading(null);
+      }
     }
   };
 

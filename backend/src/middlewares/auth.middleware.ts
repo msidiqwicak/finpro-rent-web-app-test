@@ -23,14 +23,19 @@ export const authenticate = (
   next: NextFunction,
 ): void => {
   try {
-    const authHeader = req.headers["authorization"];
+    let token = req.cookies?.token;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!token) {
+      const authHeader = req.headers["authorization"];
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        token = authHeader.substring(7).trim();
+      }
+    }
+
+    if (!token) {
       res.status(401).json({ error: "Akses ditolak. Token tidak ditemukan." });
       return;
     }
-
-    let token = authHeader.substring(7).trim();
 
     if (token.toLowerCase().startsWith("bearer ")) {
       token = token.substring(7).trim();
@@ -38,11 +43,6 @@ export const authenticate = (
 
     if (token.startsWith("<") && token.endsWith(">")) {
       token = token.substring(1, token.length - 1).trim();
-    }
-
-    if (!token) {
-      res.status(401).json({ error: "Token tidak ditemukan dalam header." });
-      return;
     }
 
     const decoded = verifyToken(token);

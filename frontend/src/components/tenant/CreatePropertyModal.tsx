@@ -18,9 +18,9 @@ export default function CreatePropertyModal({ onSuccess, onClose }: Props) {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch(`${API}/categories`);
-        const data = await res.json();
-        if (data.data) setCategories(data.data);
+        const { default: api } = await import('../../api/axiosConfig');
+        const res = await api.get('/properties/categories');
+        if (res.data.data) setCategories(res.data.data);
       } catch (err) {
         console.error("Gagal memuat kategori", err);
       }
@@ -34,16 +34,11 @@ export default function CreatePropertyModal({ onSuccess, onClose }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true); setError('');
     try {
-      const res  = await fetch(API, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token}` },
-        body:    JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const { default: api } = await import('../../api/axiosConfig');
+      await api.post('/properties', form);
       onSuccess();
     } catch (err: any) {
-      setError(err.message || 'Gagal membuat properti.');
+      setError(err.response?.data?.error || err.message || 'Gagal membuat properti.');
     } finally { setLoading(false); }
   };
 

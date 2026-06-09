@@ -30,19 +30,14 @@ export default function AvatarUpload({ currentUrl, onSuccess }: Props) {
     formData.append('image', file);
 
     try {
-      const res  = await fetch(`${API}/avatar`, {
-        method:  'PATCH',
-        headers: { Authorization: `Bearer ${user?.token}` },
-        body:    formData,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const { default: api } = await import('../../api/axiosConfig');
+      const res = await api.patch('/users/avatar', formData);
       setIsError(false);
       setMsg('Profile photo updated!');
-      onSuccess(data.data.avatar_url);
+      onSuccess(res.data.data.avatar_url);
     } catch (err: any) {
       setIsError(true);
-      setMsg(err.message || 'Upload failed. Please try again.');
+      setMsg(err.response?.data?.error || err.message || 'Upload failed. Please try again.');
       setPreview(currentUrl);
     } finally {
       setLoading(false);

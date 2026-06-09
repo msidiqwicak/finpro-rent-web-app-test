@@ -21,16 +21,13 @@ export default function SetPriceModifierModal({ roomTypes, onSuccess, onClose }:
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true); setError('');
     try {
-      const res  = await fetch(`${API}/${form.roomTypeId}/price-modifier`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token}` },
-        body:    JSON.stringify({ startDate: form.startDate, endDate: form.endDate, type: form.type, value: Number(form.value), reason: form.reason }),
+      const { default: api } = await import('../../api/axiosConfig');
+      await api.post(`/properties/room-types/${form.roomTypeId}/price-modifier`, {
+        startDate: form.startDate, endDate: form.endDate, type: form.type, value: Number(form.value), reason: form.reason
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
       onSuccess();
     } catch (err: any) {
-      setError(err.message || 'Gagal menyimpan price modifier.');
+      setError(err.response?.data?.error || err.message || 'Gagal menyimpan price modifier.');
     } finally { setLoading(false); }
   };
 

@@ -15,12 +15,35 @@ export default function Payment() {
   const orderId = id;
   const navigate = useNavigate();
 
+  // State untuk Data Booking
+  const [booking, setBooking] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
   // State untuk Midtrans
   const [isProcessing, setIsProcessing] = useState(false);
 
   // State untuk Manual Upload
   const [file, setFile] = useState<File | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
+
+  // 0. VERIFIKASI KEPEMILIKAN PESANAN DARI BACKEND
+  useEffect(() => {
+    const fetchBooking = async () => {
+      try {
+        const response = await api.get(`/bookings/${orderId}`);
+        // Jika sukses (backend mengonfirmasi ini milik user), simpan datanya
+        setBooking(response.data.data);
+      } catch (error: any) {
+        // Jika backend menolak (403 Forbidden atau 404 Not Found)
+        console.error("Akses Ditolak / Gagal memuat pesanan:", error);
+        alert(error.response?.data?.error || "Pesanan tidak ditemukan atau bukan milik Anda.");
+        navigate("/bookings"); // Tendang user kembali ke halaman amannya
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    if (orderId) fetchBooking();
+  }, [orderId, navigate]);
 
   // 1. INJEKSI SCRIPT MIDTRANS SAAT HALAMAN DIBUKA
   useEffect(() => {
@@ -109,6 +132,17 @@ export default function Payment() {
     alert("Ini nanti disambung ke API /payments/upload milikmu!");
     // Logika upload FormData ke backend ditaruh di sini
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <div className="flex flex-col items-center gap-4">
+          <span className="material-symbols-outlined animate-spin text-primary text-5xl">autorenew</span>
+          <p className="font-bold text-on-surface-variant">Memverifikasi Pesanan...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-surface text-on-surface font-body-md text-body-md min-h-screen flex flex-col antialiased">
@@ -265,7 +299,7 @@ export default function Payment() {
               <div className="flex justify-between items-center border-t border-surface-variant pt-4">
                 <span className="font-bold text-primary">Total Amount</span>
                 <span className="text-xl font-bold text-primary">
-                  Rp 500.000
+                  Rp {booking?.total_price ? Number(booking.total_price).toLocaleString("id-ID") : "0"}
                 </span>
               </div>
             </div>

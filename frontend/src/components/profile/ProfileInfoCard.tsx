@@ -39,13 +39,8 @@ export default function ProfileInfoCard({ initialName, initialPhone, onSuccess }
   const handleSave = async () => {
     setLoading(true); setMsg('');
     try {
-      const res  = await fetch(`${API}/profile`, {
-        method:  'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token}` },
-        body:    JSON.stringify({ name: name.trim(), phone: phone.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const { default: api } = await import('../../api/axiosConfig');
+      await api.patch('/users/profile', { name: name.trim(), phone: phone.trim() });
       setIsError(false);
       setMsg('Profile saved successfully!');
       setEdit(false);

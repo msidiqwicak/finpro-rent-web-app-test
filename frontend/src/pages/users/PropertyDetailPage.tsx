@@ -59,11 +59,19 @@ export default function PropertyDetailPage() {
     if (!id) return;
     const fetchDetail = async () => {
       try {
-        setIsLoading(true);
-        const res = await api.get(`/properties/${id}`);
+        if (!property) setIsLoading(true);
+        const url = checkin ? `/properties/${id}?date=${checkin}` : `/properties/${id}`;
+        const res = await api.get(url);
         const data = res.data.data ?? res.data;
         setProperty(data);
-        if (data.room_type?.length > 0) setSelectedRoom(data.room_type[0]);
+        
+        // Ensure the selected room's price is updated if it was already selected
+        if (selectedRoom) {
+          const updatedRoom = data.room_type?.find((rt: any) => rt.id === selectedRoom.id);
+          if (updatedRoom) setSelectedRoom(updatedRoom);
+        } else if (data.room_type?.length > 0) {
+          setSelectedRoom(data.room_type[0]);
+        }
       } catch (err: any) {
         setError(err.response?.data?.error ?? 'Properti tidak ditemukan.');
       } finally {
@@ -71,7 +79,7 @@ export default function PropertyDetailPage() {
       }
     };
     fetchDetail();
-  }, [id]);
+  }, [id, checkin]);
 
   const handleBookNow = () => {
     if (!selectedRoom || !checkin || !checkout) return;
@@ -80,7 +88,14 @@ export default function PropertyDetailPage() {
     params.set('checkin', checkin);
     params.set('checkout', checkout);
     params.set('guests', String(guests));
-    navigate(`/checkout/${id}?${params.toString()}`);
+    navigate(`/checkout/${id}?${params.toString()}`, {
+      state: {
+        checkIn: checkin,
+        checkOut: checkout,
+        roomName: selectedRoom.name,
+        pricePerNight: selectedRoom.adjusted_price
+      }
+    });
   };
 
   // Calculate nights

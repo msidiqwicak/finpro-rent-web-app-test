@@ -31,7 +31,13 @@ export const loginUser = async (req: Request, res: Response) => {
   try {
     const data = authSchema.loginSchema.parse(req.body);
     const result = await authService.login(data.email, data.password, 'USER');
-    res.status(200).json(result);
+    res.cookie('token', result.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+    res.status(200).json({ user: result.user });
   } catch (error: any) { res.status(401).json({ error: error.message }); }
 };
 
@@ -39,7 +45,13 @@ export const loginTenant = async (req: Request, res: Response) => {
   try {
     const data = authSchema.loginSchema.parse(req.body);
     const result = await authService.login(data.email, data.password, 'TENANT');
-    res.status(200).json(result);
+    res.cookie('token', result.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+    res.status(200).json({ user: result.user });
   } catch (error: any) { res.status(401).json({ error: error.message }); }
 };
 
@@ -88,7 +100,13 @@ export const handleSocialLogin = async (req: Request, res: Response) => {
       requestedRole,
     );
 
-    res.status(200).json(result);
+    res.cookie('token', result.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+    res.status(200).json({ user: result.user });
   } catch (error: any) {
     res.status(401).json({ error: error.message ?? 'Social login failed.' });
   }
@@ -118,3 +136,45 @@ export const verifyEmailUpdate = async (req: Request, res: Response) => {
   }
 };
 
+export const getMe = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+    
+    const { prisma } = await import('../utils/prisma.js');
+    const dbUser = await prisma.users.findUnique({
+      where: { id: req.user.id },
+      include: { tenant: true }
+    });
+    
+    if (!dbUser) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    
+    const role = dbUser.tenant ? 'TENANT' : 'USER';
+    
+    res.status(200).json({
+      user: {
+        id: dbUser.id,
+        name: dbUser.name,
+        email: dbUser.email,
+        role: role,
+        avatar_url: dbUser.avatar_url
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const logout = async (req: Request, res: Response) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  });
+  res.status(200).json({ message: 'Logged out successfully' });
+};

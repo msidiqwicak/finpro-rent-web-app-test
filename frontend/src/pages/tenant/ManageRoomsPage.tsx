@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import TenantLayout from '../../components/layout/TenantLayout';
 import api from '../../api/axiosConfig';
 import CreateRoomTypeModal from '../../components/tenant/CreateRoomTypeModal';
+import EditRoomTypeModal from '../../components/tenant/EditRoomTypeModal';
 import SetPriceModifierModal from '../../components/tenant/SetPriceModifierModal';
 
 interface RoomType { id: string; name: string; price_per_night: number; capacity: number; }
@@ -18,6 +19,7 @@ export default function ManageRoomsPage() {
   const [loading, setLoading] = useState(true);
   
   const [showAddRoom, setShowAddRoom] = useState(false);
+  const [editingRoomType, setEditingRoomType] = useState<RoomType | null>(null);
   const [showSetPrice, setShowSetPrice] = useState(false);
 
   const fetchProperty = async () => {
@@ -150,7 +152,10 @@ export default function ManageRoomsPage() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button className="px-4 py-2 rounded-lg border border-outline-variant text-[13px] font-bold text-on-surface hover:bg-surface-container-low transition-colors cursor-not-allowed opacity-50">
+                    <button 
+                      onClick={() => setEditingRoomType(rt)}
+                      className="px-4 py-2 rounded-lg border border-outline-variant text-[13px] font-bold text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+                    >
                       Edit
                     </button>
                     <button 
@@ -174,6 +179,14 @@ export default function ManageRoomsPage() {
           propertyName={property.name}
           onSuccess={() => { setShowAddRoom(false); fetchProperty(); }} 
           onClose={() => setShowAddRoom(false)} 
+        />
+      )}
+
+      {editingRoomType && (
+        <EditRoomTypeModal 
+          roomType={editingRoomType}
+          onSuccess={() => { setEditingRoomType(null); fetchProperty(); }} 
+          onClose={() => setEditingRoomType(null)} 
         />
       )}
 

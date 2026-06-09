@@ -85,7 +85,7 @@ interface SearchParams {
   page?:       number | undefined;
   limit?:      number | undefined;
   search?:     string | undefined;
-  categoryId?: string | undefined;
+  category?:   string | undefined;
   city?:       string | undefined;
   sortBy?:     'name' | 'price';
   sortOrder?:  'asc' | 'desc';
@@ -123,7 +123,7 @@ export const searchProperties = async (params: SearchParams): Promise<SearchResu
   const limit    = Math.min(50, Math.max(1, params.limit ?? 10));
   const offset   = (page - 1) * limit;
   const search   = params.search?.trim() || null;
-  const categoryId = params.categoryId || null;
+  const category = params.category?.trim() || null;
   const city     = params.city?.trim() || null;
 
   // ── Whitelist sort columns to prevent SQL injection ──
@@ -192,7 +192,7 @@ export const searchProperties = async (params: SearchParams): Promise<SearchResu
     INNER JOIN available_rooms ar ON ar.property_id = p.id
     WHERE p.deleted_at IS NULL
       AND ($3::text IS NULL OR p.name ILIKE '%' || $3 || '%')
-      AND ($4::uuid IS NULL OR p.category_id = $4::uuid)
+      AND ($4::text IS NULL OR pc.name ILIKE $4)
       AND ($5::text IS NULL OR p.city ILIKE '%' || $5 || '%')
     GROUP BY p.id, p.name, p.description, p.image_urls, p.address, p.city, p.province, pc.name
     ORDER BY ${sortColumn} ${sortDir}
@@ -204,7 +204,7 @@ export const searchProperties = async (params: SearchParams): Promise<SearchResu
     image_urls: string[]; address: string; city: string; province: string;
     category_name: string | null; lowest_price: number;
     total_count: bigint;
-  }>>(query, checkIn, checkOut, search, categoryId, city, limit, offset);
+  }>>(query, checkIn, checkOut, search, category, city, limit, offset);
 
   const total      = rows.length > 0 ? Number(rows[0]!.total_count) : 0;
   const totalPages = Math.ceil(total / limit);

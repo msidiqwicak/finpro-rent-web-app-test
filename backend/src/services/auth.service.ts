@@ -298,13 +298,8 @@ export const socialLogin = async (
     return rejectEmailConflict(byEmail);
   }
 
-  // Step 3: Email not found — only REGISTER may create a new account
-  if (action === "LOGIN") {
-    throw new Error(
-      "Akun dengan email ini belum terdaftar. Silakan registrasi terlebih dahulu.",
-    );
-  }
-
+  // Step 3: Email not found — Auto-Register (Implicit Registration)
+  // Tidak perlu melempar error, langsung buatkan akunnya.
   user = await createSocialUser(name, email, provider, providerId);
   return buildTenantAwareResponse(user, name, requestedRole, action);
 };
@@ -339,9 +334,7 @@ const buildTenantAwareResponse = async (
     tenant: object | null;
   };
   if (requestedRole === "TENANT" && !typedUser.tenant) {
-    if (action !== "REGISTER") {
-      throw new Error("Akun ini tidak terdaftar sebagai Tenant.");
-    }
+    // Jika login sebagai Tenant tapi belum ada profil Tenant, otomatis buatkan profilnya.
     await prisma.tenant.create({ data: { user_id: typedUser.id, name } });
     typedUser.tenant = await prisma.tenant.findUnique({
       where: { user_id: typedUser.id },

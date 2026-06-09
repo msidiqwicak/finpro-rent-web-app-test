@@ -24,14 +24,14 @@ export const listProperties = async (req: Request, res: Response): Promise<void>
 
 export const searchProperties = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { checkIn, checkOut, page, limit, search, categoryId, city, sortBy, sortOrder } = req.query;
+    const { checkIn, checkOut, page, limit, search, category, city, sortBy, sortOrder } = req.query;
     const result = await publicService.searchProperties({
       checkIn:    typeof checkIn    === 'string' ? checkIn    : undefined,
       checkOut:   typeof checkOut   === 'string' ? checkOut   : undefined,
       page:       typeof page       === 'string' ? Number(page)  : undefined,
       limit:      typeof limit      === 'string' ? Number(limit) : undefined,
       search:     typeof search     === 'string' ? search     : undefined,
-      categoryId: typeof categoryId === 'string' ? categoryId : undefined,
+      category:   typeof category   === 'string' ? category   : undefined,
       city:       typeof city       === 'string' ? city       : undefined,
       sortBy:     sortBy === 'price' ? 'price' : 'name',
       sortOrder:  sortOrder === 'desc' ? 'desc' : 'asc',

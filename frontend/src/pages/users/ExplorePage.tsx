@@ -9,7 +9,7 @@ import api from '../../api/axiosConfig';
 
 // ── Active Filter Pills ───────────────────────────────────────────────
 function ActiveFilters({ params, onClear }: { params: URLSearchParams; onClear: (key: string) => void }) {
-  const filters = ['search', 'city', 'categoryId', 'guests', 'checkIn', 'checkOut']
+  const filters = ['search', 'city', 'category', 'guests', 'checkIn', 'checkOut']
     .map((key) => ({ key, value: params.get(key) }))
     .filter((f) => f.value);
 
@@ -24,7 +24,7 @@ function ActiveFilters({ params, onClear }: { params: URLSearchParams; onClear: 
           onClick={() => onClear(f.key)}
           className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container text-[12px] font-semibold border-none cursor-pointer hover:opacity-80 transition-opacity"
         >
-          {f.key === 'categoryId' ? 'category' : f.key}: {f.value}
+          {f.key}: {f.value}
           <span className="material-symbols-outlined text-[14px]">close</span>
         </button>
       ))}
@@ -59,7 +59,7 @@ export default function ExplorePage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Extract all params
-  const categoryId = searchParams.get('categoryId') ?? '';
+  const category   = searchParams.get('category')   ?? '';
   const city       = searchParams.get('city')       ?? '';
   const search     = searchParams.get('search')     ?? '';
   const checkIn    = searchParams.get('checkIn')    ?? '';
@@ -67,7 +67,7 @@ export default function ExplorePage() {
   const page       = parseInt(searchParams.get('page') ?? '1', 10);
   const sort       = searchParams.get('sort')       ?? 'name-asc'; // format: field-order
 
-  const hasFilters = !!(categoryId || city || search || checkIn || checkOut);
+  const hasFilters = !!(category || city || search || checkIn || checkOut);
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -84,7 +84,7 @@ export default function ExplorePage() {
           sortOrder
         };
 
-        if (categoryId) params.categoryId = categoryId;
+        if (category)   params.category   = category;
         if (city)       params.city       = city;
         if (search)     params.search     = search;
         if (checkIn)    params.checkIn    = checkIn;
@@ -120,7 +120,7 @@ export default function ExplorePage() {
     };
 
     fetchProperties();
-  }, [categoryId, city, search, checkIn, checkOut, page, sort]);
+  }, [category, city, search, checkIn, checkOut, page, sort]);
 
   const handleClearFilter = (key: string) => {
     setSearchParams((prev) => {

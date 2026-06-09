@@ -46,11 +46,8 @@ export default function EmailCard({ initialEmail, isVerified, isLocal, onSuccess
   const handleResend = async () => {
     setResending(true); setMsg('');
     try {
-      await fetch(`${API_AUTH}/resend-verification`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email: initialEmail }),
-      });
+      const { default: api } = await import('../../api/axiosConfig');
+      await api.post('/auth/resend-verification', { email: initialEmail });
       setMsg('Verification link sent! Please check your inbox.');
       setIsError(false);
     } catch {
@@ -63,13 +60,8 @@ export default function EmailCard({ initialEmail, isVerified, isLocal, onSuccess
     if (email.trim() === initialEmail) { setEdit(false); return; }
     setLoading(true); setMsg('');
     try {
-      const res  = await fetch(`${API_USER}/profile`, {
-        method:  'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token}` },
-        body:    JSON.stringify({ email: email.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const { default: api } = await import('../../api/axiosConfig');
+      await api.patch('/users/profile', { email: email.trim() });
       setMsg('Email updated! Please verify your new email address.');
       setIsError(false);
       setEdit(false);

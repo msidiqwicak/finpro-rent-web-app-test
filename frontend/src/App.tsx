@@ -19,6 +19,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import OrderDetail from "./pages/users/BookingDetail";
 import VerifyEmailUpdatePage from "./components/profile/VerifyEmailUpdatePage";
+import VerifyPassword from "./pages/VerifyPassword";
+import VerifyEmail from "./pages/VerifyEmail";
 import TenantTransaction from "./pages/tenant/Booking";
 import TenantDashboardPage from "./pages/tenant/Dashboard";
 import PropertyListPage from "./pages/tenant/PropertyListPage";
@@ -49,6 +51,8 @@ function App() {
             path="/verify-email-update/:token"
             element={<VerifyEmailUpdatePage />}
           />
+          <Route path="/verify" element={<VerifyPassword />} />
+          <Route path="/verify-email-update" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 

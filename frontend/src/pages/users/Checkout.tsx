@@ -6,7 +6,9 @@ import Navbar from "../../components/layout/Navbar"; // 👈 Tambahkan import Na
 export default function Checkout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { id } = useParams(); // asumsikan ini adalah roomTypeId
+  const { id } = useParams(); // Ini propertyId
+  const searchParams = new URLSearchParams(location.search);
+  const roomTypeId = searchParams.get("roomTypeId");
 
   // 1. Menangkap data state (Ditambah NILAI DEFAULT agar aman saat dites dari URL)
   const {
@@ -32,7 +34,7 @@ export default function Checkout() {
     try {
       // Payload booking — userId otomatis diambil dari JWT token oleh backend
       const payload = {
-        roomTypeId: id,
+        roomTypeId: roomTypeId,
         checkIn: new Date(checkIn).toISOString(),
         checkOut: new Date(checkOut).toISOString(),
       };

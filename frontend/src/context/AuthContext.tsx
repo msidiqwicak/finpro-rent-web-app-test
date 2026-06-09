@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { auth } from '../config/firebase';
+import { signOut } from 'firebase/auth';
 
 // ============================================================
 // TIPE DATA
@@ -10,7 +12,7 @@ export interface AuthUser {
   name:       string;
   email:      string;
   role:       'USER' | 'TENANT';
-  token:      string;
+  token?:     string; // Token is now optional since it's stored in HttpOnly cookie
   avatar_url?: string | null;
 }
 
@@ -37,33 +39,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Saat aplikasi pertama dibuka (mount), cek apakah ada data login
-  // yang tersimpan di localStorage browser (sesi sebelumnya)
+  // Saat aplikasi pertama dibuka (mount), ambil data dari backend via HTTPOnly cookie
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem('auth_user');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+    const fetchMe = async () => {
+      try {
+        const { default: api } = await import('../api/axiosConfig');
+        const res = await api.get('/auth/me');
+        setUser(res.data.user);
+        // Sinkronisasi data non-sensitif ke localStorage untuk UI
+        localStorage.setItem('auth_user_public', JSON.stringify({
+          name: res.data.user.name,
+          role: res.data.user.role
+        }));
+      } catch (error) {
+        setUser(null);
+        localStorage.removeItem('auth_user_public');
+        localStorage.removeItem('auth_user'); // Bersihkan sisa data lama jika ada
+      } finally {
+        setIsLoading(false);
       }
-    } catch {
-      // Jika data di localStorage corrupt, hapus saja
-      localStorage.removeItem('auth_user');
-    } finally {
-      setIsLoading(false);
-    }
+    };
+    fetchMe();
   }, []);
 
   // Fungsi dipanggil setelah user berhasil login dari API
   const login = (userData: AuthUser) => {
     setUser(userData);
-    // Simpan ke localStorage agar sesi tidak hilang saat halaman di-refresh
-    localStorage.setItem('auth_user', JSON.stringify(userData));
+    // HANYA simpan data non-sensitif (name & role) ke localStorage sesuai instruksi keamanan
+    localStorage.setItem('auth_user_public', JSON.stringify({
+      name: userData.name,
+      role: userData.role
+    }));
+    // Hapus data lama yang mungkin menyimpan token
+    localStorage.removeItem('auth_user');
   };
 
   // Fungsi dipanggil saat user menekan tombol Logout
-  const logout = () => {
+  const logout = async () => {
+    try {
+      const { default: api } = await import('../api/axiosConfig');
+      await api.post('/auth/logout');
+    } catch (err) {
+      console.error("Logout API failed:", err);
+    }
     setUser(null);
+    localStorage.removeItem('auth_user_public');
     localStorage.removeItem('auth_user');
+    signOut(auth).catch((error) => console.error("Firebase logout failed:", error));
   };
 
   return (

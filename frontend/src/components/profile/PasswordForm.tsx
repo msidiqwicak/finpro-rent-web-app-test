@@ -64,13 +64,8 @@ export default function PasswordForm() {
     setLoading(true);
     setMsg('');
     try {
-      const res  = await fetch(`${API}/password`, {
-        method:  'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token}` },
-        body:    JSON.stringify({ oldPassword: oldPass, newPassword: newPass }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const { default: api } = await import('../../api/axiosConfig');
+      await api.patch('/users/password', { oldPassword: oldPass, newPassword: newPass });
       setIsError(false);
       setMsg('Password changed successfully!');
       setOldPass(''); setNewPass(''); setConfPass('');

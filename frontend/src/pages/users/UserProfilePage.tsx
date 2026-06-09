@@ -50,12 +50,19 @@ export default function UserProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!user?.token) return;
-    fetch(`${API}/profile`, { headers: { Authorization: `Bearer ${user.token}` } })
-      .then((r) => r.json())
-      .then((d) => { if (d.data) setProfile(d.data); })
-      .finally(() => setIsLoading(false));
-  }, [user?.token]);
+    const fetchProfile = async () => {
+      try {
+        const { default: api } = await import('../../api/axiosConfig');
+        const res = await api.get('/users/profile');
+        if (res.data.data) setProfile(res.data.data);
+      } catch (err) {
+        console.error('Failed to load profile', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
 
   if (isLoading) return <LoadingScreen />;
 
