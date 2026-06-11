@@ -67,12 +67,32 @@ export const createProperty = async (userId: string, data: CreatePropertyInput, 
   });
 };
 
-export const updateProperty = async (userId: string, propertyId: string, data: UpdatePropertyInput) => {
+export const updateProperty = async (userId: string, propertyId: string, data: any, files?: Express.Multer.File[]) => {
   const tenantId = await getTenantId(userId);
-  await assertPropertyOwner(propertyId, tenantId);
+  const existingProp = await assertPropertyOwner(propertyId, tenantId);
   
   // Clean undefined values to satisfy exactOptionalPropertyTypes
-  const cleanData = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== undefined));
+  const cleanData: any = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== undefined));
+
+  // Process existing_images from FormData
+  let keptImages: string[] = existingProp.image_urls;
+  if (data.existing_images !== undefined) {
+    if (Array.isArray(data.existing_images)) {
+      keptImages = data.existing_images;
+    } else if (typeof data.existing_images === 'string' && data.existing_images.trim() !== '') {
+      keptImages = [data.existing_images];
+    } else {
+      keptImages = []; // Explicitly empty
+    }
+    delete cleanData.existing_images;
+  }
+
+  const newImages = files && files.length > 0 ? files.map(f => f.path) : [];
+  
+  // Update image_urls if there's an explicit change in existing_images or new files added
+  if (data.existing_images !== undefined || newImages.length > 0) {
+    cleanData.image_urls = [...keptImages, ...newImages];
+  }
 
   return prisma.property.update({
     where: { id: propertyId },
@@ -146,10 +166,28 @@ export const createRoomType = async (
   const tenantId = await getTenantId(userId);
   await assertPropertyOwner(propertyId, tenantId);
 
+  if (!data.name?.trim()) throw new Error('Room name is required.');
+  if (!data.description?.trim()) throw new Error('Room description is required.');
+
+  // Anti-Duplicate Check
+  const duplicate = await prisma.room_type.findFirst({
+    where: {
+      property_id: propertyId,
+      name: { equals: data.name.trim(), mode: 'insensitive' }
+    }
+  });
+  if (duplicate) throw new Error(`Room type '${data.name}' already exists in this property. Please edit the existing one or use a different name.`);
+
   // Parse numeric fields because FormData sends everything as strings
   const price_per_night = data.price_per_night ? Number(data.price_per_night) : 0;
+  if (price_per_night <= 0) throw new Error('Price per night must be greater than 0.');
+  if (price_per_night > 100000000) throw new Error('Price per night exceeds the maximum allowed limit.');
+
   const capacity = data.capacity ? Number(data.capacity) : 1;
+  if (capacity > 20) throw new Error('Guest capacity cannot exceed 20 people per room.');
+
   const totalUnits = data.total_units ? Number(data.total_units) : 1;
+  if (totalUnits > 200) throw new Error('Total units/doors cannot exceed 200 per room type.');
   
   // Extract URLs from uploaded files, fallback to text data if no files
   const image_urls = files && files.length > 0 
@@ -186,14 +224,64 @@ export const createRoomType = async (
 };
 
 export const updateRoomType = async (
-  userId: string, roomTypeId: string, data: UpdateRoomTypeInput,
+  userId: string, roomTypeId: string, data: any, files?: Express.Multer.File[]
 ) => {
   const tenantId = await getTenantId(userId);
   const existing = await assertRoomTypeOwner(roomTypeId, tenantId);
 
-  const cleanData = Object.fromEntries(
+  if (data.name !== undefined) {
+    if (!data.name.trim()) throw new Error('Room name is required.');
+    // Anti-Duplicate Check
+    const duplicate = await prisma.room_type.findFirst({
+      where: {
+        property_id: existing.property_id,
+        name: { equals: data.name.trim(), mode: 'insensitive' },
+        id: { not: roomTypeId }
+      }
+    });
+    if (duplicate) throw new Error(`Room type '${data.name}' already exists in this property. Please use a different name.`);
+  }
+
+  if (data.description !== undefined && !data.description.trim()) throw new Error('Room description is required.');
+
+  if (data.price_per_night !== undefined) {
+    const price = Number(data.price_per_night);
+    if (price <= 0) throw new Error('Price per night must be greater than 0.');
+    if (price > 100000000) throw new Error('Price per night exceeds the maximum allowed limit.');
+  }
+
+  if (data.capacity !== undefined) {
+    const cap = Number(data.capacity);
+    if (cap > 20) throw new Error('Guest capacity cannot exceed 20 people per room.');
+  }
+
+  if (data.total_units !== undefined) {
+    const units = Number(data.total_units);
+    if (units > 200) throw new Error('Total units/doors cannot exceed 200 per room type.');
+  }
+
+  const cleanData: any = Object.fromEntries(
     Object.entries(data).filter(([_, v]) => v !== undefined),
   );
+
+  // Process existing_images
+  let keptImages: string[] = existing.image_urls;
+  if (data.existing_images !== undefined) {
+    if (Array.isArray(data.existing_images)) {
+      keptImages = data.existing_images;
+    } else if (typeof data.existing_images === 'string' && data.existing_images.trim() !== '') {
+      keptImages = [data.existing_images];
+    } else {
+      keptImages = []; // Explicitly empty
+    }
+    delete cleanData.existing_images;
+  }
+
+  const newImages = files && files.length > 0 ? files.map(f => f.path) : [];
+  
+  if (data.existing_images !== undefined || newImages.length > 0) {
+    cleanData.image_urls = [...keptImages, ...newImages];
+  }
 
   // If total_units changed, sync room_unit entries
   const newTotalUnits = data.total_units;

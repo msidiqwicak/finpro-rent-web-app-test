@@ -50,6 +50,21 @@ export const getProperty = async (req: Request, res: Response): Promise<void> =>
   } catch (e: any) { res.status(404).json({ error: e.message }); }
 };
 
+export const getRoomCalendar = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { roomId } = req.params;
+    const { month } = req.query; // e.g. "2026-06"
+    if (!month || typeof month !== 'string') {
+      res.status(400).json({ error: 'Parameter month (YYYY-MM) diperlukan.' });
+      return;
+    }
+    const data = await publicService.getRoomCalendarPrices(roomId, month);
+    res.status(200).json({ data });
+  } catch (e: any) {
+    res.status(400).json({ error: e.message });
+  }
+};
+
 // ── Tenant CRUD ───────────────────────────────────────────────
 export const getMyProperties = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -67,7 +82,7 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
 
 export const updateProperty = async (req: Request, res: Response): Promise<void> => {
   try {
-    const data = await propertyService.updateProperty(req.user!.id, req.params.id as string, req.body);
+    const data = await propertyService.updateProperty(req.user!.id, req.params.id as string, req.body, req.files as Express.Multer.File[]);
     res.status(200).json({ message: 'Properti berhasil diperbarui.', data });
   } catch (e: any) { res.status(400).json({ error: e.message }); }
 };
@@ -94,8 +109,13 @@ export const createRoomType = async (req: Request, res: Response): Promise<void>
 
 export const updateRoomType = async (req: Request, res: Response): Promise<void> => {
   try {
-    const data = await propertyService.updateRoomType(req.user!.id, req.params.id as string, req.body);
-    res.status(200).json({ message: 'Tipe kamar berhasil diperbarui.', data });
+    const data = await propertyService.updateRoomType(
+      req.user!.id, 
+      req.params.id as string, 
+      req.body,
+      req.files as Express.Multer.File[]
+    );
+    res.status(200).json({ message: 'Room type updated successfully.', data });
   } catch (e: any) { res.status(400).json({ error: e.message }); }
 };
 

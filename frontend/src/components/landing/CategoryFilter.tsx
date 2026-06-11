@@ -1,12 +1,19 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../../api/axiosConfig';
 
-const CATEGORIES = [
-  { name: 'All Category', icon: 'grid_view'   },
-  { name: 'Home',         icon: 'cottage'      },
-  { name: 'Apartment',    icon: 'apartment'    },
-  { name: 'Hotel',        icon: 'hotel'        },
-  { name: 'Villa',        icon: 'villa'        },
-];
+// Helper for dynamic icons based on category name
+const getIconForCategory = (name: string) => {
+  const lower = name.toLowerCase();
+  if (lower.includes('apartment') || lower.includes('apartemen')) return 'apartment';
+  if (lower.includes('hotel')) return 'hotel';
+  if (lower.includes('villa') || lower.includes('vila')) return 'villa';
+  if (lower.includes('beach') || lower.includes('pantai')) return 'beach_access';
+  if (lower.includes('cabin') || lower.includes('wood')) return 'cabin';
+  if (lower.includes('glamping') || lower.includes('camp')) return 'holiday_village';
+  if (lower.includes('guest') || lower.includes('wisma')) return 'location_away';
+  return 'cottage'; // default icon
+};
 
 interface CategoryItemProps {
   name:    string;
@@ -35,6 +42,23 @@ function CategoryItem({ name, icon, onClick }: CategoryItemProps) {
 
 export default function CategoryFilter() {
   const navigate = useNavigate();
+  const [categories, setCategories] = useState<{ name: string; icon: string }[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get('/properties/categories');
+        const dbCategories = res.data.data.map((cat: any) => ({
+          name: cat.name,
+          icon: getIconForCategory(cat.name)
+        }));
+        setCategories(dbCategories);
+      } catch (error) {
+        console.error("Gagal memuat kategori:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleClick = (categoryName: string) => {
     if (categoryName === 'All Category') {
@@ -48,16 +72,28 @@ export default function CategoryFilter() {
     <section aria-label="Property categories">
       <div className="max-w-[1280px] mx-auto px-5 py-9 md:px-8 lg:px-16">
         <hr className="border-none border-t border-surface-high mb-8" />
-        <div className="flex flex-wrap justify-center gap-x-8 gap-y-4">
-          {CATEGORIES.map((cat) => (
+        
+        {/* Scrollable container for mobile */}
+        <div className="flex overflow-x-auto hide-scrollbar justify-start md:justify-center gap-x-6 sm:gap-x-8 gap-y-4 pb-2 snap-x">
+          <div className="snap-start shrink-0">
             <CategoryItem
-              key={cat.name}
-              name={cat.name}
-              icon={cat.icon}
-              onClick={() => handleClick(cat.name)}
+              name="All Category"
+              icon="grid_view"
+              onClick={() => handleClick('All Category')}
             />
+          </div>
+          
+          {categories.map((cat, idx) => (
+            <div key={idx} className="snap-start shrink-0">
+              <CategoryItem
+                name={cat.name}
+                icon={cat.icon}
+                onClick={() => handleClick(cat.name)}
+              />
+            </div>
           ))}
         </div>
+        
         <hr className="border-none border-t border-surface-high mt-8" />
       </div>
     </section>

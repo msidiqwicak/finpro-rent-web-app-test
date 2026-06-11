@@ -84,8 +84,8 @@ export default function CreateRoomTypeModal({ propertyId, propertyName, onSucces
             </div>
           </div>
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Description (Optional)</label>
-            <textarea name="description" value={form.description} onChange={handleChange} rows={2} className={INPUT} />
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Description</label>
+            <textarea name="description" value={form.description} onChange={handleChange} rows={2} required className={INPUT} />
           </div>
 
           <div>

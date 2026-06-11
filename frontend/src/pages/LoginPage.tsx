@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import SocialLogin from "../components/auth/SocialLogin";
+import Navbar from "../components/layout/Navbar";
 
 type LoginMode = "USER" | "TENANT";
 
@@ -10,12 +11,7 @@ const INPUT_CLS =
 
 function AuthHeader() {
   return (
-    <div className="mb-1">
-      <div className="flex items-center justify-between mb-8">
-        <Link to="/" className="font-display font-bold text-xl text-primary">
-          Evergreen Escapes
-        </Link>
-      </div>
+    <div className="mb-4">
       <h1 className="font-display font-bold text-3xl text-on-surface mb-2">
         Welcome Back
       </h1>
@@ -165,7 +161,9 @@ export default function LoginPage() {
   const isTenant = mode === "TENANT";
 
   return (
-    <div className="min-h-screen bg-surface-low flex items-center justify-center p-5 relative overflow-hidden">
+    <>
+      <Navbar />
+      <div className="min-h-[calc(100vh-72px)] bg-surface-low flex items-center justify-center p-5 py-12 relative overflow-hidden">
       <div
         className={`absolute top-[-10%] ${isTenant ? "right-[-10%] bg-secondary-container/40" : "left-[-10%] bg-primary-fixed/30"} w-[500px] h-[500px] rounded-full blur-[80px] transition-all duration-700`}
       />
@@ -272,5 +270,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

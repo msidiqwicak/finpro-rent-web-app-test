@@ -16,6 +16,7 @@ router.get('/search',     ctrl.searchProperties);
 router.get('/categories', ctrl.getCategories);
 router.get('/my',         ...tenantAuth, ctrl.getMyProperties);
 router.get('/:id',        ctrl.getProperty);
+router.get('/room-types/:roomId/calendar', ctrl.getRoomCalendar);
 
 // ── TENANT: Property CRUD (Protected) ───────────────────────
 // GET    /api/properties/my         → daftar properti milik tenant
@@ -24,7 +25,7 @@ router.get('/:id',        ctrl.getProperty);
 // PUT    /api/properties/:id        → update properti
 // DELETE /api/properties/:id        → soft-delete properti
 router.post(  '/',      ...tenantAuth, uploadPropertyImage.array('images', 5), ctrl.createProperty);
-router.put(   '/:id',  ...tenantAuth, ctrl.updateProperty);
+router.put(   '/:id',  ...tenantAuth, uploadPropertyImage.array('images', 5), ctrl.updateProperty);
 router.delete('/:id',  ...tenantAuth, ctrl.deleteProperty);
 
 // ── TENANT: Room Type CRUD ──────────────────────────────────
@@ -32,7 +33,7 @@ router.delete('/:id',  ...tenantAuth, ctrl.deleteProperty);
 // PUT    /api/properties/room-types/:id        → update tipe kamar
 // DELETE /api/properties/room-types/:id        → hapus tipe kamar
 router.post(  '/:id/room-types',   ...tenantAuth, uploadRoomImage.array('images', 5), ctrl.createRoomType);
-router.put(   '/room-types/:id',   ...tenantAuth, ctrl.updateRoomType);
+router.put(   '/room-types/:id',   ...tenantAuth, uploadRoomImage.array('images', 5), ctrl.updateRoomType);
 router.delete('/room-types/:id',   ...tenantAuth, ctrl.deleteRoomType);
 
 // ── PRICE MODIFIER ──────────────────────────────────────────

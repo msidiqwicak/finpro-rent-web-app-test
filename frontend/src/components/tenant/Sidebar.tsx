@@ -10,6 +10,7 @@ export default function Sidebar() {
   const navItems = [
     { name: "Overview", icon: "dashboard", path: "/tenant/dashboard" },
     { name: "My Properties", icon: "home_work", path: "/tenant/properties" },
+    { name: "Categories", icon: "category", path: "/tenant/categories" },
     { name: "Bookings", icon: "receipt_long", path: "/tenant/bookings" },
     { name: "Reviews", icon: "rate_review", path: "/tenant/reviews" },
     { name: "Settings", icon: "settings", path: "/tenant/settings" },

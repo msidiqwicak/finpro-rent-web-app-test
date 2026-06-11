@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
 import api from '../../api/axiosConfig';
+import PricingCalendar from '../../components/shared/PricingCalendar';
 
 // ── Types ─────────────────────────────────────────────────────
 interface RoomType {
@@ -54,6 +55,7 @@ export default function PropertyDetailPage() {
   const [checkin, setCheckin] = useState('');
   const [checkout, setCheckout] = useState('');
   const [guests, setGuests] = useState(1);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -150,10 +152,10 @@ export default function PropertyDetailPage() {
 
           {/* ── Image Gallery (Airbnb Grid) ── */}
           <div className="rounded-2xl overflow-hidden mb-10">
-            <div className={`grid gap-1 ${allImages.length >= 5 ? 'grid-cols-4 grid-rows-2' : allImages.length >= 2 ? 'grid-cols-2' : 'grid-cols-1'}`} style={{ maxHeight: 460 }}>
+            <div className={`grid gap-2 ${allImages.length >= 5 ? 'grid-cols-4 grid-rows-2 h-[400px] md:h-[500px]' : allImages.length >= 2 ? 'grid-cols-2 h-[300px] md:h-[400px]' : 'grid-cols-1 aspect-[16/9] md:aspect-[21/9]'}`}>
               {allImages.slice(0, 5).map((url, i) => (
-                <div key={i} className={`overflow-hidden ${i === 0 && allImages.length >= 5 ? 'col-span-2 row-span-2' : ''}`}>
-                  <img src={url} alt={`${property.name} - ${i + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" style={{ minHeight: i === 0 ? 460 : 228 }} />
+                <div key={i} className={`relative w-full h-full overflow-hidden rounded-xl ${i === 0 && allImages.length >= 5 ? 'col-span-2 row-span-2' : ''}`}>
+                  <img src={url} alt={`${property.name} - ${i + 1}`} className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-500 bg-surface-container-high" />
                 </div>
               ))}
             </div>
@@ -269,20 +271,38 @@ export default function PropertyDetailPage() {
                   )}
 
                   {/* Date Inputs */}
-                  <div className="grid grid-cols-2 gap-0 mb-4 rounded-xl border border-outline-variant overflow-hidden">
+                  <div 
+                    className="grid grid-cols-2 gap-0 mb-4 rounded-xl border border-outline-variant overflow-hidden cursor-pointer hover:bg-surface-low transition-colors"
+                    onClick={() => setShowCalendar(s => !s)}
+                  >
                     <div className="p-3 border-r border-outline-variant">
                       <label className="block text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Check-in</label>
-                      <input type="date" min={today} value={checkin}
-                        onChange={(e) => { setCheckin(e.target.value); if (checkout && e.target.value >= checkout) setCheckout(''); }}
-                        className="w-full bg-transparent border-none text-[14px] font-semibold text-on-surface outline-none cursor-pointer" />
+                      <div className="text-[14px] font-semibold text-on-surface">
+                        {checkin ? new Date(checkin).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Add date'}
+                      </div>
                     </div>
                     <div className="p-3">
                       <label className="block text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Check-out</label>
-                      <input type="date" min={checkin || today} value={checkout}
-                        onChange={(e) => setCheckout(e.target.value)}
-                        className="w-full bg-transparent border-none text-[14px] font-semibold text-on-surface outline-none cursor-pointer" />
+                      <div className="text-[14px] font-semibold text-on-surface">
+                        {checkout ? new Date(checkout).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Add date'}
+                      </div>
                     </div>
                   </div>
+
+                  {showCalendar && selectedRoom && (
+                    <div className="mb-4">
+                      <PricingCalendar 
+                        roomId={selectedRoom.id}
+                        checkin={checkin}
+                        checkout={checkout}
+                        onChange={(ci, co) => {
+                          setCheckin(ci);
+                          setCheckout(co);
+                          if (ci && co) setShowCalendar(false);
+                        }}
+                      />
+                    </div>
+                  )}
 
                   {/* Guests */}
                   <div className="p-3 mb-4 rounded-xl border border-outline-variant">

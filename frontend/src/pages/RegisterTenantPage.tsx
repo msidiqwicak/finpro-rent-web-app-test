@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import SocialLogin from '../components/auth/SocialLogin';
+import Navbar from '../components/layout/Navbar';
 
 
 const INPUT_CLS = 'w-full pl-11 pr-4 py-3.5 bg-surface border border-outline-variant rounded-xl text-[15px] text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all disabled:opacity-60';
@@ -8,12 +9,9 @@ const INPUT_CLS = 'w-full pl-11 pr-4 py-3.5 bg-surface border border-outline-var
 function AuthHeader() {
   return (
     <div className="mb-8">
-      <div className="flex items-center justify-between mb-8">
-        <Link to="/" className="font-display font-bold text-xl text-primary">Evergreen Escapes</Link>
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary-fixed text-on-primary-fixed text-[11px] font-bold uppercase rounded-full tracking-wider">
-          <span className="material-symbols-outlined text-[16px]">home_work</span>
-          Tenant Account
-        </div>
+      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary-fixed text-on-primary-fixed text-[11px] font-bold uppercase rounded-full tracking-wider mb-4">
+        <span className="material-symbols-outlined text-[16px]">home_work</span>
+        Tenant Account
       </div>
       <h1 className="font-display font-bold text-3xl text-on-surface mb-2">List Your Property</h1>
       <p className="text-on-surface-variant text-[15px]">Join our community of eco-friendly hosts and start earning from your property.</p>
@@ -90,8 +88,10 @@ export default function RegisterTenantPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-low flex items-center justify-center p-5 relative overflow-hidden">
-      <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-secondary-container/40 blur-[100px]" />
+    <>
+      <Navbar />
+      <div className="min-h-[calc(100vh-72px)] bg-surface-low flex items-center justify-center p-5 py-12 relative overflow-hidden">
+        <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-secondary-container/40 blur-[100px]" />
 
       <div className="w-full max-w-[540px] bg-white rounded-3xl shadow-[0_4px_24px_rgba(6,27,14,0.10)] border border-outline-variant/30 p-8 sm:p-10 relative z-10">
         <AuthHeader />
@@ -118,6 +118,7 @@ export default function RegisterTenantPage() {
           <p>Just looking to book stays? <Link to="/register" className="font-bold text-primary hover:underline">Register as Guest</Link></p>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

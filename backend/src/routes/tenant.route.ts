@@ -8,8 +8,15 @@ import {
   getTenantBookingDetail,
   sendReminderEmail,
 } from "../controllers/tenant.controller.js";
+import * as categoryCtrl from "../controllers/tenant-category.controller.js";
 
 const router = Router();
+
+// ── Property Category CRUD ────────────────────────────────────
+router.get(   "/categories",     authenticate, authorizeRole("TENANT"), categoryCtrl.getCategories);
+router.post(  "/categories",     authenticate, authorizeRole("TENANT"), categoryCtrl.createCategory);
+router.put(   "/categories/:id", authenticate, authorizeRole("TENANT"), categoryCtrl.updateCategory);
+router.delete("/categories/:id", authenticate, authorizeRole("TENANT"), categoryCtrl.deleteCategory);
 
 // Rute Aksi Tenant terhadap Pesanan
 router.patch(

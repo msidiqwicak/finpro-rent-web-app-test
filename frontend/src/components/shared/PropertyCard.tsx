@@ -36,7 +36,7 @@ const formatPrice = (price: number): string =>
 // ── Sub-components ────────────────────────────────────────────────────
 function CategoryBadge({ label }: { label: string }) {
   return (
-    <div className="absolute top-3 left-3 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm text-[11px] font-bold text-primary-container whitespace-nowrap">
+    <div className="absolute top-3 left-3 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm text-[11px] font-bold text-primary-container whitespace-nowrap pointer-events-auto">
       <span className="material-symbols-outlined text-[14px] text-secondary [font-variation-settings:'FILL'_1,'wght'_400,'GRAD'_0,'opsz'_20]">eco</span>
       {label}
     </div>
@@ -48,7 +48,7 @@ function WishlistBtn({ name }: { name: string }) {
     <button
       aria-label={`Save ${name} to wishlist`}
       onClick={(e) => e.preventDefault()}
-      className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/88 backdrop-blur-sm flex items-center justify-center text-outline hover:text-red-500 hover:bg-white transition-all duration-200"
+      className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/88 backdrop-blur-sm flex items-center justify-center text-outline hover:text-red-500 hover:bg-white transition-all duration-200 pointer-events-auto"
     >
       <span className="material-symbols-outlined text-[18px] [font-variation-settings:'FILL'_0,'wght'_300,'GRAD'_0,'opsz'_24]">favorite</span>
     </button>
@@ -73,8 +73,10 @@ export default function PropertyCard({ id, name, city, province, property_catego
             loading="lazy"
             className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-in-out"
           />
-          <CategoryBadge label={category} />
-          <WishlistBtn name={name} />
+          <div className="absolute inset-0 z-20 pointer-events-none">
+            <CategoryBadge label={category} />
+            <WishlistBtn name={name} />
+          </div>
         </div>
 
         <div className="p-5 flex flex-col flex-1 gap-1">

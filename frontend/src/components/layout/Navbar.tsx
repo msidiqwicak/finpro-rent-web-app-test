@@ -96,12 +96,12 @@ export default function Navbar() {
     return (
       <>
         {toast && <Toast msg={toast} />}
-        <header className="bg-surface/80 top-0 sticky backdrop-blur-md shadow-sm flex justify-between items-center w-full px-6 md:px-16 h-[72px] z-50 border-b border-outline-variant/30">
-          <div className="flex items-center gap-4">
+        <header className="bg-surface/80 top-0 sticky backdrop-blur-md shadow-sm flex justify-center items-center w-full px-5 h-[72px] z-50 border-b border-outline-variant/30">
+          <div className="max-w-[1280px] w-full mx-auto flex items-center gap-2 md:gap-3">
             <button
               onClick={() => navigate(-1)}
               aria-label="Go back"
-              className="material-symbols-outlined text-primary cursor-pointer hover:bg-surface-container-high transition-colors p-2 rounded-full border-none bg-transparent flex items-center justify-center"
+              className="material-symbols-outlined text-primary cursor-pointer hover:bg-surface-container-high transition-colors w-10 h-10 -ml-2 rounded-full border-none bg-transparent flex items-center justify-center"
             >
               arrow_back
             </button>
@@ -109,30 +109,44 @@ export default function Navbar() {
               Finpro Escapes
             </div>
           </div>
-          {/* Sisi kanan dibiarkan kosong agar user fokus pada transaksi */}
         </header>
       </>
     );
   }
   // =========================================================
 
+  const isHome = location.pathname === "/";
+
   return (
     <>
       {toast && <Toast msg={toast} />}
 
-      <header className="sticky top-0 z-50 h-[72px] bg-surface/90 backdrop-blur-md border-b border-outline-variant shadow-[0_1px_3px_rgba(6,27,14,0.08)] w-full">
-        <div className="flex items-center justify-between h-full max-w-[1280px] mx-auto px-5">
-          {/* Bagian Kiri: Logo */}
-          <Link
-            to="/"
-            className="font-display font-bold text-xl text-primary flex items-center gap-2"
-          >
-            Finpro Escapes
-          </Link>
+      <header className="sticky top-0 z-50 h-[72px] bg-surface/90 backdrop-blur-md border-b border-outline-variant shadow-[0_1px_3px_rgba(6,27,14,0.08)] w-full flex justify-center items-center">
+        <div className="flex items-center justify-between h-full w-full max-w-[1280px] px-5 relative">
+          {/* Bagian Kiri: Logo & Back Button */}
+          <div className="flex items-center gap-1 sm:gap-2 z-10">
+            {!isHome ? (
+              <button
+                onClick={() => navigate(-1)}
+                aria-label="Go back"
+                className="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-high transition-colors w-10 h-10 rounded-full border-none bg-transparent flex items-center justify-center -ml-2"
+              >
+                arrow_back
+              </button>
+            ) : (
+              <div className="w-10 h-10 -ml-2 invisible pointer-events-none" />
+            )}
+            <Link
+              to="/"
+              className="font-display font-bold text-xl text-primary flex items-center whitespace-nowrap"
+            >
+              Finpro Escapes
+            </Link>
+          </div>
 
           {/* Bagian Tengah: Desktop Navigation */}
-          {!isTenant && (
-            <nav className="hidden md:flex items-center gap-8">
+          {!isTenant && isHome && (
+            <nav className="hidden md:flex items-center justify-center gap-8 absolute left-1/2 -translate-x-1/2 w-fit">
               {navItems.map((item) => {
                 const isActive =
                   location.pathname === item.path ||
@@ -156,7 +170,7 @@ export default function Navbar() {
           )}
 
           {/* Bagian Kanan: Actions & Profile */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 z-10">
             {isLoggedIn && (
               <button
                 aria-label="Notifications"

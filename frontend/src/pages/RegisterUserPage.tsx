@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import SocialLogin from '../components/auth/SocialLogin';
+import Navbar from '../components/layout/Navbar';
 
 
 const INPUT_CLS = 'w-full pl-11 pr-4 py-3.5 bg-surface border border-outline-variant rounded-xl text-[15px] text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all disabled:opacity-60';
@@ -8,12 +9,9 @@ const INPUT_CLS = 'w-full pl-11 pr-4 py-3.5 bg-surface border border-outline-var
 function AuthHeader() {
   return (
     <div className="mb-8">
-      <div className="flex items-center justify-between mb-8">
-        <Link to="/" className="font-display font-bold text-xl text-primary">Evergreen Escapes</Link>
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary-container text-on-secondary-container text-[11px] font-bold uppercase rounded-full tracking-wider">
-          <span className="material-symbols-outlined text-[16px]">person</span>
-          Guest Account
-        </div>
+      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary-container text-on-secondary-container text-[11px] font-bold uppercase rounded-full tracking-wider mb-4">
+        <span className="material-symbols-outlined text-[16px]">person</span>
+        Guest Account
       </div>
       <h1 className="font-display font-bold text-3xl text-on-surface mb-2">Create an Account</h1>
       <p className="text-on-surface-variant text-[15px]">Discover the best eco-stays and create unforgettable experiences.</p>
@@ -79,8 +77,10 @@ export default function RegisterUserPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-low flex items-center justify-center p-5 relative overflow-hidden">
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary-fixed/30 blur-[80px]" />
+    <>
+      <Navbar />
+      <div className="min-h-[calc(100vh-72px)] bg-surface-low flex items-center justify-center p-5 py-12 relative overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-primary-fixed/30 blur-[80px]" />
 
       <div className="w-full max-w-[480px] bg-white rounded-3xl shadow-[0_4px_24px_rgba(6,27,14,0.10)] border border-outline-variant/30 p-8 sm:p-10 relative z-10">
         <AuthHeader />
@@ -106,6 +106,7 @@ export default function RegisterUserPage() {
           <p>Want to host a property? <Link to="/tenant/register" className="font-bold text-secondary hover:underline">Register as Tenant</Link></p>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

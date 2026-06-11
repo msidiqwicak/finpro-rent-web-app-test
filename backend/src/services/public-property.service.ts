@@ -3,6 +3,8 @@ import { Prisma } from '../generated/prisma/index.js';
 // ── Public: Categories ────────────────────────────────────────
 export const getCategories = async () => {
   return prisma.property_category.findMany({
+    select: { name: true },
+    distinct: ['name'],
     orderBy: { name: 'asc' },
   });
 };
@@ -223,4 +225,54 @@ export const searchProperties = async (params: SearchParams): Promise<SearchResu
     })),
     pagination: { page, limit, total, totalPages },
   };
+};
+
+// ── Public: Room Calendar Pricing ─────────────────────────────
+export const getRoomCalendarPrices = async (roomId: string, monthStr: string) => {
+  // monthStr is expected to be "YYYY-MM"
+  const parts = monthStr.split('-');
+  if (parts.length !== 2) {
+    throw new Error('Format bulan tidak valid. Gunakan YYYY-MM.');
+  }
+
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1; // JS months are 0-indexed
+
+  if (isNaN(year) || isNaN(month)) {
+    throw new Error('Format bulan tidak valid. Gunakan YYYY-MM.');
+  }
+
+  const roomType = await prisma.room_type.findUnique({
+    where: { id: roomId },
+    include: {
+      price_modifier: {
+        where: { is_available: true }
+      }
+    }
+  });
+
+  if (!roomType) {
+    throw new Error('Tipe kamar tidak ditemukan.');
+  }
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const calendar = [];
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const targetForCalc = new Date(dateString);
+
+    const adjustedPrice = calcAdjustedPrice(
+      roomType.price_per_night,
+      roomType.price_modifier,
+      targetForCalc
+    );
+
+    calendar.push({
+      date: dateString,
+      price: adjustedPrice
+    });
+  }
+
+  return calendar;
 };

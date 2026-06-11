@@ -5,7 +5,7 @@ import TenantLayout from '../../components/layout/TenantLayout';
 import api from '../../api/axiosConfig';
 
 interface RoomType { id: string; name: string; price_per_night: number; }
-interface Property { id: string; name: string; city: string; province: string; address: string; room_type: RoomType[]; }
+interface Property { id: string; name: string; city: string; province: string; address: string; room_type: RoomType[]; image_urls: string[]; }
 
 export default function PropertyListPage() {
   const { user } = useAuth();
@@ -86,11 +86,23 @@ export default function PropertyListPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {properties.map((p) => (
               <div key={p.id} className="bg-white rounded-2xl border border-outline-variant/40 shadow-sm overflow-hidden hover:shadow-md transition-shadow flex flex-col">
-                <div className="h-48 bg-surface-container-high relative flex-shrink-0">
-                  <div className="absolute top-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-[11px] font-bold text-on-surface">
+                <div className="h-48 bg-surface-container-high relative flex-shrink-0 overflow-hidden">
+                  {p.image_urls && p.image_urls.length > 0 ? (
+                    <img 
+                      src={`http://localhost:8000/${p.image_urls[0].replace(/\\/g, '/')}`} 
+                      alt={p.name} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        if (p.image_urls[0].startsWith('http')) (e.target as HTMLImageElement).src = p.image_urls[0];
+                        else (e.target as HTMLImageElement).src = 'https://placehold.co/400x300?text=Property';
+                      }}
+                    />
+                  ) : (
+                    <span className="material-symbols-outlined absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[48px] text-outline opacity-50">holiday_village</span>
+                  )}
+                  <div className="absolute top-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-[11px] font-bold text-on-surface z-10 shadow-sm">
                     {p.room_type.length} Room Types
                   </div>
-                  <span className="material-symbols-outlined absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[48px] text-outline opacity-50">holiday_village</span>
                 </div>
                 <div className="p-5 flex flex-col flex-grow">
                   <h3 className="font-display font-bold text-lg text-on-surface leading-tight mb-1">{p.name}</h3>
@@ -108,7 +120,10 @@ export default function PropertyListPage() {
                       Manage Rooms & Pricing
                     </button>
                     <div className="flex gap-2">
-                      <button className="flex-1 flex items-center justify-center py-2 rounded-xl border border-outline-variant text-on-surface text-[12px] font-bold hover:bg-surface-container-low transition-colors cursor-not-allowed opacity-50">
+                      <button 
+                        onClick={() => navigate(`/tenant/properties/${p.id}/edit`)}
+                        className="flex-1 flex items-center justify-center py-2 rounded-xl border border-outline-variant text-on-surface text-[12px] font-bold hover:bg-surface-container-low transition-colors cursor-pointer"
+                      >
                         <span className="material-symbols-outlined text-[16px] mr-1">edit</span> Edit
                       </button>
                       <button
