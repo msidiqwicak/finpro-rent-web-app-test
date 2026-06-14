@@ -6,7 +6,6 @@ import Navbar from "../../components/layout/Navbar";
 // Import semua komponen modular yang sudah kamu buat dengan rapi
 import PaymentTimerBanner from "../../components/users/payment/PaymentTimerBanner";
 import MidtransPayment from "../../components/users/payment/MidtransPayment";
-import BankDetailsCard from "../../components/users/payment/BankDetailsCard";
 import PaymentSummaryCard from "../../components/users/payment/PaymentSummaryCard";
 import ManualTransfer from "../../components/users/payment/ManualTransfer";
 // (Atau kamu bisa pakai OrderSummarySidebar jika lebih suka desain yang itu)
@@ -26,7 +25,10 @@ export default function Payment() {
         setBookingData(response.data.data);
       } catch (error: any) {
         console.error("Akses Ditolak / Gagal memuat pesanan:", error);
-        alert(error.response?.data?.error || "Pesanan tidak ditemukan atau bukan milik Anda.");
+        alert(
+          error.response?.data?.error ||
+            "Pesanan tidak ditemukan atau bukan milik Anda.",
+        );
         navigate("/bookings"); // Kick user back if not owner
       } finally {
         setIsLoading(false);
@@ -62,9 +64,7 @@ export default function Payment() {
   const totalAmount = Number(bookingData.total_price);
 
   // Asumsi dari backend ada field expired_at, sesuaikan jika namanya berbeda
-  const expiredAt = bookingData.expired_at || bookingData.created_at;
-
-
+  const expiresAt = bookingData.expires_at || bookingData.created_at;
 
   return (
     <div className="bg-surface text-on-surface font-body-md text-body-md min-h-screen flex flex-col antialiased">
@@ -85,7 +85,7 @@ export default function Payment() {
 
           {/* Bagian Kanan: Timer */}
           <div className="w-full md:w-auto shrink-0 min-w-[300px]">
-            <PaymentTimerBanner expiresAt={expiredAt} />
+            <PaymentTimerBanner expiresAt={expiresAt} />
           </div>
         </div>
 

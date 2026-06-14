@@ -184,28 +184,42 @@ export default function OrderHistory() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {displayedOrders.length > 0 ? (
-              displayedOrders.map((order) => (
-                <OrderCard
-                  key={order.id}
-                  // Title diisi dengan Nama Properti
-                  title={
-                    order.room_unit?.room_type?.property?.name ||
-                    "Finpro Escapes Property"
-                  }
-                  // Subtitle diisi dengan Nama Tipe Kamar
-                  subtitle={order.room_unit?.room_type?.name || "Standard Room"}
-                  date={`${new Date(order.check_in).toLocaleDateString("id-ID", { day: "2-digit", month: "short" })} - ${new Date(order.check_out).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}`}
-                  orderId={order.id.substring(0, 8).toUpperCase()}
-                  price={new Intl.NumberFormat("id-ID", {
-                    style: "currency",
-                    currency: "IDR",
-                    minimumFractionDigits: 0,
-                  }).format(Number(order.total_price))}
-                  status={formatStatus(order.status)}
-                  image="https://images.unsplash.com/photo-1542718610-a1d656d1884c?q=80&w=600&auto=format&fit=crop"
-                  onActionClick={() => handleCardAction(order.id, order.status)}
-                />
-              ))
+              displayedOrders.map((order) => {
+                // 👇 Ekstrak gambar secara dinamis dari database
+                const propertyImages =
+                  order.room_unit?.room_type?.property?.image_urls;
+                const imageUrl =
+                  propertyImages && propertyImages.length > 0
+                    ? propertyImages[0] // Ambil gambar pertama jika array tidak kosong
+                    : "https://images.unsplash.com/photo-1542718610-a1d656d1884c?q=80&w=600&auto=format&fit=crop"; // Gambar cadangan
+
+                return (
+                  <OrderCard
+                    key={order.id}
+                    // Title diisi dengan Nama Properti
+                    title={
+                      order.room_unit?.room_type?.property?.name ||
+                      "Finpro Escapes Property"
+                    }
+                    // Subtitle diisi dengan Nama Tipe Kamar
+                    subtitle={
+                      order.room_unit?.room_type?.name || "Standard Room"
+                    }
+                    date={`${new Date(order.check_in).toLocaleDateString("id-ID", { day: "2-digit", month: "short" })} - ${new Date(order.check_out).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}`}
+                    orderId={order.id.substring(0, 8).toUpperCase()}
+                    price={new Intl.NumberFormat("id-ID", {
+                      style: "currency",
+                      currency: "IDR",
+                      minimumFractionDigits: 0,
+                    }).format(Number(order.total_price))}
+                    status={formatStatus(order.status)}
+                    image={imageUrl} // 👈 Gunakan variabel gambar dinamis di sini
+                    onActionClick={() =>
+                      handleCardAction(order.id, order.status)
+                    }
+                  />
+                );
+              })
             ) : (
               <div className="col-span-full text-center py-12 text-on-surface-variant">
                 Tidak ada pesanan yang cocok dengan kriteria pencarian.
