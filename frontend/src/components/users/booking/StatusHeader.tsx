@@ -25,7 +25,7 @@ export default function StatusHeader({
             </h1>
 
             {isCanceled ? (
-              <span className="px-4 py-1 rounded-full font-semibold text-xs flex items-center gap-2 bg-error-container text-on-error-container">
+              <span className="px-4 py-1 rounded-full font-semibold text-xs flex items-center gap-2 bg-error-container border border-error-outline text-on-error-container">
                 <span
                   className="material-symbols-outlined text-[18px]"
                   style={{ fontVariationSettings: "'FILL' 1" }}
@@ -68,12 +68,6 @@ export default function StatusHeader({
                   calendar_today
                 </span>
                 Rebook Now
-              </button>
-              <button className="flex items-center gap-2 border border-outline-variant text-primary px-6 py-3 rounded-lg font-semibold text-sm hover:bg-surface-variant transition-all bg-transparent cursor-pointer">
-                <span className="material-symbols-outlined text-[18px]">
-                  help
-                </span>
-                Help Center
               </button>
             </>
           ) : (

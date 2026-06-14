@@ -132,11 +132,21 @@ export const getBookingDetails = async (id: string) => {
         include: {
           room_type: {
             include: {
-              property: true,
+              property: {
+                include: {
+                  tenant: {
+                    include: {
+                      users: true, // 👈 Data Host / Tenant
+                    },
+                  },
+                },
+              },
             },
           },
         },
       },
+      users: true, // 👈 Data Tamu
+      review: true, // 👈 TAMBAHKAN INI: Agar data review & balasan tenant ikut terbawa
     },
   });
 };

@@ -6,7 +6,8 @@ import StatusHeader from "../../components/users/booking/StatusHeader";
 import PropertySummary from "../../components/users/booking/PropertySummary";
 import StayDetails from "../../components/users/booking/StayDetails";
 import PaymentBreakdown from "../../components/users/booking/PaymentBreakdown";
-
+import UserReviewSection from "../../components/users/booking/UserReview";
+import ReviewModal from "../../components/users/booking/ReviewModal";
 export default function OrderDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -14,21 +15,24 @@ export default function OrderDetail() {
   const [booking, setBooking] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+  const fetchBookingDetail = async (showLoading = true) => {
+    try {
+      if (showLoading) setIsLoading(true); // Agar saat refresh review, layar tidak berkedip putih
+      const response = await api.get(`/bookings/${id}`);
+      setBooking(response.data.data);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Gagal memuat detail pesanan.");
+    } finally {
+      if (showLoading) setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchBookingDetail = async () => {
-      try {
-        setIsLoading(true);
-        const response = await api.get(`/bookings/${id}`);
-        setBooking(response.data.data);
-      } catch (err: any) {
-        setError(err.response?.data?.message || "Gagal memuat detail pesanan.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (id) fetchBookingDetail();
+    if (id) {
+      fetchBookingDetail(true); // Load pertama kali dengan animasi loading
+    }
   }, [id]);
 
   if (isLoading) {
@@ -66,11 +70,23 @@ export default function OrderDetail() {
 
   // --- Data Formatting Engine ---
   const isCanceled = booking.status === "CANCELED";
-  const propertyName =
-    booking.room_unit?.room_type?.property?.name || "Finpro Escapes Property";
-  const roomName = booking.room_unit?.room_type?.name || "Standard Room";
-  const location = "Olympic National Park, Washington";
 
+  // 1. Ekstrak data Property
+  const property = booking.room_unit?.room_type?.property;
+  const propertyName = property?.name || "Finpro Escapes Property";
+  const roomName = booking.room_unit?.room_type?.name || "Standard Room";
+
+  // 2. Ekstrak data Lokasi secara dinamis
+  const location = property
+    ? `${property.city}, ${property.province}`
+    : "Bandung, Jawa Barat";
+
+  // 3. Ekstrak data Tenant/Host untuk PropertySummary
+  const tenantUser = property?.tenant?.users;
+  const propertyImage =
+    property?.image_urls && property.image_urls.length > 0
+      ? property.image_urls[0]
+      : undefined;
   const shortId = booking.id.substring(0, 8).toUpperCase();
   const orderDate = new Date(booking.created_at).toLocaleDateString("en-US", {
     day: "numeric",
@@ -129,10 +145,14 @@ export default function OrderDetail() {
               </div>
             )}
 
+            {/* Mengirimkan data dinamis ke komponen PropertySummary */}
             <PropertySummary
               propertyName={propertyName}
               location={location}
               isCanceled={isCanceled}
+              hostName={tenantUser?.name}
+              hostAvatar={tenantUser?.avatar_url}
+              propertyImage={propertyImage}
             />
 
             <StayDetails
@@ -140,6 +160,14 @@ export default function OrderDetail() {
               checkOutDate={checkOutDate}
               roomName={roomName}
             />
+            {/* 👇 SISIPKAN KOMPONEN REVIEW DI SINI 👇 */}
+            <UserReviewSection
+              status={booking.status}
+              checkOutDate={checkOutDate}
+              review={booking.review} // Asumsi API backend sudah melakukan `include: { review: true }`
+              onOpenReviewModal={() => setIsReviewModalOpen(true)}
+            />
+            {/* 👆 ================================== 👆 */}
           </div>
 
           {/* Right Column (lg:col-span-4) */}
@@ -154,6 +182,14 @@ export default function OrderDetail() {
           />
         </div>
       </main>
+      {booking && (
+        <ReviewModal
+          isOpen={isReviewModalOpen}
+          onClose={() => setIsReviewModalOpen(false)}
+          bookingId={booking.id}
+          onSuccess={() => fetchBookingDetail(false)} // 👈 Silent refresh agar mulus!
+        />
+      )}
     </div>
   );
 }
