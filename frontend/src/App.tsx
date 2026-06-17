@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 // ======== CONTEXT & PROTECTION ========
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import ScrollToTop from "./components/shared/ScrollToTop";
 
 // ======== PAGES ========
 import LandingPage from "./pages/users/LandingPage";
@@ -38,6 +39,7 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           {/* ======== RUTE PUBLIK ======== */}
           <Route path="/" element={<LandingPage />} />

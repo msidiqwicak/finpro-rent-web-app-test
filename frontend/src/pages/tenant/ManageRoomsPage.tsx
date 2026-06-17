@@ -7,7 +7,16 @@ import CreateRoomTypeModal from '../../components/tenant/CreateRoomTypeModal';
 import EditRoomTypeModal from '../../components/tenant/EditRoomTypeModal';
 import SetPriceModifierModal from '../../components/tenant/SetPriceModifierModal';
 
-interface RoomType { id: string; name: string; price_per_night: number; capacity: number; }
+interface PriceModifier {
+  id: string;
+  start_date: string;
+  end_date: string;
+  is_available: boolean;
+  reason: string | null;
+  modifier_type: string;
+  modifier_value: number;
+}
+interface RoomType { id: string; name: string; price_per_night: number; capacity: number; price_modifier?: PriceModifier[]; }
 interface Property { id: string; name: string; city: string; province: string; address: string; room_type: RoomType[]; }
 
 export default function ManageRoomsPage() {
@@ -55,6 +64,20 @@ export default function ManageRoomsPage() {
       alert("Gagal menghapus tipe kamar.");
     }
   };
+
+  const handleDeleteModifier = async (modifierId: string) => {
+    if (!confirm('Hapus rule harga/blokir ini?')) return;
+    try {
+      await api.delete(`/properties/price-modifiers/${modifierId}`, {
+        headers: { Authorization: `Bearer ${user?.token}` }
+      });
+      fetchProperty();
+    } catch (error) {
+      alert("Gagal menghapus rule.");
+    }
+  };
+
+  const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
   if (loading) return <TenantLayout title="Manage Rooms" subtitle="Loading..."><div className="flex justify-center py-20"><span className="material-symbols-outlined text-primary text-[48px] animate-spin">progress_activity</span></div></TenantLayout>;
   if (!property) return null;
@@ -150,6 +173,38 @@ export default function ManageRoomsPage() {
                         </span>
                       </div>
                     </div>
+
+                    {/* ── Price Rules / Block Badges ── */}
+                    {rt.price_modifier && rt.price_modifier.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {rt.price_modifier.map((mod) => (
+                          <div
+                            key={mod.id}
+                            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${
+                              mod.is_available === false
+                                ? 'bg-red-50 text-red-700 border border-red-200'
+                                : 'bg-amber-50 text-amber-700 border border-amber-200'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[13px]">
+                              {mod.is_available === false ? 'block' : 'trending_up'}
+                            </span>
+                            <span>
+                              {mod.is_available === false ? 'Blocked' : 'Peak Season'}:
+                              &nbsp;{fmtDate(mod.start_date)} – {fmtDate(mod.end_date)}
+                              {mod.reason && <> &mdash; {mod.reason}</>}
+                            </span>
+                            <button
+                              onClick={() => handleDeleteModifier(mod.id)}
+                              title="Remove this rule"
+                              className="ml-1 cursor-pointer bg-transparent border-none p-0 leading-none opacity-60 hover:opacity-100 transition-opacity"
+                            >
+                              <span className="material-symbols-outlined text-[13px]">close</span>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <button 

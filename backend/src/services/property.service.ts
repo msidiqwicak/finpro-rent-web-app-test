@@ -39,7 +39,13 @@ export const getMyProperties = async (userId: string) => {
   const tenantId = await getTenantId(userId);
   return prisma.property.findMany({
     where: { tenant_id: tenantId, deleted_at: null },
-    include: { room_type: true, property_category: true },
+    include: {
+      room_type: { 
+        where: { deleted_at: null },
+        include: { price_modifier: true } 
+      },
+      property_category: true,
+    },
     orderBy: { created_at: 'desc' },
   });
 };
@@ -113,7 +119,8 @@ export const deleteProperty = async (userId: string, propertyId: string) => {
 // ── Price Modifier ────────────────────────────────────────────
 type PriceModifierInput = {
   startDate: string; endDate: string;
-  type: modifier_type_enum; value: number; reason?: string;
+  type: string; value: number; reason?: string;
+  isAvailable?: boolean;
 };
 
 export const setPriceModifier = async (
@@ -122,15 +129,21 @@ export const setPriceModifier = async (
   const tenantId = await getTenantId(userId);
   await assertRoomTypeOwner(roomTypeId, tenantId);
 
+  const isBlock = input.isAvailable === false || input.type === 'UNAVAILABLE';
+
+  // UNAVAILABLE is a virtual type — store as PERCENTAGE with value=0 and is_available=false
+  const dbType = isBlock ? 'PERCENTAGE' : input.type as modifier_type_enum;
+  const dbValue = isBlock ? 0 : input.value;
+
   return prisma.price_modifier.create({
     data: {
       room_type_id:   roomTypeId,
       start_date:     new Date(input.startDate),
       end_date:       new Date(input.endDate),
-      modifier_type:  input.type,
-      modifier_value: input.value,
+      modifier_type:  dbType,
+      modifier_value: dbValue,
       reason:         input.reason || null,
-      is_available:   true,
+      is_available:   !isBlock,
     },
   });
 };
@@ -141,10 +154,10 @@ export const deletePriceModifier = async (userId: string, modifierId: string) =>
     where: { id: modifierId },
     include: { room_type: { include: { property: { select: { tenant_id: true } } } } },
   });
-  if (!modifier) throw new Error('Price modifier tidak ditemukan.');
-  if (modifier.room_type.property.tenant_id !== tenantId) throw new Error('Akses ditolak.');
+  if (!modifier) throw new Error('Price rule not found.');
+  if (modifier.room_type.property.tenant_id !== tenantId) throw new Error('Access denied.');
   await prisma.price_modifier.delete({ where: { id: modifierId } });
-  return { message: 'Price modifier berhasil dihapus.' };
+  return { message: 'Price rule deleted successfully.' };
 };
 
 // ── Room Type CRUD ────────────────────────────────────────────
@@ -319,6 +332,9 @@ export const updateRoomType = async (
 export const deleteRoomType = async (userId: string, roomTypeId: string) => {
   const tenantId = await getTenantId(userId);
   await assertRoomTypeOwner(roomTypeId, tenantId);
-  await prisma.room_type.delete({ where: { id: roomTypeId } });
-  return { message: 'Tipe kamar berhasil dihapus.' };
+  await prisma.room_type.update({ 
+    where: { id: roomTypeId },
+    data: { deleted_at: new Date() }
+  });
+  return { message: 'Tipe kamar berhasil dihapus (disembunyikan).' };
 };

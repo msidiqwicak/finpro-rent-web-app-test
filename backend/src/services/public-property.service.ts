@@ -50,12 +50,13 @@ export const listProperties = async (filters: ListFilters = {}) => {
 
 // ── Public: Property detail with dynamic pricing ──────────────
 export const getPropertyDetails = async (propertyId: string, targetDateStr?: string) => {
-  const prop = await prisma.property.findUnique({
+  const prop = await prisma.property.findFirst({
     where: { id: propertyId, deleted_at: null },
     include: {
       property_category:  true,
       tenant:             { select: { id: true, name: true, image_url: true } },
       room_type: {
+        where: { deleted_at: null },
         include: { price_modifier: true },
       },
     },
@@ -163,7 +164,8 @@ export const searchProperties = async (params: SearchParams): Promise<SearchResu
           AND $1::date <= pm2.end_date
         LIMIT 1
       ) pm ON true
-      WHERE EXISTS (
+      WHERE rt.deleted_at IS NULL
+        AND EXISTS (
         SELECT 1
         FROM room_unit ru
         WHERE ru.room_type_id = rt.id
@@ -176,6 +178,15 @@ export const searchProperties = async (params: SearchParams): Promise<SearchResu
               AND b.check_in < $2::date
               AND b.check_out > $1::date
           )
+      )
+      -- Exclude any room_type that has a block (is_available=false) covering the check-in date
+      AND NOT EXISTS (
+        SELECT 1
+        FROM price_modifier pm_block
+        WHERE pm_block.room_type_id = rt.id
+          AND pm_block.is_available = false
+          AND $1::date >= pm_block.start_date
+          AND $1::date <= pm_block.end_date
       )
     )
     SELECT
@@ -242,12 +253,10 @@ export const getRoomCalendarPrices = async (roomId: string, monthStr: string) =>
     throw new Error('Format bulan tidak valid. Gunakan YYYY-MM.');
   }
 
-  const roomType = await prisma.room_type.findUnique({
-    where: { id: roomId },
+  const roomType = await prisma.room_type.findFirst({
+    where: { id: roomId, deleted_at: null },
     include: {
-      price_modifier: {
-        where: { is_available: true }
-      }
+      price_modifier: true  // fetch ALL modifiers including is_available=false (blocks)
     }
   });
 
@@ -261,17 +270,32 @@ export const getRoomCalendarPrices = async (roomId: string, monthStr: string) =>
   for (let day = 1; day <= daysInMonth; day++) {
     const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const targetForCalc = new Date(dateString);
+    targetForCalc.setHours(12, 0, 0, 0); // Normalize to midday to avoid timezone edge cases
 
+    // Check if this date is blocked by any is_available=false modifier
+    const isBlocked = roomType.price_modifier.some((mod) => {
+      if (mod.is_available !== false) return false;
+      const start = new Date(mod.start_date);
+      const end   = new Date(mod.end_date);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      return targetForCalc >= start && targetForCalc <= end;
+    });
+
+    if (isBlocked) {
+      calendar.push({ date: dateString, price: 0, available: false });
+      continue;
+    }
+
+    // Only pass is_available=true modifiers to price calculator
+    const activePriceModifiers = roomType.price_modifier.filter(m => m.is_available !== false);
     const adjustedPrice = calcAdjustedPrice(
       roomType.price_per_night,
-      roomType.price_modifier,
+      activePriceModifiers,
       targetForCalc
     );
 
-    calendar.push({
-      date: dateString,
-      price: adjustedPrice
-    });
+    calendar.push({ date: dateString, price: adjustedPrice, available: true });
   }
 
   return calendar;

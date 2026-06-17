@@ -67,18 +67,38 @@ export default function PricingCalendar({ roomId, checkin, checkout, onChange }:
     return `Rp ${price}`;
   };
 
+  const hasBlockedDateInRange = (from: string, to: string): boolean => {
+    // Check if any date strictly between 'from' and 'to' (exclusive endpoints) is blocked
+    const start = new Date(from);
+    const end   = new Date(to);
+    let cursor  = new Date(start);
+    cursor.setDate(cursor.getDate() + 1); // start from day AFTER checkin
+    while (cursor < end) {
+      const d = cursor.toISOString().split('T')[0];
+      if (prices[d]?.available === false) return true;
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return false;
+  };
+
   const handleDateClick = (dateStr: string) => {
-    // Logic to select checkin/checkout
     if (!checkin) {
+      // Selecting check-in
       onChange(dateStr, '');
     } else if (checkin && !checkout) {
       if (dateStr > checkin) {
-        onChange(checkin, dateStr);
+        // Validate: no blocked dates inside the range
+        if (hasBlockedDateInRange(checkin, dateStr)) {
+          // Range crosses a block — reset and start a new check-in selection
+          onChange(dateStr, '');
+        } else {
+          onChange(checkin, dateStr);
+        }
       } else {
-        onChange(dateStr, ''); // Reset to new checkin
+        onChange(dateStr, ''); // Clicked same or earlier date — restart check-in
       }
     } else {
-      onChange(dateStr, ''); // Reset
+      onChange(dateStr, ''); // Already have both — reset
     }
   };
 
@@ -107,18 +127,23 @@ export default function PricingCalendar({ roomId, checkin, checkout, onChange }:
     const isBetween = checkin && checkout && dateStr > checkin && dateStr < checkout;
     const isSelected = isCheckin || isCheckout;
     
-    const isAvailable = !isPast && (!dayData || dayData.available !== false);
+    const isBlocked = !isPast && dayData?.available === false;
+    const isAvailable = !isPast && !isBlocked;
 
     grid.push(
       <button
         key={dateStr}
         disabled={!isAvailable}
         onClick={() => handleDateClick(dateStr)}
-        className={`relative flex flex-col items-center justify-center h-14 border border-outline-variant/20 transition-colors
-          ${isPast ? 'opacity-30 cursor-not-allowed bg-surface-low' : 'cursor-pointer hover:border-primary'}
-          ${isSelected ? 'bg-primary text-on-primary font-bold' : ''}
+        className={`relative flex flex-col items-center justify-center h-14 border transition-colors
+          ${isBlocked
+            ? 'cursor-not-allowed border-red-200 bg-[repeating-linear-gradient(135deg,#fff_0px,#fff_4px,#fee2e2_4px,#fee2e2_8px)]'
+            : isPast
+            ? 'opacity-30 cursor-not-allowed bg-surface-low border-outline-variant/20'
+            : 'cursor-pointer hover:border-primary border-outline-variant/20'}
+          ${isSelected ? 'bg-primary text-on-primary font-bold border-primary' : ''}
           ${isBetween ? 'bg-primary/10 text-primary font-semibold' : ''}
-          ${!isSelected && !isBetween && !isPast ? 'bg-white text-on-surface' : ''}
+          ${!isSelected && !isBetween && !isPast && !isBlocked ? 'bg-white text-on-surface' : ''}
           ${isCheckin ? 'rounded-l-xl' : ''}
           ${isCheckout ? 'rounded-r-xl' : ''}
           ${!checkin && !checkout ? 'rounded-xl' : ''}
@@ -131,12 +156,14 @@ export default function PricingCalendar({ roomId, checkin, checkout, onChange }:
           </div>
         ) : (
           <>
-            <span className="text-[13px]">{i}</span>
-            {dayData && (
+            <span className={`text-[13px] ${isBlocked ? 'text-red-400 font-semibold' : ''}`}>{i}</span>
+            {isBlocked ? (
+              <span className="text-[9px] mt-0.5 text-red-400 font-bold uppercase tracking-wide">Closed</span>
+            ) : dayData ? (
               <span className={`text-[9px] mt-0.5 ${isSelected ? 'text-on-primary/80' : 'text-on-surface-variant'}`}>
                 {formatShortPrice(dayData.price)}
               </span>
-            )}
+            ) : null}
           </>
         )}
       </button>

@@ -58,7 +58,7 @@ export const getRoomCalendar = async (req: Request, res: Response): Promise<void
       res.status(400).json({ error: 'Parameter month (YYYY-MM) diperlukan.' });
       return;
     }
-    const data = await publicService.getRoomCalendarPrices(roomId, month);
+    const data = await publicService.getRoomCalendarPrices(roomId, month as string);
     res.status(200).json({ data });
   } catch (e: any) {
     res.status(400).json({ error: e.message });
@@ -129,11 +129,12 @@ export const deleteRoomType = async (req: Request, res: Response): Promise<void>
 // ── Price Modifier ────────────────────────────────────────────
 export const setPriceModifier = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { startDate, endDate, type, value, reason } = req.body;
+    const { startDate, endDate, type, value, reason, isAvailable } = req.body;
     const data = await propertyService.setPriceModifier(req.user!.id, req.params.id as string, {
       startDate, endDate, type, value: Number(value), reason,
+      isAvailable: isAvailable === undefined ? true : Boolean(isAvailable),
     });
-    res.status(201).json({ message: 'Price modifier berhasil disimpan.', data });
+    res.status(201).json({ message: 'Price rule saved successfully.', data });
   } catch (e: any) { res.status(400).json({ error: e.message }); }
 };
 

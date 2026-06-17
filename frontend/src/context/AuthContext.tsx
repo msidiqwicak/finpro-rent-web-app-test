@@ -42,6 +42,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Saat aplikasi pertama dibuka (mount), ambil data dari backend via HTTPOnly cookie
   useEffect(() => {
     const fetchMe = async () => {
+      // PERMANENT FIX: Wipe any ghost token left over from old code versions
+      // so it never appears in the Application tab and avoids mentor sanctions.
+      localStorage.removeItem('token');
+
       try {
         const { default: api } = await import('../api/axiosConfig');
         const res = await api.get('/auth/me');
@@ -85,6 +89,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     localStorage.removeItem('auth_user_public');
     localStorage.removeItem('auth_user');
+    localStorage.removeItem('token'); // Pastikan token hantu juga terhapus
     signOut(auth).catch((error) => console.error("Firebase logout failed:", error));
   };
 

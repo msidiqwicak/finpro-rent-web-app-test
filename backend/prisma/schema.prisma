@@ -112,6 +112,7 @@ model room_type {
   total_units     Int              @default(0)
   amenities       String[]         @default([])
   image_urls      String[]         @default([])
+  deleted_at      DateTime?        @db.Timestamptz(6)
   price_modifier  price_modifier[]
   property        property         @relation(fields: [property_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   room_unit       room_unit[]

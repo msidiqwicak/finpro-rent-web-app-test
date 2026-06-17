@@ -9,6 +9,8 @@ interface Props    { roomTypes: RoomType[]; onSuccess: () => void; onClose: () =
 
 const INITIAL = { roomTypeId: '', startDate: '', endDate: '', type: 'PERCENTAGE', value: '', reason: '' };
 
+const isUnavailable = (type: string) => type === 'UNAVAILABLE';
+
 export default function SetPriceModifierModal({ roomTypes, onSuccess, onClose }: Props) {
   const { user }            = useAuth();
   const [form, setForm]     = useState(INITIAL);
@@ -23,11 +25,16 @@ export default function SetPriceModifierModal({ roomTypes, onSuccess, onClose }:
     try {
       const { default: api } = await import('../../api/axiosConfig');
       await api.post(`/properties/room-types/${form.roomTypeId}/price-modifier`, {
-        startDate: form.startDate, endDate: form.endDate, type: form.type, value: Number(form.value), reason: form.reason
+        startDate: form.startDate,
+        endDate:   form.endDate,
+        type:      form.type,
+        value:     isUnavailable(form.type) ? 0 : Number(form.value),
+        reason:    form.reason,
+        isAvailable: !isUnavailable(form.type),
       });
       onSuccess();
     } catch (err: any) {
-      setError(err.response?.data?.error || err.message || 'Gagal menyimpan price modifier.');
+      setError(err.response?.data?.error || err.message || 'Failed to save price rule.');
     } finally { setLoading(false); }
   };
 
@@ -61,16 +68,28 @@ export default function SetPriceModifierModal({ roomTypes, onSuccess, onClose }:
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Modifier Type</label>
             <select name="type" value={form.type} onChange={handleChange} className={INPUT}>
-              <option value="PERCENTAGE">Percentage (%)</option>
-              <option value="FIXED">Fixed Amount (Rp)</option>
+              <option value="PERCENTAGE">Percentage (%) — Price Increase</option>
+              <option value="FIXED">Fixed Amount (Rp) — Price Increase</option>
+              <option value="UNAVAILABLE">🚫 Unavailable — Block This Date</option>
             </select>
           </div>
-          <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">
-              {form.type === 'PERCENTAGE' ? 'Percentage (e.g. 20 for +20%)' : 'Fixed Amount (Rp)'}
-            </label>
-            <input name="value" type="number" min="0" value={form.value} onChange={handleChange} required className={INPUT} />
-          </div>
+
+          {isUnavailable(form.type) ? (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+              <span className="material-symbols-outlined text-[22px] text-red-500 shrink-0 mt-0.5">block</span>
+              <div>
+                <p className="font-bold text-[14px] text-red-700">Room will be blocked</p>
+                <p className="text-[12px] text-red-600 mt-0.5">The selected room type will be completely unavailable for booking during this date range. No guests can make reservations.</p>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">
+                {form.type === 'PERCENTAGE' ? 'Percentage (e.g. 20 for +20%)' : 'Fixed Amount (Rp)'}
+              </label>
+              <input name="value" type="number" min="0" value={form.value} onChange={handleChange} required={!isUnavailable(form.type)} className={INPUT} />
+            </div>
+          )}
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Reason (optional)</label>
             <input name="reason" type="text" value={form.reason} onChange={handleChange} className={INPUT} placeholder="e.g. Holiday season" />

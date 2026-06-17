@@ -55,10 +55,36 @@ export const createBookingProcess = async (
   }
 
   if (checkOut <= checkIn) {
-    throw new Error("Tanggal check-out harus setelah tanggal check-in");
+    throw new Error("Check-out date must be after check-in date.");
   }
 
-  // 2. Auto-Assign: Cari 1 unit kamar yang aktif dan TIDAK tabrakan jadwalnya
+  // 2. Block-date validation: reject if ANY night overlaps an is_available=false modifier
+  const roomForBlockCheck = await prisma.room_type.findUnique({
+    where: { id: roomTypeId },
+    include: { price_modifier: { where: { is_available: false } } },
+  });
+
+  if (roomForBlockCheck && roomForBlockCheck.price_modifier.length > 0) {
+    const stayNights = eachDayOfInterval({ start: checkIn, end: subDays(checkOut, 1) });
+    for (const night of stayNights) {
+      const blocker = roomForBlockCheck.price_modifier.find((mod) => {
+        const start = new Date(mod.start_date); start.setHours(0, 0, 0, 0);
+        const end   = new Date(mod.end_date);   end.setHours(23, 59, 59, 999);
+        return night >= start && night <= end;
+      });
+      if (blocker) {
+        const fmtOpts: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short', year: 'numeric' };
+        const from = new Date(blocker.start_date).toLocaleDateString('en-GB', fmtOpts);
+        const to   = new Date(blocker.end_date).toLocaleDateString('en-GB', fmtOpts);
+        const why  = blocker.reason ? ` Reason: "${blocker.reason}".` : '';
+        throw new Error(
+          `Booking failed: This room is unavailable from ${from} to ${to}.${why} Please choose different dates.`
+        );
+      }
+    }
+  }
+
+  // 3. Auto-Assign: Cari 1 unit kamar yang aktif dan TIDAK tabrakan jadwalnya
   const availableUnit = await prisma.room_unit.findFirst({
     where: {
       room_type_id: roomTypeId,
