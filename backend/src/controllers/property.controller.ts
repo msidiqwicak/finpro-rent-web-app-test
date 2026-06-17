@@ -58,7 +58,7 @@ export const getRoomCalendar = async (req: Request, res: Response): Promise<void
       res.status(400).json({ error: 'Parameter month (YYYY-MM) diperlukan.' });
       return;
     }
-    const data = await publicService.getRoomCalendarPrices(roomId, month as string);
+    const data = await publicService.getRoomCalendarPrices(roomId as string, month as string);
     res.status(200).json({ data });
   } catch (e: any) {
     res.status(400).json({ error: e.message });
