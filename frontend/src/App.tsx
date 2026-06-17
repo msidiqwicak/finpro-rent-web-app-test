@@ -30,6 +30,9 @@ import ManageRoomsPage from "./pages/tenant/ManageRoomsPage";
 import UserProfilePage from "./pages/users/UserProfilePage";
 import TenantBookingDetail from "./pages/tenant/BookingDetail";
 import PropertyCategoryManagement from "./pages/tenant/PropertyCategoryManagement";
+import TenantReviewPage from "./pages/tenant/TenantReviewPage";
+import TenantSalesReportPage from "./pages/tenant/TenantSalesReportPage";
+import TenantPropertyCalendarPage from "./pages/tenant/TenantPropertyCalendarPage";
 
 // ============================================================
 // KOMPONEN APP (ROUTING UTAMA)
@@ -164,6 +167,30 @@ function App() {
             element={
               <ProtectedRoute requiredRole="TENANT">
                 <PropertyCategoryManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tenant/reviews"
+            element={
+              <ProtectedRoute requiredRole="TENANT">
+                <TenantReviewPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tenant/report"
+            element={
+              <ProtectedRoute requiredRole="TENANT">
+                <TenantSalesReportPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tenant/calendar"
+            element={
+              <ProtectedRoute requiredRole="TENANT">
+                <TenantPropertyCalendarPage />
               </ProtectedRoute>
             }
           />

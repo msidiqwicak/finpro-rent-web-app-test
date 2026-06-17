@@ -2,21 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import NavDropdown from "./NavDropdown";
-
-function Toast({ msg }: { msg: string }) {
-  return (
-    <div
-      role="alert"
-      aria-live="polite"
-      className="fixed top-20 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-2 bg-primary-container text-on-primary text-[14px] font-medium font-body px-5 py-3 rounded-xl shadow-[0_8px_24px_rgba(6,27,14,0.25)] max-w-[90vw]"
-    >
-      <span className="material-symbols-outlined text-[18px] shrink-0">
-        info
-      </span>
-      {msg}
-    </div>
-  );
-}
+import Toast from "./Toast";
+import CheckoutNavbar from "./CheckoutNavbar";
+import MobileMenu from "./MobileMenu";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -43,7 +31,7 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  // Sync avatar from API when user logs in or token changes
+  // Sync avatar
   useEffect(() => {
     if (!user?.token) return;
     fetch("http://localhost:8000/api/users/profile", {
@@ -56,7 +44,7 @@ export default function Navbar() {
         if (url !== user.avatar_url) login({ ...user, avatar_url: url });
       })
       .catch(() => {});
-  }, [user?.token]);
+  }, [user?.token, login, user]);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -65,6 +53,7 @@ export default function Navbar() {
 
   const handleLogout = () => {
     logout();
+    setMobileOpen(false);
     navigate("/");
     showToast("You have successfully logged out.");
   };
@@ -73,7 +62,6 @@ export default function Navbar() {
   const isUser = user?.role === "USER";
   const isLoggedIn = !!user;
 
-  // Array untuk menu navigasi utama
   const navItems = [
     { name: "Explore", path: "/explore" },
     ...(isLoggedIn
@@ -84,9 +72,7 @@ export default function Navbar() {
       : []),
   ];
 
-  // =========================================================
-  // LOGIC UNTUK CHECKOUT ISOLATION (NAVBAR MINIMALIS)
-  // =========================================================
+  // Logic Checkout Isolation
   const isCheckoutPhase =
     location.pathname.startsWith("/checkout") ||
     location.pathname.startsWith("/payment") ||
@@ -96,24 +82,10 @@ export default function Navbar() {
     return (
       <>
         {toast && <Toast msg={toast} />}
-        <header className="bg-surface/80 top-0 sticky backdrop-blur-md shadow-sm flex justify-center items-center w-full px-5 h-[72px] z-50 border-b border-outline-variant/30">
-          <div className="max-w-[1280px] w-full mx-auto flex items-center gap-2 md:gap-3">
-            <button
-              onClick={() => navigate(-1)}
-              aria-label="Go back"
-              className="material-symbols-outlined text-primary cursor-pointer hover:bg-surface-container-high transition-colors w-10 h-10 -ml-2 rounded-full border-none bg-transparent flex items-center justify-center"
-            >
-              arrow_back
-            </button>
-            <div className="font-display font-bold text-xl text-primary">
-              Finpro Escapes
-            </div>
-          </div>
-        </header>
+        <CheckoutNavbar />
       </>
     );
   }
-  // =========================================================
 
   const isHome = location.pathname === "/";
 
@@ -121,10 +93,10 @@ export default function Navbar() {
     <>
       {toast && <Toast msg={toast} />}
 
-      <header className="sticky top-0 z-50 h-[72px] bg-surface/90 backdrop-blur-md border-b border-outline-variant shadow-[0_1px_3px_rgba(6,27,14,0.08)] w-full flex justify-center items-center">
-        <div className="flex items-center justify-between h-full w-full max-w-[1280px] px-5 relative">
-          {/* Bagian Kiri: Logo & Back Button */}
-          <div className="flex items-center gap-1 sm:gap-2 z-10">
+      <header className="sticky top-0 z-50 h-[72px] bg-surface/95 backdrop-blur-md border-b border-outline-variant/50 shadow-sm w-full">
+        <div className="flex items-center justify-between h-full w-full max-w-[1280px] px-4 md:px-5 mx-auto relative">
+          {/* Kiri: Logo */}
+          <div className="flex items-center gap-1 sm:gap-2 z-20">
             {!isHome ? (
               <button
                 onClick={() => navigate(-1)}
@@ -134,7 +106,7 @@ export default function Navbar() {
                 arrow_back
               </button>
             ) : (
-              <div className="w-10 h-10 -ml-2 invisible pointer-events-none" />
+              <div className="w-10 h-10 -ml-2 hidden md:block invisible pointer-events-none" />
             )}
             <Link
               to="/"
@@ -144,9 +116,9 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Bagian Tengah: Desktop Navigation */}
-          {!isTenant && isHome && (
-            <nav className="hidden md:flex items-center justify-center gap-8 absolute left-1/2 -translate-x-1/2 w-fit">
+          {/* Tengah: Desktop Nav */}
+          {!isTenant && (
+            <nav className="hidden md:flex items-center justify-center gap-8 absolute left-1/2 -translate-x-1/2 w-fit z-10">
               {navItems.map((item) => {
                 const isActive =
                   location.pathname === item.path ||
@@ -156,11 +128,7 @@ export default function Navbar() {
                   <Link
                     key={item.name}
                     to={item.path}
-                    className={`text-[15px] font-body transition-colors ${
-                      isActive
-                        ? "font-bold text-primary"
-                        : "font-medium text-on-surface-variant hover:text-primary"
-                    }`}
+                    className={`text-[15px] font-body transition-colors ${isActive ? "font-bold text-primary" : "font-medium text-on-surface-variant hover:text-primary"}`}
                   >
                     {item.name}
                   </Link>
@@ -169,156 +137,80 @@ export default function Navbar() {
             </nav>
           )}
 
-          {/* Bagian Kanan: Actions & Profile */}
-          <div className="flex items-center gap-3 z-10">
-            {isLoggedIn && (
-              <button
-                aria-label="Notifications"
-                title="Notifications"
-                className="hidden md:flex w-10 h-10 rounded-full border border-outline-variant bg-transparent items-center justify-center text-primary hover:bg-surface-low transition-colors cursor-pointer relative"
-              >
-                <span className="material-symbols-outlined text-[22px]">
-                  notifications
-                </span>
-                <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-surface-white"></span>
-              </button>
-            )}
-
-            {!isLoggedIn ? (
-              <Link
-                to="/login"
-                aria-label="Login"
-                title="Login or Register"
-                className="w-10 h-10 rounded-full border border-outline-variant text-primary bg-transparent flex items-center justify-center hover:bg-surface-low transition-colors"
-              >
-                <span className="material-symbols-outlined text-[22px]">
-                  person
-                </span>
-              </Link>
-            ) : (
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  aria-label="Profile menu"
-                  onClick={() => setOpen((o) => !o)}
-                  title={`Logged in as ${user.name} (${user.role})`}
-                  className="w-10 h-10 rounded-full border-2 border-primary bg-transparent flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer overflow-hidden"
-                >
-                  {avatarUrl ? (
-                    <img
-                      src={avatarUrl}
-                      alt={user.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="material-symbols-outlined text-[22px] text-primary">
-                      account_circle
-                    </span>
-                  )}
+          {/* Kanan: Desktop Profile & Mobile Hamburger */}
+          <div className="flex items-center gap-3 z-20">
+            <div className="hidden md:flex items-center gap-3">
+              {isLoggedIn && (
+                <button className="w-10 h-10 rounded-full border border-outline-variant bg-transparent flex items-center justify-center text-primary hover:bg-surface-low transition-colors cursor-pointer relative">
+                  <span className="material-symbols-outlined text-[22px]">
+                    notifications
+                  </span>
+                  <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-surface-white"></span>
                 </button>
-                {open && (
-                  <NavDropdown
-                    user={user}
-                    onLogout={handleLogout}
-                    onClose={() => setOpen(false)}
-                    onToast={showToast}
-                  />
-                )}
-              </div>
-            )}
+              )}
 
-            {/* Hamburger Menu (Mobile) */}
+              {!isLoggedIn ? (
+                <Link
+                  to="/login"
+                  className="w-10 h-10 rounded-full border border-outline-variant text-primary bg-transparent flex items-center justify-center hover:bg-surface-low transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[22px]">
+                    person
+                  </span>
+                </Link>
+              ) : (
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setOpen((o) => !o)}
+                    className="w-10 h-10 rounded-full border-2 border-primary bg-transparent flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer overflow-hidden"
+                  >
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt={user.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="material-symbols-outlined text-[22px] text-primary">
+                        account_circle
+                      </span>
+                    )}
+                  </button>
+                  {open && (
+                    <NavDropdown
+                      user={user}
+                      onLogout={handleLogout}
+                      onClose={() => setOpen(false)}
+                      onToast={showToast}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+
             <button
-              aria-label="Toggle menu"
               onClick={() => setMobileOpen((o) => !o)}
-              className="flex md:hidden w-10 h-10 rounded-full border border-outline-variant bg-transparent items-center justify-center text-primary hover:bg-surface-low transition-colors cursor-pointer"
+              className="flex md:hidden w-10 h-10 rounded-full bg-surface-low items-center justify-center text-primary hover:bg-surface-container transition-colors cursor-pointer border-none"
             >
-              <span className="material-symbols-outlined text-[20px]">
+              <span className="material-symbols-outlined text-[24px]">
                 {mobileOpen ? "close" : "menu"}
               </span>
             </button>
           </div>
         </div>
 
-        {/* Mobile Dropdown Menu */}
         {mobileOpen && (
-          <nav className="md:hidden bg-surface-white border-t border-outline-variant py-2 shadow-md">
-            <div className="max-w-[1280px] mx-auto px-5 flex flex-col">
-              {!isTenant && (
-                <div className="py-2 border-b border-surface-high mb-2 flex flex-col gap-1">
-                  {navItems.map((item) => {
-                    const isActive =
-                      location.pathname === item.path ||
-                      (item.path !== "/" &&
-                        location.pathname.startsWith(item.path));
-                    return (
-                      <Link
-                        key={item.name}
-                        to={item.path}
-                        onClick={() => setMobileOpen(false)}
-                        className={`block py-3 text-[15px] ${
-                          isActive
-                            ? "font-bold text-primary"
-                            : "font-medium text-on-surface-variant"
-                        }`}
-                      >
-                        {item.name}
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-
-              {isLoggedIn && (
-                <Link
-                  to="/notifications"
-                  onClick={() => setMobileOpen(false)}
-                  className="block py-3 text-[15px] font-medium text-on-surface-variant flex items-center justify-between border-b border-surface-high"
-                >
-                  <span>Notifications</span>
-                  <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                    New
-                  </span>
-                </Link>
-              )}
-
-              {isUser && (
-                <Link
-                  to="/profile"
-                  onClick={() => setMobileOpen(false)}
-                  className="block py-3 text-[14px] font-semibold text-on-surface border-b border-surface-high"
-                >
-                  My Profile
-                </Link>
-              )}
-              {isTenant && (
-                <Link
-                  to="/tenant/dashboard"
-                  onClick={() => setMobileOpen(false)}
-                  className="block py-3 text-[14px] font-semibold text-on-surface border-b border-surface-high"
-                >
-                  Tenant Dashboard
-                </Link>
-              )}
-
-              {!isLoggedIn && (
-                <Link
-                  to="/login"
-                  onClick={() => setMobileOpen(false)}
-                  className="block py-3 text-[14px] font-bold text-primary"
-                >
-                  Login / Register
-                </Link>
-              )}
-              {isLoggedIn && (
-                <button
-                  onClick={handleLogout}
-                  className="text-left py-3 text-[14px] font-bold text-red-600 bg-transparent border-none cursor-pointer"
-                >
-                  Logout
-                </button>
-              )}
-            </div>
-          </nav>
+          <MobileMenu
+            user={user}
+            isLoggedIn={isLoggedIn}
+            isTenant={isTenant}
+            isUser={isUser}
+            navItems={navItems}
+            locationPath={location.pathname}
+            setMobileOpen={setMobileOpen}
+            handleLogout={handleLogout}
+            avatarUrl={avatarUrl}
+          />
         )}
       </header>
     </>
