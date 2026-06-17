@@ -3,6 +3,7 @@ import type { Request, Response } from "express";
 import {
   createPropertyReview,
   replyPropertyReview,
+  getTenantReviews,
 } from "../services/review.service.js";
 
 export const submitReview = async (req: Request, res: Response) => {
@@ -56,6 +57,21 @@ export const submitReply = async (req: Request, res: Response) => {
     res
       .status(200)
       .json({ message: "Review berhasil dibalas!", data: updatedReview });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+export const fetchTenantReviews = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id; // Diambil dari token JWT
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized." });
+    }
+
+    const reviews = await getTenantReviews(userId);
+    res.status(200).json({ data: reviews });
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }

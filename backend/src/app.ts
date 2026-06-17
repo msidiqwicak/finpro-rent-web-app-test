@@ -11,6 +11,8 @@ import propertyRoutes from "./routes/property.route.js";
 import { initCronJobs } from "./cron/reminder.cron.js";
 import tenantRoute from "./routes/tenant.route.js";
 import reviewRoutes from "./routes/review.route.js";
+import reportRoutes from "./routes/report.route.js";
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -32,6 +34,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/tenant", tenantRoute);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/reports", reportRoutes);
 startBookingCron();
 app.use(
   (

@@ -1,6 +1,10 @@
 // routes/review.route.ts
 import { Router } from "express";
-import { submitReview, submitReply } from "../controllers/review.controller.js";
+import {
+  submitReview,
+  submitReply,
+  fetchTenantReviews,
+} from "../controllers/review.controller.js";
 import { authenticate, authorizeRole } from "../middlewares/auth.middleware.js"; // Sesuaikan dengan nama middleware auth-mu
 
 const router = Router();
@@ -14,8 +18,15 @@ router.post("/", authenticate, authorizeRole("USER"), submitReview);
 router.patch(
   "/:reviewId/reply",
   authenticate,
-  authorizeRole("USER"),
+  authorizeRole("TENANT"),
   submitReply,
+);
+
+router.get(
+  "/tenant",
+  authenticate,
+  authorizeRole("TENANT"),
+  fetchTenantReviews,
 );
 
 export default router;

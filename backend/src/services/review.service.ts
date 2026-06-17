@@ -76,3 +76,34 @@ export const replyPropertyReview = async (
     data: { tenant_reply: replyText },
   });
 };
+
+export const getTenantReviews = async (userId: string) => {
+  // 1. Cari data tenant berdasarkan user yang login
+  const tenant = await prisma.tenant.findUnique({
+    where: { user_id: userId },
+  });
+
+  if (!tenant) throw new Error("Akses ditolak. Anda bukan tenant.");
+
+  // 2. Ambil semua review yang tertuju pada properti milik tenant ini
+  return await prisma.review.findMany({
+    where: {
+      property: {
+        tenant_id: tenant.id,
+      },
+    },
+    include: {
+      // Ambil data tamu untuk foto & nama
+      users: {
+        select: { name: true, avatar_url: true },
+      },
+      // Ambil data properti agar tenant tahu ulasan ini untuk properti yang mana
+      property: {
+        select: { name: true },
+      },
+    },
+    orderBy: {
+      created_at: "desc", // Urutkan dari ulasan yang paling baru
+    },
+  });
+};
