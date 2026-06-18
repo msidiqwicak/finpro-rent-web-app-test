@@ -4,29 +4,8 @@ import {
   getBookingDetails,
   cancelBookingById,
   getAllBookings,
-  verifyBookingOwnership,
   getBookingsByTenant,
 } from "../services/booking.service.js";
-
-// ── Helper: verify ownership and respond if check fails ──────────────
-// Helper ini SEKARANG HANYA dipakai untuk aksi yang tidak butuh fetch data utuh (seperti Cancel)
-const checkOwnership = async (
-  bookingId: string,
-  userId: string,
-  res: Response,
-): Promise<boolean> => {
-  try {
-    const isOwner = await verifyBookingOwnership(bookingId, userId);
-    if (!isOwner) {
-      res.status(403).json({ error: "Akses ditolak. Ini bukan pesanan Anda." });
-      return false;
-    }
-    return true;
-  } catch (err: any) {
-    res.status(404).json({ error: err.message ?? "Pesanan tidak ditemukan." });
-    return false;
-  }
-};
 
 export const createBooking = async (
   req: Request,
@@ -36,7 +15,6 @@ export const createBooking = async (
     const userId = req.user!.id;
     const { roomTypeId, checkIn, checkOut } = req.body;
 
-    // Tambahan efisiensi: Cegah error sebelum masuk ke service/Prisma
     if (!roomTypeId || !checkIn || !checkOut) {
       res.status(400).json({ error: "Data booking tidak lengkap." });
       return;
@@ -63,23 +41,17 @@ export const getBookingById = async (
 ): Promise<void> => {
   try {
     const id = req.params.id as string;
-    const userId = req.user!.id;
 
     if (!id) {
       res.status(400).json({ error: "ID pesanan tidak valid." });
       return;
     }
 
-    // EFISIENSI: Hanya 1x hit database langsung mengambil detailnya
+    // Hanya fokus mengambil detail data untuk dikirim ke frontend.
+    // Jika eksekusi sampai ke baris ini, middleware sudah menjamin ini adalah pesanan miliknya.
     const booking = await getBookingDetails(id);
     if (!booking) {
       res.status(404).json({ error: "Pesanan tidak ditemukan." });
-      return;
-    }
-
-    // EFISIENSI: Cek kepemilikan secara langsung (tanpa perlu ke database lagi)
-    if (booking.user_id !== userId) {
-      res.status(403).json({ error: "Akses ditolak. Ini bukan pesanan Anda." });
       return;
     }
 
@@ -96,17 +68,13 @@ export const cancelBookingProcess = async (
 ): Promise<void> => {
   try {
     const id = req.params.id as string;
-    const userId = req.user!.id;
 
     if (!id) {
       res.status(400).json({ error: "ID pesanan tidak valid." });
       return;
     }
 
-    // Di sini Helper checkOwnership sangat berguna dan efisien!
-    const passed = await checkOwnership(id, userId, res);
-    if (!passed) return;
-
+    // Langsung eksekusi! Validasi kepemilikan sudah diurus oleh Middleware di rute.
     await cancelBookingById(id);
     res.status(200).json({ message: "Pesanan berhasil dibatalkan." });
   } catch (error: any) {
@@ -125,7 +93,6 @@ export const getBookings = async (
     const { search, date } = req.query;
     const userId = req.user!.id;
 
-    // Defensive programming ini dipertahankan karena query bisa berbentuk Array jika user iseng
     const searchQuery = typeof search === "string" ? search : undefined;
     const dateQuery = typeof date === "string" ? date : undefined;
 

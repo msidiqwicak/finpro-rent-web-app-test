@@ -3,24 +3,20 @@ import { processPaymentUpload } from "../services/payment.service.js";
 import { prisma } from "../utils/prisma.js";
 import { snap } from "../utils/midtrans.js";
 
-import { verifyBookingOwnership } from "../services/booking.service.js"; // 👈 Import dari service booking
-
-const checkBookingOwnership = async (
-  bookingId: string,
-  userId: string,
-  res: Response,
-): Promise<boolean> => {
-  try {
-    const isOwner = await verifyBookingOwnership(bookingId, userId);
-    if (!isOwner) {
-      res.status(403).json({ error: "Akses ditolak. Ini bukan pesanan Anda." });
-      return false;
-    }
-    return true;
-  } catch (err: any) {
-    res.status(404).json({ error: "Pesanan tidak ditemukan." });
-    return false;
+// ── Helper: Mapping Status Midtrans ──
+const mapMidtransStatus = (
+  transactionStatus: string,
+  fraudStatus?: string,
+): string => {
+  if (transactionStatus === "capture" || transactionStatus === "settlement") {
+    return fraudStatus === "accept" || !fraudStatus
+      ? "CONFIRMED"
+      : "WAITING_FOR_PAYMENT";
   }
+  if (["cancel", "deny", "expire"].includes(transactionStatus)) {
+    return "CANCELED";
+  }
+  return "WAITING_FOR_PAYMENT";
 };
 
 export const uploadPaymentProof = async (
@@ -28,7 +24,6 @@ export const uploadPaymentProof = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const userId = req.user!.id;
     const { bookingId, amount, method } = req.body;
     const file = req.file;
 
@@ -37,10 +32,8 @@ export const uploadPaymentProof = async (
       return;
     }
 
-    const passed = await checkBookingOwnership(bookingId, userId, res);
-    if (!passed) return;
+    // ⚡ Langsung eksekusi! Middleware verifyBookingOwnership sudah memastikan kepemilikan.
     const proofUrl = file.path;
-
     const result = await processPaymentUpload(
       bookingId,
       Number(amount),
@@ -59,26 +52,23 @@ export const uploadPaymentProof = async (
   }
 };
 
-// midtrans
 export const createSnapToken = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
     const userId = req.user!.id;
-    const { orderId } = req.params;
+    const orderId = req.params.orderId as string;
 
     if (!orderId || orderId === "undefined") {
       res.status(400).json({ message: "Order ID tidak valid." });
       return;
     }
 
-    // 1. Ambil data HANYA SEKALI, lengkap dengan relasi 'users' yang dibutuhkan Midtrans
+    // Ambil data utuh (termasuk user) untuk Midtrans
     const booking = await prisma.booking.findUnique({
-      where: { id: orderId as string },
-      include: {
-        users: true,
-      },
+      where: { id: orderId },
+      include: { users: true },
     });
 
     if (!booking) {
@@ -86,7 +76,7 @@ export const createSnapToken = async (
       return;
     }
 
-    // 2. CEK KEPEMILIKAN SECARA LANGSUNG (Tanpa Double Query)
+    // ⚡ CEK KEPEMILIKAN INLINE (Menghindari Double Query dari Middleware)
     if (booking.user_id !== userId) {
       res.status(403).json({
         message: "Forbidden. Akses ditolak karena ini bukan pesanan Anda.",
@@ -101,7 +91,6 @@ export const createSnapToken = async (
       return;
     }
 
-    // 3. Kirim data ke Midtrans
     const parameter = {
       transaction_details: {
         order_id: `${booking.id}-${Date.now()}`,
@@ -133,38 +122,20 @@ export const handleMidtransNotification = async (
     const statusResponse = await (snap as any).transaction.notification(
       req.body,
     );
-
     const orderId = statusResponse.order_id;
-    const transactionStatus = statusResponse.transaction_status;
-    const fraudStatus = statusResponse.fraud_status;
-
     const realBookingId =
       orderId.length > 36 ? orderId.substring(0, 36) : orderId;
 
-    let newStatus: any = "WAITING_FOR_PAYMENT";
-
-    if (transactionStatus === "capture" || transactionStatus === "settlement") {
-      if (fraudStatus === "accept" || !fraudStatus) {
-        newStatus = "CONFIRMED";
-      }
-    } else if (
-      transactionStatus === "cancel" ||
-      transactionStatus === "deny" ||
-      transactionStatus === "expire"
-    ) {
-      newStatus = "CANCELED";
-    } else if (transactionStatus === "pending") {
-      newStatus = "WAITING_FOR_PAYMENT";
-    }
+    const newStatus = mapMidtransStatus(
+      statusResponse.transaction_status,
+      statusResponse.fraud_status,
+    );
 
     await prisma.booking.update({
       where: { id: realBookingId },
-      data: { status: newStatus },
+      data: { status: newStatus as any },
     });
 
-    console.log(
-      `✅ Status pesanan ${realBookingId} berhasil diupdate menjadi ${newStatus}`,
-    );
     res.status(200).json({ status: "ok" });
   } catch (error: any) {
     console.error("❌ Gagal memproses notifikasi Midtrans:", error);
@@ -187,7 +158,7 @@ export const syncPaymentStatus = async (
     const realBookingId =
       orderId.length > 36 ? orderId.substring(0, 36) : orderId;
 
-    // EFISIENSI: Gunakan select alih-alih include penuh jika hanya butuh ID
+    // Ambil data untuk validasi hak akses ganda (User & Tenant)
     const booking = await prisma.booking.findUnique({
       where: { id: realBookingId },
       select: {
@@ -196,15 +167,7 @@ export const syncPaymentStatus = async (
           select: {
             room_type: {
               select: {
-                property: {
-                  select: {
-                    tenant: {
-                      select: {
-                        user_id: true,
-                      },
-                    },
-                  },
-                },
+                property: { select: { tenant: { select: { user_id: true } } } },
               },
             },
           },
@@ -229,32 +192,18 @@ export const syncPaymentStatus = async (
     }
 
     const statusResponse = await (snap as any).transaction.status(orderId);
-    const transactionStatus = statusResponse.transaction_status;
-    const fraudStatus = statusResponse.fraud_status;
-
-    let newStatus: any = "WAITING_FOR_PAYMENT";
-
-    if (transactionStatus === "capture" || transactionStatus === "settlement") {
-      if (fraudStatus === "accept" || !fraudStatus) {
-        newStatus = "CONFIRMED";
-      }
-    } else if (
-      transactionStatus === "cancel" ||
-      transactionStatus === "deny" ||
-      transactionStatus === "expire"
-    ) {
-      newStatus = "CANCELED";
-    } else if (transactionStatus === "pending") {
-      newStatus = "WAITING_FOR_PAYMENT";
-    }
+    const newStatus = mapMidtransStatus(
+      statusResponse.transaction_status,
+      statusResponse.fraud_status,
+    );
 
     await prisma.booking.update({
       where: { id: realBookingId },
-      data: { status: newStatus },
+      data: { status: newStatus as any },
     });
 
     console.log(
-      `✅ Status pesanan ${realBookingId} berhasil disinkronkan menjadi ${newStatus}`,
+      `✅ Sync: Status pesanan ${realBookingId} disinkronkan menjadi ${newStatus}`,
     );
     res.status(200).json({ status: newStatus });
   } catch (error: any) {

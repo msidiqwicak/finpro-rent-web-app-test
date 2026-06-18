@@ -6,39 +6,40 @@ import {
   syncPaymentStatus,
 } from "../controllers/payment.controller.js";
 import { uploadPaymentProof } from "../middlewares/upload.middleware.js";
-import { authenticate, authorizeRole } from "../middlewares/auth.middleware.js";
+import {
+  authenticate,
+  authorizeRole,
+  verifyBookingOwnership,
+} from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
 // POST /api/payments/upload
-// Hanya USER pemilik booking yang bisa upload bukti pembayaran
+// Gunakan verifyBookingOwnership (membaca dari req.body.bookingId)
 router.post(
   "/upload",
   authenticate,
   authorizeRole("USER"),
   uploadPaymentProof.single("image"),
+  verifyBookingOwnership,
   uploadPaymentProofController,
 );
 
 // POST /api/payments/snap/:orderId
-// Hanya USER pemilik booking yang bisa membuat snap token
+// 🛑 JANGAN pakai verifyBookingOwnership di sini untuk menghindari Double Query
+// Biarkan Controller mengeceknya secara inline sekaligus mengambil data lengkap untuk Midtrans
 router.post(
   "/snap/:orderId",
   authenticate,
   authorizeRole("USER"),
-  (req, res, next) => {
-    // Mapping orderId → id agar verifyBookingOwnership bisa membaca req.params.id
-    req.params.id = req.params.orderId as string;
-    next();
-  },
   createSnapToken,
 );
 
-// POST /api/payments/sync-status — Sinkronisasi status dari Midtrans manually
+// POST /api/payments/sync-status
+// (Bisa diakses USER dan TENANT, pengecekan hak akses ganda dilakukan di dalam controller)
 router.post("/sync-status", authenticate, syncPaymentStatus);
 
-// POST /api/payments/webhook — Dipanggil oleh Midtrans, tanpa auth
+// POST /api/payments/webhook
 router.post("/webhook", handleMidtransNotification);
-
 
 export default router;
