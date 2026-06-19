@@ -1,10 +1,16 @@
+import React from "react";
+
 interface Props {
   currentDate: string;
   tenantName: string;
   onAddProperty: () => void;
 }
 
-export default function WelcomeHeader({ currentDate, tenantName, onAddProperty }: Props) {
+export default function WelcomeHeader({
+  currentDate,
+  tenantName,
+  onAddProperty,
+}: Props) {
   return (
     <section className="flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div>
@@ -22,10 +28,7 @@ export default function WelcomeHeader({ currentDate, tenantName, onAddProperty }
         </p>
       </div>
       <div className="flex gap-3">
-        <button className="px-6 py-2.5 rounded-full border border-outline text-on-surface font-label-md hover:bg-surface-container transition-all">
-          Download Report
-        </button>
-        <button 
+        <button
           onClick={onAddProperty}
           className="px-6 py-2.5 rounded-full bg-secondary text-white font-label-md hover:shadow-md transition-all cursor-pointer border-none"
         >

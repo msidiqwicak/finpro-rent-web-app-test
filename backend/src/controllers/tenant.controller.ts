@@ -8,6 +8,7 @@ import {
   getBookingDetailByTenantProcess,
 } from "../services/tenant.service.js";
 import { executeSendReminder } from "../services/email.service.js";
+import { getTenantDashboardStats } from "../services/dashboard.service.js";
 
 // Helper untuk mengecek apakah booking ini benar milik tenant yang sedang login
 const verifyTenantOwnership = async (bookingId: string, userId: string) => {
@@ -202,5 +203,24 @@ export const sendReminderEmail = async (
   } catch (error: any) {
     console.error("Gagal mengirim email pengingat:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getDashboardStats = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user!.id; // Diambil dari middleware authenticate
+
+    const dashboardData = await getTenantDashboardStats(userId);
+
+    res.status(200).json({
+      message: "Berhasil mengambil data dashboard",
+      data: dashboardData,
+    });
+  } catch (error: any) {
+    console.error("Dashboard Error:", error);
+    res.status(500).json({ error: error.message || "Gagal memuat dashboard" });
   }
 };

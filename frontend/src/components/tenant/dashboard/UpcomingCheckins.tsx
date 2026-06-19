@@ -1,42 +1,26 @@
+import React from "react";
+import type { DashboardStats } from "../../../pages/tenant/Dashboard";
+
 interface Props {
+  checkins?: DashboardStats["upcomingCheckins"];
   onViewAllActivity: () => void;
 }
 
-export default function UpcomingCheckins({ onViewAllActivity }: Props) {
+export default function UpcomingCheckins({
+  checkins,
+  onViewAllActivity,
+}: Props) {
+  if (!checkins) return null;
+
   return (
     <div className="p-8 bg-surface-container-lowest rounded-[2.5rem] shadow-sm border border-outline-variant">
       <h4 className="text-xl font-bold text-primary mb-6">
         Upcoming Check-ins
       </h4>
       <div className="space-y-4">
-        {[
-          {
-            name: "Michael Chen",
-            prop: "Forest Pine Retreat",
-            date: "Tomorrow",
-            time: "2:00 PM",
-            img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Michael",
-            bg: "bg-secondary-fixed",
-          },
-          {
-            name: "Elena Rodriguez",
-            prop: "Sage Lake Cottage",
-            date: "June 24",
-            time: "3:00 PM",
-            img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Elena",
-            bg: "bg-primary-fixed",
-          },
-          {
-            name: "Jameson Blake",
-            prop: "Moss Ridge Villa",
-            date: "June 26",
-            time: "11:00 AM",
-            img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jameson",
-            bg: "bg-tertiary-fixed",
-          },
-        ].map((item, idx) => (
+        {checkins.map((item) => (
           <div
-            key={idx}
+            key={item.id}
             className="flex items-center gap-4 p-3 rounded-2xl hover:bg-surface-container-low transition-all cursor-pointer border border-transparent hover:border-outline-variant"
           >
             <div
@@ -49,31 +33,21 @@ export default function UpcomingCheckins({ onViewAllActivity }: Props) {
               />
             </div>
             <div className="flex-grow">
-              <p className="text-on-surface font-bold text-sm">
-                {item.name}
-              </p>
-              <p className="text-on-surface-variant text-xs">
-                {item.prop}
-              </p>
+              <p className="text-on-surface font-bold text-sm">{item.name}</p>
+              <p className="text-on-surface-variant text-xs">{item.property}</p>
             </div>
             <div className="text-right">
               <p
-                className={`font-bold text-sm ${
-                  item.date === "Tomorrow"
-                    ? "text-primary"
-                    : "text-on-surface"
-                }`}
+                className={`font-bold text-sm ${item.date === "Tomorrow" ? "text-primary" : "text-on-surface"}`}
               >
                 {item.date}
               </p>
-              <p className="text-on-surface-variant text-xs">
-                {item.time}
-              </p>
+              <p className="text-on-surface-variant text-xs">{item.time}</p>
             </div>
           </div>
         ))}
       </div>
-      <button 
+      <button
         onClick={onViewAllActivity}
         className="w-full mt-6 py-3 text-secondary font-bold text-sm hover:bg-surface-container-low rounded-xl transition-all cursor-pointer border-none"
       >

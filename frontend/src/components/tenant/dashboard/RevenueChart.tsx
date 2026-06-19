@@ -1,11 +1,18 @@
-export default function RevenueChart() {
+import React from "react";
+import type { DashboardStats } from "../../../pages/tenant/Dashboard";
+
+interface Props {
+  data?: DashboardStats["chartData"];
+}
+
+export default function RevenueChart({ data }: Props) {
+  const safeData = data || [];
+
   return (
-    <div className="lg:col-span-2 p-8 bg-surface-container-lowest rounded-[2.5rem] shadow-sm border border-outline-variant">
+    <div className="lg:col-span-2 p-8 bg-surface-container-lowest rounded-[2.5rem] shadow-sm border border-outline-variant flex flex-col justify-between">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h4 className="text-xl font-bold text-primary">
-            Revenue Overview
-          </h4>
+          <h4 className="text-xl font-bold text-primary">Revenue Overview</h4>
           <p className="text-on-surface-variant text-sm">
             Monthly earnings for the past 6 months
           </p>
@@ -15,44 +22,53 @@ export default function RevenueChart() {
           <option>Year to Date</option>
         </select>
       </div>
-      <div className="h-64 flex items-end justify-between gap-4 px-2">
-        {/* Dummy Bar Charts */}
-        {[
-          { month: "Jan", height: "40%", label: "Rp 4.2M" },
-          { month: "Feb", height: "55%", label: "Rp 5.1M" },
-          { month: "Mar", height: "45%", label: "Rp 4.8M" },
-          { month: "Apr", height: "75%", label: "Rp 7.5M" },
-          { month: "May", height: "85%", label: "Rp 8.2M" },
-          { month: "Jun", height: "95%", label: "Rp 9.8M", active: true },
-        ].map((data, idx) => (
-          <div
-            key={idx}
-            className="flex-1 group flex flex-col items-center gap-3"
-          >
+
+      {safeData.length === 0 ? (
+        <div className="h-64 flex flex-col items-center justify-center text-on-surface-variant border-2 border-dashed border-outline-variant rounded-xl">
+          <span className="material-symbols-outlined text-4xl mb-2 opacity-50">
+            bar_chart
+          </span>
+          <p className="font-label-md">Data grafik belum tersedia</p>
+        </div>
+      ) : (
+        <div className="h-64 flex justify-between gap-4 px-2 mt-4">
+          {safeData.map((item, idx) => (
             <div
-              className={`w-full rounded-t-xl relative transition-colors ${
-                data.active
-                  ? "bg-primary-container group-hover:bg-primary"
-                  : "bg-surface-container-high group-hover:bg-secondary-container"
-              }`}
-              style={{ height: data.height }}
+              key={idx}
+              className="flex-1 group flex flex-col items-center justify-end h-full gap-2"
             >
-              <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-primary text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                {data.label}
+              <div
+                className={`w-full rounded-t-xl relative transition-colors ${
+                  item.active
+                    ? "bg-primary-container group-hover:bg-secondary/80"
+                    : "bg-secondary-container group-hover:bg-primary/80"
+                }`}
+                style={{ height: item.height || "0%" }}
+              >
+                {/* 👇 PERUBAHAN: Hapus opacity-0 dan rapikan gaya teksnya 👇 */}
+                <div
+                  className={`absolute -top-7 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-bold whitespace-nowrap pointer-events-none transition-colors ${
+                    item.active
+                      ? "text-primary"
+                      : "text-on-surface-variant group-hover:text-primary"
+                  }`}
+                >
+                  {item.label}
+                </div>
               </div>
+              <span
+                className={`text-xs ${
+                  item.active
+                    ? "text-primary font-bold"
+                    : "text-on-surface-variant"
+                }`}
+              >
+                {item.month}
+              </span>
             </div>
-            <span
-              className={`text-xs ${
-                data.active
-                  ? "text-primary font-bold"
-                  : "text-on-surface-variant"
-              }`}
-            >
-              {data.month}
-            </span>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
