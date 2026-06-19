@@ -45,7 +45,9 @@ export default function KeyMetrics({ metrics }: Props) {
           <div className="p-3 rounded-2xl bg-secondary-container text-on-secondary-container group-hover:scale-110 transition-transform">
             <span className="material-symbols-outlined">event_available</span>
           </div>
-          <span className="text-on-surface-variant text-xs">Current stays</span>
+          <span className="px-3 py-1 rounded-full inline-flex items-center gap-1 bg-secondary-container text-on-secondary-container text-xs font-bold">
+            Current stays
+          </span>
         </div>
         <p className="text-on-surface-variant font-label-md mb-1 text-sm">
           Active Bookings
@@ -61,7 +63,9 @@ export default function KeyMetrics({ metrics }: Props) {
           <div className="p-3 rounded-2xl bg-primary-fixed text-on-primary-fixed group-hover:scale-110 transition-transform">
             <span className="material-symbols-outlined">bed</span>
           </div>
-          <span className="text-on-surface-variant text-xs">Average</span>
+          <span className="px-3 py-1 rounded-full inline-flex items-center gap-1 bg-secondary-container text-on-secondary-container text-xs font-bold">
+            Average
+          </span>
         </div>
         <p className="text-on-surface-variant font-label-md mb-1 text-sm">
           Property Occupancy
@@ -74,7 +78,7 @@ export default function KeyMetrics({ metrics }: Props) {
       {/* Average Rating */}
       <div className="p-6 bg-surface-container-lowest rounded-[2rem] shadow-sm border border-outline-variant hover:border-secondary transition-all group cursor-default">
         <div className="flex justify-between items-start mb-4">
-          <div className="p-3 rounded-2xl bg-secondary-fixed text-on-secondary-fixed group-hover:scale-110 transition-transform border-2">
+          <div className="p-3 rounded-2xl bg-primary-fixed text-on-primary-fixed group-hover:scale-110 transition-transform">
             <span
               className="material-symbols-outlined"
               style={{ fontVariationSettings: "'FILL' 1" }}

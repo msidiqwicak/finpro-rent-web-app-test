@@ -13,49 +13,48 @@ export default function SalesMetricsCards({
   avgRate,
   formatCurrency,
 }: SalesMetricsCardsProps) {
+  const cards = [
+    {
+      label: "Total Revenue",
+      value: formatCurrency(totalRevenue),
+      icon: "payments",
+      color: "bg-secondary-container text-on-secondary-container",
+    },
+    {
+      label: "Total Bookings",
+      value: totalBookings,
+      icon: "calendar_month",
+      color: "bg-surface-container-highest text-on-surface",
+    },
+    {
+      label: "Avg Transaction",
+      value: formatCurrency(avgRate),
+      icon: "trending_up",
+      color: "bg-tertiary-fixed text-on-tertiary-fixed",
+      extraClasses: "sm:col-span-2 lg:col-span-1",
+    },
+  ];
+
   return (
     <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 md:mb-12">
-      <div className="bg-white p-6 rounded-3xl border border-outline-variant/30 shadow-sm hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-secondary-container flex items-center justify-center text-on-secondary-container">
-            <span className="material-symbols-outlined">payments</span>
+      {cards.map((card, i) => (
+        <div
+          key={i}
+          className={`bg-white p-6 rounded-3xl border border-outline-variant/30 shadow-sm hover:shadow-md transition-shadow ${card.extraClasses || ""}`}
+        >
+          <div
+            className={`w-12 h-12 mb-4 rounded-2xl flex items-center justify-center ${card.color}`}
+          >
+            <span className="material-symbols-outlined">{card.icon}</span>
           </div>
+          <p className="text-on-surface-variant text-sm font-bold mb-1 uppercase tracking-wider">
+            {card.label}
+          </p>
+          <h3 className="font-headline-sm text-2xl md:text-3xl font-bold text-primary truncate">
+            {card.value}
+          </h3>
         </div>
-        <p className="text-on-surface-variant text-sm font-bold mb-1 uppercase tracking-wider">
-          Total Revenue
-        </p>
-        <h3 className="font-headline-sm text-2xl md:text-3xl font-bold text-primary truncate">
-          {formatCurrency(totalRevenue)}
-        </h3>
-      </div>
-
-      <div className="bg-white p-6 rounded-3xl border border-outline-variant/30 shadow-sm hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-surface-container-highest flex items-center justify-center text-on-surface">
-            <span className="material-symbols-outlined">calendar_month</span>
-          </div>
-        </div>
-        <p className="text-on-surface-variant text-sm font-bold mb-1 uppercase tracking-wider">
-          Total Bookings
-        </p>
-        <h3 className="font-headline-sm text-2xl md:text-3xl font-bold text-primary">
-          {totalBookings}
-        </h3>
-      </div>
-
-      <div className="bg-white p-6 rounded-3xl border border-outline-variant/30 shadow-sm hover:shadow-md transition-shadow sm:col-span-2 lg:col-span-1">
-        <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed">
-            <span className="material-symbols-outlined">trending_up</span>
-          </div>
-        </div>
-        <p className="text-on-surface-variant text-sm font-bold mb-1 uppercase tracking-wider">
-          Avg Transaction
-        </p>
-        <h3 className="font-headline-sm text-2xl md:text-3xl font-bold text-primary truncate">
-          {formatCurrency(avgRate)}
-        </h3>
-      </div>
+      ))}
     </section>
   );
 }
