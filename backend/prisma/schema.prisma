@@ -19,11 +19,11 @@ model booking {
   status           booking_status_enum @default(WAITING_FOR_PAYMENT)
   expires_at       DateTime            @db.Timestamptz(6)
   created_at       DateTime            @default(now()) @db.Timestamptz(6)
+  is_reminder_sent Boolean             @default(false)
   room_unit        room_unit           @relation(fields: [room_unit_id], references: [id], onUpdate: NoAction)
   users            users               @relation(fields: [user_id], references: [id], onUpdate: NoAction)
   payment          payment[]
   review           review?
-  is_reminder_sent Boolean             @default(false)
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -59,7 +59,6 @@ model property {
   category_id       String?            @db.Uuid
   name              String             @db.VarChar(255)
   description       String?
-  image_urls        String[]           @default([])
   address           String
   city              String             @db.VarChar(100)
   province          String             @db.VarChar(100)
@@ -68,6 +67,7 @@ model property {
   created_at        DateTime           @default(now()) @db.Timestamptz(6)
   updated_at        DateTime           @default(now()) @db.Timestamptz(6)
   deleted_at        DateTime?          @db.Timestamptz(6)
+  image_urls        String[]           @default([])
   property_category property_category? @relation(fields: [category_id], references: [id], onUpdate: NoAction)
   tenant            tenant             @relation(fields: [tenant_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   review            review[]
