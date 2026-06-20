@@ -1,105 +1,70 @@
-import React from "react";
-import type { AuthUser } from "../../context/AuthContext";
-import RoleBadge from "./RoleBadge";
-import NavDropdownItem from "./NavDropDownItem";
+import { Link } from 'react-router-dom';
+import type { AuthUser } from '../../context/AuthContext';
 
 interface NavDropdownProps {
-  user: AuthUser;
+  user:     AuthUser;
   onLogout: () => void;
-  onClose: () => void;
-  onToast: (msg: string) => void;
+  onClose:  () => void;
+  onToast:  (msg: string) => void;
 }
 
-export default function NavDropdown({
-  user,
-  onLogout,
-  onClose,
-  onToast,
-}: NavDropdownProps) {
-  const isUser = user.role === "USER";
-  const isTenant = user.role === "TENANT";
+function DropdownItem({ to, icon, label }: { to: string; icon: string; label: string }) {
+  return (
+    <Link to={to}
+      className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold font-body text-on-surface hover:bg-surface-low transition-colors duration-150"
+    >
+      <span className="material-symbols-outlined text-[18px]">{icon}</span>
+      {label}
+    </Link>
+  );
+}
+
+function DisabledItem({ icon, label, badge, onClick }: { icon: string; label: string; badge: string; onClick: () => void }) {
+  return (
+    <div onClick={onClick}
+      className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold font-body text-on-surface opacity-45 cursor-not-allowed"
+    >
+      <span className="material-symbols-outlined text-[18px]">{icon}</span>
+      {label}
+      <span className="ml-auto text-[10px] font-bold bg-surface-high text-on-surface-variant px-1.5 py-0.5 rounded">{badge}</span>
+    </div>
+  );
+}
+
+function RoleBadge({ role }: { role: string }) {
+  const isUser = role === 'USER';
+  return (
+    <span className={`text-[10px] font-bold tracking-wide uppercase px-2.5 py-0.5 rounded-full ${isUser ? 'bg-secondary-container text-on-secondary-container' : 'bg-primary-fixed text-on-primary-fixed'}`}>
+      {role}
+    </span>
+  );
+}
+
+export default function NavDropdown({ user, onLogout, onClose, onToast }: NavDropdownProps) {
+  const isUser   = user.role === 'USER';
+  const isTenant = user.role === 'TENANT';
 
   return (
-    <div
-      onClick={onClose}
-      // w-[calc(100vw-2rem)] menjamin dropdown tidak akan melebihi layar HP
-      className="absolute top-[calc(100%+12px)] right-0 bg-white border border-outline-variant/50 rounded-2xl shadow-xl w-[calc(100vw-2rem)] sm:w-auto sm:min-w-[240px] z-[100] overflow-hidden animate-fade-in origin-top-right"
+    <div onClick={onClose}
+      className="absolute top-[calc(100%+8px)] right-0 bg-surface-white border border-outline-variant rounded-2xl shadow-[0_8px_32px_rgba(6,27,14,0.15)] min-w-[220px] z-[100] overflow-hidden animate-[fadeIn_0.2s_ease]"
     >
-      {/* Header Info */}
-      <div className="flex items-center justify-between gap-3 px-4 py-3 md:py-4 bg-surface-container-lowest">
-        <p className="font-body font-bold text-sm md:text-[15px] text-on-surface truncate">
-          {user.name}
-        </p>
+      <div className="flex items-center justify-between gap-2 px-4 py-3 bg-surface-low">
+        <p className="font-body font-bold text-[14px] text-on-surface truncate">{user.name}</p>
         <RoleBadge role={user.role} />
       </div>
+      <div className="h-px bg-outline-variant my-1" />
 
-      <div className="h-px bg-outline-variant/30 my-1 md:my-1.5" />
+      {isUser   && <><DropdownItem to="/profile"  icon="person"        label="My Profile" /><DropdownItem to="/bookings" icon="calendar_month" label="My Bookings" /></>}
+      {isTenant && <><DropdownItem to="/tenant/dashboard"  icon="dashboard"   label="Dashboard" /><DropdownItem to="/tenant/properties" icon="home_work" label="My Properties" /><DropdownItem to="/tenant/bookings" icon="receipt_long" label="Manage Bookings" /></>}
 
-      {/* Menu Navigasi Aktif */}
-      {isUser && (
-        <>
-          <NavDropdownItem to="/profile" icon="person" label="My Profile" />
-          <NavDropdownItem
-            to="/bookings"
-            icon="calendar_month"
-            label="My Bookings"
-          />
-        </>
-      )}
 
-      {isTenant && (
-        <>
-          <NavDropdownItem
-            to="/tenant/dashboard"
-            icon="dashboard"
-            label="Dashboard"
-          />
-          <NavDropdownItem
-            to="/tenant/properties"
-            icon="home_work"
-            label="My Properties"
-          />
-          <NavDropdownItem
-            to="/tenant/bookings"
-            icon="receipt_long"
-            label="Manage Bookings"
-          />
-        </>
-      )}
 
-      {/* Menu Terkunci (Disabled) */}
-      {isTenant && (
-        <NavDropdownItem
-          icon="hotel"
-          label="Book a Stay"
-          badge="Guest only"
-          isDisabled
-          onClick={() =>
-            onToast("This feature is only available for Guest accounts.")
-          }
-        />
-      )}
-      {isUser && (
-        <NavDropdownItem
-          icon="dashboard"
-          label="Tenant Dashboard"
-          badge="Tenant only"
-          isDisabled
-          onClick={() =>
-            onToast("This feature is only available for Tenant accounts.")
-          }
-        />
-      )}
-
-      <div className="h-px bg-outline-variant/30 my-1 md:my-1.5" />
-
-      {/* Menu Logout */}
-      <NavDropdownItem
-        icon="logout"
-        label="Logout"
-        isDanger
-        onClick={onLogout}
-      />
+      <div className="h-px bg-outline-variant my-1" />
+      <button onClick={onLogout}
+        className="flex items-center gap-2.5 w-full px-4 py-2.5 text-[13px] font-semibold font-body text-red-600 hover:bg-red-50 transition-colors duration-150 cursor-pointer border-none bg-transparent text-left"
+      >
+        <span className="material-symbols-outlined text-[18px]">logout</span>Logout
+      </button>
     </div>
   );
 }

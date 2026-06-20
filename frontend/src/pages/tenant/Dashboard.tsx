@@ -80,7 +80,7 @@ export default function Dashboard() {
   return (
     <TenantLayout
       title="Dashboard Overview"
-      subtitle="Pantau performa dan ringkasan properti Anda"
+      subtitle="Monitor your property performance and summary"
     >
       {isLoading ? (
         <div className="flex flex-col items-center justify-center h-[60vh] text-secondary gap-4">

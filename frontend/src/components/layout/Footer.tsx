@@ -1,28 +1,38 @@
 const LINKS = ['Legal', 'Company', 'Privacy Policy', 'Terms of Service', 'Contact'];
 
-function NewsletterSection() {
+function ContactSection() {
   return (
     <div className="bg-primary-container relative overflow-hidden py-20">
       <div className="absolute top-[-80px] right-[-80px] w-80 h-80 rounded-full bg-primary-fixed/10 blur-[60px] pointer-events-none" />
       <div className="relative z-10 max-w-[1280px] mx-auto px-5 md:px-8 lg:px-16">
         <div className="max-w-[640px] mx-auto text-center">
-          <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-primary-fixed-dim mb-3">Stay Connected</p>
-          <h2 className="font-display text-[clamp(24px,3.5vw,32px)] font-semibold text-on-primary mb-3">
-            Join the Evergreen Community
+          <p className="text-[11px] font-bold tracking-[0.1em] uppercase text-primary-fixed-dim mb-3">Get in Touch</p>
+          <h2 className="font-display text-[clamp(24px,3.5vw,32px)] font-semibold text-on-primary mb-4">
+            Need Help With Your Booking?
           </h2>
-          <p className="font-body text-[18px] text-on-primary/75 mb-9">
-            Sign up for eco-travel tips, exclusive retreats, and early access to our newest sustainable properties.
+          <p className="font-body text-[18px] text-on-primary/75 mb-10 max-w-[500px] mx-auto">
+            Our support team is available from 9 AM to 6 PM. Choose your preferred way to contact us below.
           </p>
-          <form className="flex flex-col gap-3 max-w-xl mx-auto sm:flex-row">
-            <input type="email" placeholder="Your email address" aria-label="Email address" required
-              className="flex-1 min-w-0 bg-white/10 border border-white/22 rounded-full px-6 py-3.5 text-white font-body text-[15px] outline-none placeholder:text-white/50 focus:border-white/50 transition-colors"
-            />
-            <button type="submit"
-              className="bg-primary-fixed text-on-primary-fixed px-7 py-3.5 rounded-full font-body font-bold text-[14px] whitespace-nowrap border-none cursor-pointer hover:opacity-90 transition-opacity"
+          
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a 
+              href="https://wa.me/6281234567890" 
+              target="_blank" 
+              rel="noreferrer"
+              className="flex items-center gap-2 bg-[#25D366] text-white px-8 py-3.5 rounded-full font-body font-bold text-[15px] hover:bg-[#1ebd5a] transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 w-full sm:w-auto justify-center no-underline"
             >
-              Subscribe
-            </button>
-          </form>
+              <span className="material-symbols-outlined text-[20px]">chat</span>
+              WhatsApp Us
+            </a>
+            
+            <a 
+              href="mailto:support@evergreenescapes.com" 
+              className="flex items-center gap-2 bg-white/10 border border-white/20 text-white px-8 py-3.5 rounded-full font-body font-bold text-[15px] hover:bg-white/20 transition-all w-full sm:w-auto justify-center no-underline"
+            >
+              <span className="material-symbols-outlined text-[20px]">mail</span>
+              Email Support
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -32,7 +42,7 @@ function NewsletterSection() {
 export default function Footer() {
   return (
     <footer aria-label="Site footer" className="bg-surface-low border-t border-outline-variant">
-      <NewsletterSection />
+      <ContactSection />
       <div className="max-w-[1280px] mx-auto px-5 py-7 md:px-8 lg:px-16">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>

@@ -64,10 +64,10 @@ export default function Navbar() {
 
   const navItems = [
     { name: "Explore", path: "/explore" },
+    { name: "Our Mission", path: "/sustainability" },
     ...(isLoggedIn
       ? [
           { name: "Bookings", path: "/bookings" },
-          { name: "Favorites", path: "/favorites" },
         ]
       : []),
   ];

@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export default function Sustainability() {
   return (
     <section aria-label="Our sustainability mission" className="bg-surface-low">
@@ -27,9 +29,9 @@ export default function Sustainability() {
             </p>
 
             <div className="mt-2">
-              <button className="inline-flex items-center border-2 border-secondary text-primary-container bg-transparent rounded-full px-6 py-2.5 font-body font-semibold text-[14px] cursor-pointer hover:bg-secondary/10 transition-colors duration-200">
+              <Link to="/sustainability" className="inline-flex items-center border-2 border-secondary text-primary-container bg-transparent rounded-full px-6 py-2.5 font-body font-semibold text-[14px] cursor-pointer hover:bg-secondary/10 transition-colors duration-200">
                 Learn More
-              </button>
+              </Link>
             </div>
           </div>
 

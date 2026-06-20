@@ -9,6 +9,7 @@ import ScrollToTop from "./components/shared/ScrollToTop";
 import LandingPage from "./pages/users/LandingPage";
 import ExplorePage from "./pages/users/ExplorePage";
 import PropertyDetailPage from "./pages/users/PropertyDetailPage";
+import SustainabilityPage from "./pages/users/SustainabilityPage";
 import Checkout from "./pages/users/Checkout";
 import Payment from "./pages/users/Payment";
 import OrderHistory from "./pages/users/Booking";
@@ -47,6 +48,7 @@ function App() {
           {/* ======== RUTE PUBLIK ======== */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/explore" element={<ExplorePage />} />
+          <Route path="/sustainability" element={<SustainabilityPage />} />
           <Route path="/property/:id" element={<PropertyDetailPage />} />
 
           {/* ======== RUTE AUTH ======== */}
