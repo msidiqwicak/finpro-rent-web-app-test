@@ -50,6 +50,7 @@ export default function MidtransPayment({
 
       window.snap.pay(snapToken, {
         onSuccess: async function (result: any) {
+          setIsProcessing(false);
           try {
             await api.post("/payments/sync-status", {
               orderId: result.order_id,
@@ -61,6 +62,7 @@ export default function MidtransPayment({
           onPaymentResult("success", totalAmount);
         },
         onPending: async function (result: any) {
+          setIsProcessing(false);
           try {
             await api.post("/payments/sync-status", {
               orderId: result.order_id,
@@ -72,18 +74,19 @@ export default function MidtransPayment({
           onPaymentResult("pending", totalAmount);
         },
         onError: function (result: any) {
+          setIsProcessing(false);
           console.error(result);
           // 👇 5. Panggil onPaymentResult untuk memunculkan Modal Error
           onPaymentResult("error", totalAmount);
         },
         onClose: function () {
+          setIsProcessing(false);
           // Hanya tertutup tanpa alert mengganggu
         },
       });
     } catch (error) {
       console.error("Gagal memanggil Midtrans:", error);
       alert("Terjadi kesalahan saat memuat payment gateway.");
-    } finally {
       setIsProcessing(false);
     }
   };

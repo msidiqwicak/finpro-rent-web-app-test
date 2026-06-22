@@ -53,6 +53,29 @@ export default function Payment() {
     if (id) fetchBookingDetails();
   }, [id, navigate]);
 
+  // 👇 CEK REDIRECT DARI MIDTRANS (GOPAY, SHOPEEPAY, DLL)
+  useEffect(() => {
+    if (!bookingData) return;
+
+    const transactionStatus = searchParams.get("transaction_status");
+    const orderIdParam = searchParams.get("order_id");
+
+    if (transactionStatus && orderIdParam) {
+      const amount = Number(bookingData.total_price);
+      
+      if (["settlement", "capture"].includes(transactionStatus)) {
+        handleMidtransResult("success", amount);
+      } else if (transactionStatus === "pending") {
+        handleMidtransResult("pending", amount);
+      } else if (["deny", "cancel", "expire"].includes(transactionStatus)) {
+        handleMidtransResult("error", amount);
+      }
+      
+      // Bersihkan URL dari parameter Midtrans agar tidak re-trigger saat user refresh page
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [bookingData, searchParams]);
+
   // 👇 FUNGSI UNTUK MENANGKAP HASIL DARI MIDTRANS
   const handleMidtransResult = (
     status: "success" | "pending" | "error",
