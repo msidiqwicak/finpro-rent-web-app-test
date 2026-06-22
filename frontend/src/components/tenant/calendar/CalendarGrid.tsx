@@ -183,7 +183,7 @@ export default function CalendarGrid({
                             : "bg-[#d0e9d4] text-primary"
                         }`}
                       >
-                        {isFullHouse ? "Full" : `${totalAvailable} Avail`}
+                        {isFullHouse ? "Full" : `${totalAvailable} Availaible`}
                       </div>
                     )}
                   </div>

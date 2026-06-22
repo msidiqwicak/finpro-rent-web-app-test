@@ -1,4 +1,3 @@
-// services/report.service.ts
 import { prisma } from "../utils/prisma.js";
 
 interface SalesFilter {
@@ -130,8 +129,6 @@ export const getSalesReport = async (
 
   return result;
 };
-
-// Tambahkan di services/report.service.ts
 
 export const getPropertyCalendar = async (
   tenantUserId: string,

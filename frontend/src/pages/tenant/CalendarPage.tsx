@@ -3,7 +3,6 @@ import api from "../../api/axiosConfig";
 import TenantLayout from "../../components/layout/TenantLayout";
 import AnalyticsSidebar from "../../components/tenant/calendar/AnalyticsSidebar";
 import CalendarGrid from "../../components/tenant/calendar/CalendarGrid";
-// ❌ Import PropertySelectorBar sudah dihapus karena sudah gabung di CalendarGrid
 
 export default function TenantPropertyCalendarPage() {
   const [calendarData, setCalendarData] = useState<any[]>([]);
@@ -121,7 +120,6 @@ export default function TenantPropertyCalendarPage() {
       subtitle="Lihat kalender ketersediaan properti"
     >
       <div className="flex flex-col xl:flex-row flex-1 gap-6 lg:gap-8 max-w-[1280px] mx-auto w-full animate-fade-in pt-2 pb-10">
-        {/* ✅ CalendarGrid sekarang menerima semua props properti */}
         <CalendarGrid
           currentDate={currentDate}
           handlePrevMonth={() =>

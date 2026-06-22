@@ -1,6 +1,8 @@
-// controllers/report.controller.ts
 import type { Request, Response } from "express";
-import { getSalesReport } from "../services/report.service.js";
+import {
+  getSalesReport,
+  getPropertyCalendar,
+} from "../services/report.service.js";
 
 export const fetchSalesReport = async (req: Request, res: Response) => {
   try {
@@ -24,9 +26,6 @@ export const fetchSalesReport = async (req: Request, res: Response) => {
     res.status(400).json({ error: error.message });
   }
 };
-
-// Tambahkan di controllers/report.controller.ts
-import { getPropertyCalendar } from "../services/report.service.js"; // Pastikan di-import
 
 export const fetchPropertyCalendar = async (req: Request, res: Response) => {
   try {
