@@ -1,7 +1,7 @@
 import { prisma } from '../utils/prisma.js';
 import { comparePassword, hashPassword } from '../utils/password.js';
 import { generateVerificationToken } from '../utils/jwt.js';
-import { sendEmailChangeVerificationEmail } from './email.service.js';
+import { sendEmailChangeVerificationEmail } from './email/email.service.js';
 // Select fields for the base user query (password_hash used locally only, not returned to client)
 const USER_SELECT = {
     id: true,

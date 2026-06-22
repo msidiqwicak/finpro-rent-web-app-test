@@ -88,8 +88,7 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [resendLoading, setResendLoading] = useState(false);
-  const [resendMsg, setResendMsg] = useState("");
+
   const [error, setError] = useState("");
 
   if (user) {
@@ -136,27 +135,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleResend = async () => {
-    setResendLoading(true);
-    setResendMsg("");
-    try {
-      const res = await fetch(
-        "http://localhost:8000/api/auth/resend-verification",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: form.email.trim() }),
-        },
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Gagal mengirim ulang email.");
-      setResendMsg(data.message);
-    } catch (err: any) {
-      setResendMsg(err.message);
-    } finally {
-      setResendLoading(false);
-    }
-  };
+
 
   const isTenant = mode === "TENANT";
 

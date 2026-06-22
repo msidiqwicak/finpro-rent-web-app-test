@@ -1,6 +1,3 @@
-// src/components/checkout/BookingDetailsCard.tsx
-import React from "react";
-
 interface BookingDetailsCardProps {
   checkInFormatted: string;
   checkOutFormatted: string;

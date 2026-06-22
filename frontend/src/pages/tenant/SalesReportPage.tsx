@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import api from "../../api/axiosConfig";
 import TenantLayout from "../../components/layout/TenantLayout";
 import DateRangePickerPopover from "../../components/tenant/reports/DateRangePickerPopover";

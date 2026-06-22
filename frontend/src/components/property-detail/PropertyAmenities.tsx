@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 const AMENITY_ICONS: Record<string, string> = {
   wifi: 'wifi', 'Wi-Fi': 'wifi', ac: 'ac_unit', AC: 'ac_unit',

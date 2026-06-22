@@ -1,15 +1,96 @@
+export declare const getTenantByUserId: (userId: string) => Promise<{
+    id: string;
+    name: string;
+    user_id: string;
+    created_at: Date;
+    image_url: string | null;
+} | null>;
+export declare const verifyTenantOwnership: (bookingId: string, userId: string) => Promise<boolean>;
 export declare const approvePaymentProcess: (bookingId: string) => Promise<{
+    room_unit: {
+        room_type: {
+            property: {
+                id: string;
+                name: string;
+                created_at: Date;
+                updated_at: Date;
+                description: string | null;
+                image_urls: string[];
+                deleted_at: Date | null;
+                tenant_id: string;
+                category_id: string | null;
+                address: string;
+                city: string;
+                province: string;
+                latitude: number | null;
+                longitude: number | null;
+            };
+        } & {
+            id: string;
+            name: string;
+            property_id: string;
+            description: string | null;
+            price_per_night: import("@prisma/client-runtime-utils").Decimal;
+            capacity: number;
+            total_units: number;
+            amenities: string[];
+            image_urls: string[];
+            deleted_at: Date | null;
+        };
+    } & {
+        id: string;
+        room_type_id: string;
+        unit_number: string;
+        is_active: boolean | null;
+    };
     users: {
         id: string;
         email: string;
         name: string;
+        created_at: Date;
         password_hash: string | null;
         is_verified: boolean | null;
         phone: string | null;
         avatar_url: string | null;
-        created_at: Date;
         updated_at: Date;
     };
+} & {
+    id: string;
+    user_id: string;
+    room_unit_id: string;
+    check_in: Date;
+    check_out: Date;
+    total_price: import("@prisma/client-runtime-utils").Decimal;
+    status: import("../generated/prisma/index.js").$Enums.booking_status_enum;
+    expires_at: Date;
+    created_at: Date;
+    is_reminder_sent: boolean;
+}>;
+export declare const rejectPaymentProcess: (bookingId: string) => Promise<{
+    id: string;
+    user_id: string;
+    room_unit_id: string;
+    check_in: Date;
+    check_out: Date;
+    total_price: import("@prisma/client-runtime-utils").Decimal;
+    status: import("../generated/prisma/index.js").$Enums.booking_status_enum;
+    expires_at: Date;
+    created_at: Date;
+    is_reminder_sent: boolean;
+}>;
+export declare const cancelBookingByTenantProcess: (bookingId: string) => Promise<{
+    id: string;
+    user_id: string;
+    room_unit_id: string;
+    check_in: Date;
+    check_out: Date;
+    total_price: import("@prisma/client-runtime-utils").Decimal;
+    status: import("../generated/prisma/index.js").$Enums.booking_status_enum;
+    expires_at: Date;
+    created_at: Date;
+    is_reminder_sent: boolean;
+}>;
+export declare const getBookingsByTenant: (tenantId: string, search?: string, status?: string) => Promise<({
     room_unit: {
         room_type: {
             property: {
@@ -17,8 +98,9 @@ export declare const approvePaymentProcess: (bookingId: string) => Promise<{
                 name: string;
                 created_at: Date;
                 updated_at: Date;
-                image_url: string | null;
                 description: string | null;
+                image_urls: string[];
+                deleted_at: Date | null;
                 tenant_id: string;
                 category_id: string | null;
                 address: string;
@@ -26,7 +108,6 @@ export declare const approvePaymentProcess: (bookingId: string) => Promise<{
                 province: string;
                 latitude: number | null;
                 longitude: number | null;
-                deleted_at: Date | null;
             };
         } & {
             id: string;
@@ -38,6 +119,7 @@ export declare const approvePaymentProcess: (bookingId: string) => Promise<{
             total_units: number;
             amenities: string[];
             image_urls: string[];
+            deleted_at: Date | null;
         };
     } & {
         id: string;
@@ -45,44 +127,32 @@ export declare const approvePaymentProcess: (bookingId: string) => Promise<{
         unit_number: string;
         is_active: boolean | null;
     };
-} & {
-    check_out: Date;
-    check_in: Date;
-    id: string;
-    created_at: Date;
-    user_id: string;
-    status: import("../generated/prisma/index.js").$Enums.booking_status_enum;
-    total_price: import("@prisma/client-runtime-utils").Decimal;
-    expires_at: Date;
-    room_unit_id: string;
-}>;
-export declare const rejectPaymentProcess: (bookingId: string) => Promise<{
-    check_out: Date;
-    check_in: Date;
-    id: string;
-    created_at: Date;
-    user_id: string;
-    status: import("../generated/prisma/index.js").$Enums.booking_status_enum;
-    total_price: import("@prisma/client-runtime-utils").Decimal;
-    expires_at: Date;
-    room_unit_id: string;
-}>;
-export declare const cancelBookingByTenantProcess: (bookingId: string) => Promise<{
-    check_out: Date;
-    check_in: Date;
-    id: string;
-    created_at: Date;
-    user_id: string;
-    status: import("../generated/prisma/index.js").$Enums.booking_status_enum;
-    total_price: import("@prisma/client-runtime-utils").Decimal;
-    expires_at: Date;
-    room_unit_id: string;
-}>;
-export declare const getBookingsByTenant: (tenantId: string, search?: string, status?: string) => Promise<({
     users: {
         email: string;
         name: string;
     };
+    payment: {
+        id: string;
+        status: import("../generated/prisma/index.js").$Enums.payment_status_enum;
+        booking_id: string;
+        amount: import("@prisma/client-runtime-utils").Decimal;
+        method: import("../generated/prisma/index.js").$Enums.payment_method_enum;
+        proof_url: string | null;
+        confirmed_at: Date | null;
+    }[];
+} & {
+    id: string;
+    user_id: string;
+    room_unit_id: string;
+    check_in: Date;
+    check_out: Date;
+    total_price: import("@prisma/client-runtime-utils").Decimal;
+    status: import("../generated/prisma/index.js").$Enums.booking_status_enum;
+    expires_at: Date;
+    created_at: Date;
+    is_reminder_sent: boolean;
+})[]>;
+export declare const getBookingDetailByTenantProcess: (bookingId: string, tenantId: string) => Promise<({
     room_unit: {
         room_type: {
             property: {
@@ -90,8 +160,9 @@ export declare const getBookingsByTenant: (tenantId: string, search?: string, st
                 name: string;
                 created_at: Date;
                 updated_at: Date;
-                image_url: string | null;
                 description: string | null;
+                image_urls: string[];
+                deleted_at: Date | null;
                 tenant_id: string;
                 category_id: string | null;
                 address: string;
@@ -99,7 +170,6 @@ export declare const getBookingsByTenant: (tenantId: string, search?: string, st
                 province: string;
                 latitude: number | null;
                 longitude: number | null;
-                deleted_at: Date | null;
             };
         } & {
             id: string;
@@ -111,6 +181,7 @@ export declare const getBookingsByTenant: (tenantId: string, search?: string, st
             total_units: number;
             amenities: string[];
             image_urls: string[];
+            deleted_at: Date | null;
         };
     } & {
         id: string;
@@ -118,24 +189,29 @@ export declare const getBookingsByTenant: (tenantId: string, search?: string, st
         unit_number: string;
         is_active: boolean | null;
     };
+    users: {
+        email: string;
+        name: string;
+    };
     payment: {
         id: string;
         status: import("../generated/prisma/index.js").$Enums.payment_status_enum;
-        confirmed_at: Date | null;
         booking_id: string;
         amount: import("@prisma/client-runtime-utils").Decimal;
         method: import("../generated/prisma/index.js").$Enums.payment_method_enum;
         proof_url: string | null;
+        confirmed_at: Date | null;
     }[];
 } & {
-    check_out: Date;
-    check_in: Date;
     id: string;
-    created_at: Date;
     user_id: string;
-    status: import("../generated/prisma/index.js").$Enums.booking_status_enum;
-    total_price: import("@prisma/client-runtime-utils").Decimal;
-    expires_at: Date;
     room_unit_id: string;
-})[]>;
+    check_in: Date;
+    check_out: Date;
+    total_price: import("@prisma/client-runtime-utils").Decimal;
+    status: import("../generated/prisma/index.js").$Enums.booking_status_enum;
+    expires_at: Date;
+    created_at: Date;
+    is_reminder_sent: boolean;
+}) | null>;
 //# sourceMappingURL=tenant.service.d.ts.map

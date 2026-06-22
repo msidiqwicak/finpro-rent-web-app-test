@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "../../api/axiosConfig";
 import Navbar from "../../components/layout/Navbar";
 
-// Import semua komponen modular yang sudah kamu buat dengan rapi
 import PaymentTimerBanner from "../../components/users/payment/PaymentTimerBanner";
 import MidtransPayment from "../../components/users/payment/MidtransPayment";
 import PaymentSummaryCard from "../../components/users/payment/PaymentSummaryCard";
 import ManualTransfer from "../../components/users/payment/ManualTransfer";
-// (Atau kamu bisa pakai OrderSummarySidebar jika lebih suka desain yang itu)
+
 
 export default function Payment() {
   const { id } = useParams();

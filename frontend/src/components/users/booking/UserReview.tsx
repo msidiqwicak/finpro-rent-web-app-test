@@ -1,5 +1,3 @@
-import React, { useState } from "react";
-
 // Tipe data berdasarkan Prisma Schema yang baru
 interface ReviewData {
   id: string;

@@ -1,10 +1,8 @@
-// src/pages/Checkout.tsx
 import { useState, useEffect } from "react";
 import api from "../../api/axiosConfig";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../../components/layout/Navbar";
 
-// Import komponen modular yang baru saja dibuat
 import BookingDetailsCard from "../../components/users/checkout/BookingDetailCart";
 import ReviewNoticeCard from "../../components/users/checkout/ReviewNoticeCard";
 import OrderSummarySidebar from "../../components/users/checkout/OrderSummarySidebar";

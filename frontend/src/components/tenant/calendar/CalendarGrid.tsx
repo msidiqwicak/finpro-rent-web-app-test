@@ -1,5 +1,3 @@
-import React from "react";
-
 const DAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
 interface CalendarGridProps {

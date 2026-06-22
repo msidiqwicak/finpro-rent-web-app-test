@@ -1,8 +1,4 @@
 import { useState } from 'react';
-import { useAuth }  from '../../context/AuthContext';
-
-const API_USER = 'http://localhost:8000/api/users';
-const API_AUTH = 'http://localhost:8000/api/auth';
 
 const INPUT_CLS =
   'w-full px-4 py-3 bg-surface-low border border-outline-variant rounded-xl text-[15px] text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all';
@@ -14,8 +10,8 @@ export interface EmailCardProps {
   onSuccess:    (newEmail: string) => void;
 }
 
-function VerificationBadge({ email, onResend, resending }: {
-  email: string; onResend: () => void; resending: boolean;
+function VerificationBadge({ onResend, resending }: {
+  onResend: () => void; resending: boolean;
 }) {
   return (
     <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -34,8 +30,6 @@ function VerificationBadge({ email, onResend, resending }: {
 }
 
 export default function EmailCard({ initialEmail, isVerified, isLocal, onSuccess }: EmailCardProps) {
-  const { user } = useAuth();
-
   const [isEditing, setEdit]    = useState(false);
   const [email,     setEmail]   = useState(initialEmail);
   const [loading,   setLoading] = useState(false);
@@ -104,7 +98,7 @@ export default function EmailCard({ initialEmail, isVerified, isLocal, onSuccess
           <p className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Email Address</p>
           <p className="text-[15px] text-on-surface font-medium">{initialEmail}</p>
           {!isVerified && (
-            <VerificationBadge email={initialEmail} onResend={handleResend} resending={resending} />
+            <VerificationBadge onResend={handleResend} resending={resending} />
           )}
           {isVerified && (
             <span className="inline-flex items-center gap-1 text-xs font-semibold mt-1 text-emerald-700">

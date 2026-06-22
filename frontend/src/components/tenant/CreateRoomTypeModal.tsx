@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { useAuth }  from '../../context/AuthContext';
 
-const API = 'http://localhost:8000/api/properties';
+
 const INPUT = 'w-full px-4 py-2.5 bg-surface-low border border-outline-variant rounded-xl text-[14px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all';
 
 interface Props { propertyId: string; propertyName: string; onSuccess: () => void; onClose: () => void; }
@@ -9,7 +8,7 @@ interface Props { propertyId: string; propertyName: string; onSuccess: () => voi
 const INITIAL = { name: '', description: '', price_per_night: '', capacity: '2', total_units: '1' };
 
 export default function CreateRoomTypeModal({ propertyId, propertyName, onSuccess, onClose }: Props) {
-  const { user } = useAuth();
+
   const [form, setForm] = useState(INITIAL);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
@@ -46,8 +45,7 @@ export default function CreateRoomTypeModal({ propertyId, propertyName, onSucces
       });
 
       const { default: api } = await import('../../api/axiosConfig');
-      const res = await api.post(`/properties/${propertyId}/room-types`, formData);
-      const data = res.data;
+      await api.post(`/properties/${propertyId}/room-types`, formData);
       onSuccess();
     } catch (err: any) {
       setError(err.message || 'Gagal membuat tipe kamar.');

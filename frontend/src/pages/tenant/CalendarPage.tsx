@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import api from "../../api/axiosConfig";
 import TenantLayout from "../../components/layout/TenantLayout";
 import AnalyticsSidebar from "../../components/tenant/calendar/AnalyticsSidebar";
 import CalendarGrid from "../../components/tenant/calendar/CalendarGrid";
-// ❌ Import PropertySelectorBar sudah dihapus karena sudah gabung di CalendarGrid
 
 export default function TenantPropertyCalendarPage() {
   const [calendarData, setCalendarData] = useState<any[]>([]);

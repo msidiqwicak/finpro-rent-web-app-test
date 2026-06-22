@@ -1,6 +1,3 @@
-import React from "react";
-
-// Tipe data berdasarkan hasil include Prisma
 interface ReviewUser {
   name: string;
   avatar_url?: string | null;

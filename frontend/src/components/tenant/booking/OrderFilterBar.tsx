@@ -1,4 +1,3 @@
-import React from "react";
 
 interface OrderFilterBarProps {
   activeTab: "ongoing" | "completed";

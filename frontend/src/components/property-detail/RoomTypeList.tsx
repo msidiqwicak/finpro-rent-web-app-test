@@ -1,4 +1,4 @@
-import React from 'react';
+
 import type { RoomType } from './types';
 import { formatPrice, PLACEHOLDER } from './utils';
 

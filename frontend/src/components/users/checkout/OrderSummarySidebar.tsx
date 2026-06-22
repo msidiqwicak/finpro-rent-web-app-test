@@ -1,6 +1,3 @@
-// src/components/checkout/OrderSummarySidebar.tsx
-import React from "react";
-
 interface OrderSummarySidebarProps {
   roomName: string;
   locationName: string;

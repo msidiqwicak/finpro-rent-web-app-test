@@ -19,17 +19,6 @@ function DropdownItem({ to, icon, label }: { to: string; icon: string; label: st
   );
 }
 
-function DisabledItem({ icon, label, badge, onClick }: { icon: string; label: string; badge: string; onClick: () => void }) {
-  return (
-    <div onClick={onClick}
-      className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-semibold font-body text-on-surface opacity-45 cursor-not-allowed"
-    >
-      <span className="material-symbols-outlined text-[18px]">{icon}</span>
-      {label}
-      <span className="ml-auto text-[10px] font-bold bg-surface-high text-on-surface-variant px-1.5 py-0.5 rounded">{badge}</span>
-    </div>
-  );
-}
 
 function RoleBadge({ role }: { role: string }) {
   const isUser = role === 'USER';

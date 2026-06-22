@@ -14,4 +14,6 @@ export declare const confirmReset: (req: Request, res: Response) => Promise<void
 export declare const handleSocialLogin: (req: Request, res: Response) => Promise<void>;
 export declare const resendVerification: (req: Request, res: Response) => Promise<void>;
 export declare const verifyEmailUpdate: (req: Request, res: Response) => Promise<void>;
+export declare const getMe: (req: Request, res: Response) => Promise<void>;
+export declare const logout: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=auth.controller.d.ts.map

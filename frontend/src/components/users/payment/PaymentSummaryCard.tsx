@@ -1,6 +1,3 @@
-// components/payment/PaymentSummaryCard.tsx
-import React from "react";
-
 interface PaymentSummaryCardProps {
   orderId: string;
   totalAmount: number;

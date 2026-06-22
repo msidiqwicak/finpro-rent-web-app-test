@@ -21,5 +21,12 @@ export interface PropertyDetail {
   property_category: { name: string } | null;
   tenant: { id: string; name: string; image_url?: string | null };
   room_type: RoomType[];
-  review?: { rating: number; comment?: string; users?: { name: string } }[];
+  review?: { 
+    id: string;
+    rating: number; 
+    comment: string | null; 
+    tenant_reply: string | null;
+    created_at: string;
+    users: { name: string; avatar_url?: string | null; } 
+  }[];
 }

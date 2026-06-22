@@ -1,7 +1,6 @@
 import { useState, useEffect }  from 'react';
 import { useAuth }   from '../../context/AuthContext';
 
-const API   = 'http://localhost:8000/api/properties';
 const INPUT = 'w-full px-4 py-2.5 bg-surface-low border border-outline-variant rounded-xl text-[14px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all';
 
 interface Props { onSuccess: () => void; onClose: () => void; }

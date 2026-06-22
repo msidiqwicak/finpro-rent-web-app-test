@@ -3,10 +3,10 @@ export declare const getUserProfile: (userId: string) => Promise<{
     id: string;
     email: string;
     name: string;
+    created_at: Date;
     is_verified: boolean | null;
     phone: string | null;
     avatar_url: string | null;
-    created_at: Date;
 }>;
 type UpdateProfileInput = {
     name?: string;
@@ -17,11 +17,11 @@ export declare const updateUserProfile: (userId: string, data: UpdateProfileInpu
     id: string;
     email: string;
     name: string;
+    created_at: Date;
     password_hash: string | null;
     is_verified: boolean | null;
     phone: string | null;
     avatar_url: string | null;
-    created_at: Date;
     user_providers: {
         provider: string;
     }[];

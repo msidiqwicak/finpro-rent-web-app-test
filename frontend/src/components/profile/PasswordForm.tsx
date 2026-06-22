@@ -1,7 +1,4 @@
 import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
-
-const API = 'http://localhost:8000/api/users';
 
 const INPUT_CLS =
   'w-full pl-11 pr-12 py-3 bg-surface border border-outline-variant rounded-xl text-[15px] text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all disabled:opacity-60';
@@ -43,7 +40,6 @@ function PasswordInput({
 }
 
 export default function PasswordForm() {
-  const { user } = useAuth();
   const [oldPass, setOldPass]     = useState('');
   const [newPass, setNewPass]     = useState('');
   const [confPass, setConfPass]   = useState('');

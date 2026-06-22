@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useAuth }        from '../../context/AuthContext';
+
 import Navbar             from '../../components/layout/Navbar';
 import ProfileHeader      from '../../components/profile/ProfileHeader';
 import ProfileInfoCard    from '../../components/profile/ProfileInfoCard';
 import EmailCard          from '../../components/profile/EmailCard';
 import PasswordForm       from '../../components/profile/PasswordForm';
-
-const API = 'http://localhost:8000/api/users';
 
 export interface ProfileData {
   name:        string;
@@ -45,7 +43,7 @@ function PasswordSection() {
 }
 
 export default function UserProfilePage() {
-  const { user }  = useAuth();
+
   const [profile,   setProfile]   = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 

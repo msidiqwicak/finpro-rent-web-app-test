@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import TenantLayout from "../../components/layout/TenantLayout";
-import api from "../../api/axiosConfig"; // Pastikan path ini benar
+import api from "../../api/axiosConfig";
 
-// Import Child Components
 import WelcomeHeader from "../../components/tenant/dashboard/WelcomeHeader";
 import KeyMetrics from "../../components/tenant/dashboard/KeyMetrics";
 import RevenueChart from "../../components/tenant/dashboard/RevenueChart";

@@ -99,10 +99,7 @@ export default function OrderDetail() {
   const nights = Math.ceil(
     (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24),
   );
-  const pricePerNight = Number(
-    booking.room_unit?.room_type?.price_per_night || 0,
-  );
-  const baseTotal = nights * pricePerNight;
+
   const totalPrice = Number(booking.total_price);
 
   const formatCurrency = (amount: number) =>
@@ -173,9 +170,7 @@ export default function OrderDetail() {
           {/* Right Column (lg:col-span-4) */}
           <PaymentBreakdown
             shortId={shortId}
-            pricePerNight={pricePerNight}
             nights={nights}
-            baseTotal={baseTotal}
             totalPrice={totalPrice}
             isCanceled={isCanceled}
             formatCurrency={formatCurrency}

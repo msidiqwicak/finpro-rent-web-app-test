@@ -1,8 +1,6 @@
 interface PaymentBreakdownProps {
   shortId: string;
-  pricePerNight: number;
   nights: number;
-  baseTotal: number;
   totalPrice: number;
   isCanceled: boolean;
   formatCurrency: (amount: number) => string;
@@ -10,9 +8,7 @@ interface PaymentBreakdownProps {
 
 export default function PaymentBreakdown({
   shortId,
-  pricePerNight,
   nights,
-  baseTotal,
   totalPrice,
   isCanceled,
   formatCurrency,
@@ -29,17 +25,9 @@ export default function PaymentBreakdown({
 
         <div className="p-6 space-y-4">
           <div className="flex justify-between items-center text-on-surface-variant text-sm">
-            <span>
-              {formatCurrency(pricePerNight)} x {nights} nights
-            </span>
-            <span>{formatCurrency(baseTotal)}</span>
+            <span>Room Rate ({nights} nights)</span>
+            <span>{formatCurrency(totalPrice)}</span>
           </div>
-          {totalPrice > baseTotal && (
-            <div className="flex justify-between items-center text-on-surface-variant text-sm">
-              <span>Service Fee</span>
-              <span>{formatCurrency(totalPrice - baseTotal)}</span>
-            </div>
-          )}
 
           <div className="pt-4 border-t border-outline-variant flex justify-between items-center">
             <span

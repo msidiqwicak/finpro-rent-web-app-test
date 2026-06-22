@@ -1,4 +1,4 @@
-import React from "react";
+
 import TenantReviewCard from "./TenantReviewCard"; // Pastikan path ini benar
 
 interface ReviewListProps {

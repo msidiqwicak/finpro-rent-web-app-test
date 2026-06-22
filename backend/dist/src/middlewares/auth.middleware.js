@@ -5,21 +5,22 @@ import { prisma } from "../utils/prisma.js";
 // ============================================================
 export const authenticate = (req, res, next) => {
     try {
-        const authHeader = req.headers["authorization"];
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        let token = req.cookies?.token;
+        if (!token) {
+            const authHeader = req.headers["authorization"];
+            if (authHeader && authHeader.startsWith("Bearer ")) {
+                token = authHeader.substring(7).trim();
+            }
+        }
+        if (!token) {
             res.status(401).json({ error: "Akses ditolak. Token tidak ditemukan." });
             return;
         }
-        let token = authHeader.substring(7).trim();
         if (token.toLowerCase().startsWith("bearer ")) {
             token = token.substring(7).trim();
         }
         if (token.startsWith("<") && token.endsWith(">")) {
             token = token.substring(1, token.length - 1).trim();
-        }
-        if (!token) {
-            res.status(401).json({ error: "Token tidak ditemukan dalam header." });
-            return;
         }
         const decoded = verifyToken(token);
         if (decoded.purpose !== "access") {

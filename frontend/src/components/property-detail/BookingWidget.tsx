@@ -1,4 +1,4 @@
-import React from 'react';
+
 import PricingCalendar from '../shared/PricingCalendar';
 import type { RoomType } from './types';
 import { formatPrice } from './utils';
@@ -99,13 +99,9 @@ export default function BookingWidget({
                 <span>Rp {formatPrice(selectedRoom.adjusted_price)} × {nightCount} night{nightCount > 1 ? 's' : ''}</span>
                 <span>Rp {formatPrice(selectedRoom.adjusted_price * nightCount)}</span>
               </div>
-              <div className="flex justify-between text-[14px] text-on-surface-variant">
-                <span>Service fee</span>
-                <span>Rp {formatPrice(Math.round(selectedRoom.adjusted_price * nightCount * 0.05))}</span>
-              </div>
               <div className="flex justify-between text-[16px] font-bold text-on-surface pt-3 border-t border-outline-variant/50">
                 <span>Total</span>
-                <span>Rp {formatPrice(Math.round(selectedRoom.adjusted_price * nightCount * 1.05))}</span>
+                <span>Rp {formatPrice(Math.round(selectedRoom.adjusted_price * nightCount))}</span>
               </div>
             </div>
           )}

@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function RoleBadge({ role }: { role: string }) {
   const isUser = role === "USER";
 

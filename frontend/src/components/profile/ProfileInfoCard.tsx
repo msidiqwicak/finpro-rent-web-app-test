@@ -1,7 +1,4 @@
 import { useState } from 'react';
-import { useAuth }  from '../../context/AuthContext';
-
-const API = 'http://localhost:8000/api/users';
 
 const INPUT_CLS =
   'w-full px-4 py-3 bg-surface-low border border-outline-variant rounded-xl text-[15px] text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all';
@@ -27,8 +24,6 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
 }
 
 export default function ProfileInfoCard({ initialName, initialPhone, onSuccess }: ProfileInfoCardProps) {
-  const { user } = useAuth();
-
   const [isEditing, setEdit] = useState(false);
   const [name,  setName]     = useState(initialName);
   const [phone, setPhone]    = useState(initialPhone);

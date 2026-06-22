@@ -1,6 +1,3 @@
-// src/components/checkout/ReviewNoticeCard.tsx
-import React from "react";
-
 export default function ReviewNoticeCard() {
   return (
     <section className="bg-surface-container-low/60 rounded-2xl p-8 border border-outline-variant/30 space-y-4">

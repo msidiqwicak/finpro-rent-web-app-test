@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
-const API = 'http://localhost:8000/api/users';
 
 interface Props {
   currentUrl: string | null;

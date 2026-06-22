@@ -1,7 +1,4 @@
 import { useState } from 'react';
-import { useAuth }  from '../../context/AuthContext';
-
-const API   = 'http://localhost:8000/api/properties/room-types';
 const INPUT = 'w-full px-4 py-2.5 bg-surface-low border border-outline-variant rounded-xl text-[14px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all';
 
 interface RoomType { id: string; name: string; price_per_night: number; }
@@ -12,7 +9,6 @@ const INITIAL = { roomTypeId: '', startDate: '', endDate: '', type: 'PERCENTAGE'
 const isUnavailable = (type: string) => type === 'UNAVAILABLE';
 
 export default function SetPriceModifierModal({ roomTypes, onSuccess, onClose }: Props) {
-  const { user }            = useAuth();
   const [form, setForm]     = useState(INITIAL);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
