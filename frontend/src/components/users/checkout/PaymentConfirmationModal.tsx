@@ -1,5 +1,3 @@
-import React from "react";
-
 interface PaymentConfirmationModalProps {
   isOpen: boolean;
   status: "success" | "pending" | "error" | null;

@@ -202,9 +202,6 @@ export const syncPaymentStatus = async (
       data: { status: newStatus as any },
     });
 
-    console.log(
-      `✅ Sync: Status pesanan ${realBookingId} disinkronkan menjadi ${newStatus}`,
-    );
     res.status(200).json({ status: newStatus });
   } catch (error: any) {
     console.error("❌ Gagal menyinkronkan status pembayaran:", error);

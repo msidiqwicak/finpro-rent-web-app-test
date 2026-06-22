@@ -17,12 +17,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     { name: "Categories", icon: "category", path: "/tenant/categories" },
     { name: "Bookings", icon: "receipt_long", path: "/tenant/bookings" },
     { name: "Reviews", icon: "rate_review", path: "/tenant/reviews" },
+    { name: "Report", icon: "report", path: "/tenant/report" },
+    { name: "Calendar", icon: "calendar_month", path: "/tenant/calendar" },
   ];
 
   return (
-    <aside className={`h-screen w-64 fixed left-0 top-0 z-50 bg-white shadow-2xl lg:shadow-none border-r border-outline-variant/30 flex flex-col p-4 gap-2 transition-transform duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
+    <aside
+      className={`h-screen w-64 fixed left-0 top-0 z-50 bg-white shadow-2xl lg:shadow-none border-r border-outline-variant/30 flex flex-col p-4 gap-2 transition-transform duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
+    >
       <div className="px-2 py-4 mb-6 flex items-center justify-between">
-        <Link to="/" onClick={onClose} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+        <Link
+          to="/"
+          onClick={onClose}
+          className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+        >
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white overflow-hidden">
             <span className="material-symbols-outlined">forest</span>
           </div>
@@ -35,7 +43,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             </p>
           </div>
         </Link>
-        <button onClick={onClose} className="lg:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-variant text-on-surface-variant">
+        <button
+          onClick={onClose}
+          className="lg:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-variant text-on-surface-variant"
+        >
           <span className="material-symbols-outlined text-[20px]">close</span>
         </button>
       </div>

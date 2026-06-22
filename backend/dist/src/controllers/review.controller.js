@@ -20,7 +20,6 @@ export const submitReply = async (req, res) => {
         if (!tenantUserId) {
             return res.status(401).json({ error: "Unauthorized." });
         }
-        // 👇 TAMBAHKAN VALIDASI INI UNTUK MEMBUNGKAM TYPESCRIPT 👇
         if (!reviewId || typeof reviewId !== "string") {
             return res.status(400).json({ error: "ID Review tidak valid." });
         }
@@ -29,8 +28,6 @@ export const submitReply = async (req, res) => {
                 .status(400)
                 .json({ error: "Format balasan tidak valid atau kosong." });
         }
-        // 👆 =================================================== 👆
-        // Sekarang TypeScript tahu 100% bahwa reviewId dan reply adalah sebuah "string"
         const updatedReview = await replyPropertyReview(tenantUserId, reviewId, reply);
         res
             .status(200)

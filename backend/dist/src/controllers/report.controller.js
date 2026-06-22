@@ -1,4 +1,4 @@
-import { getSalesReport } from "../services/report/report.service.js";
+import { getSalesReport, getPropertyCalendar, } from "../services/report/report.service.js";
 export const fetchSalesReport = async (req, res) => {
     try {
         const tenantUserId = req.user?.id;
@@ -20,8 +20,6 @@ export const fetchSalesReport = async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 };
-// Tambahkan di controllers/report.controller.ts
-import { getPropertyCalendar } from "../services/report/report.service.js"; // Pastikan di-import
 export const fetchPropertyCalendar = async (req, res) => {
     try {
         const tenantUserId = req.user?.id;

@@ -146,7 +146,6 @@ export const syncPaymentStatus = async (req, res) => {
             where: { id: realBookingId },
             data: { status: newStatus },
         });
-        console.log(`✅ Sync: Status pesanan ${realBookingId} disinkronkan menjadi ${newStatus}`);
         res.status(200).json({ status: newStatus });
     }
     catch (error) {
