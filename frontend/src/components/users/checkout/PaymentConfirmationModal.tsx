@@ -28,23 +28,23 @@ export default function PaymentConfirmationModal({
     success: {
       icon: "check_circle",
       iconColor: "text-emerald-500 bg-emerald-50",
-      title: "Pembayaran Berhasil!",
+      title: "Payment Success!",
       description:
-        "Terima kasih! Pembayaran Anda telah kami terima dan pesanan Anda otomatis terkonfirmasi.",
+        "Thank you! We have received your payment and your order has been automatically confirmed.",
     },
     pending: {
       icon: "schedule",
       iconColor: "text-amber-500 bg-amber-50",
-      title: "Menunggu Pembayaran",
+      title: "Pending Payment",
       description:
-        "Pesanan Anda berhasil dibuat. Harap segera selesaikan pembayaran sesuai instruksi di Midtrans.",
+        "Your order has been successfully created. Please complete the payment according to the instructions on Midtrans.",
     },
     error: {
       icon: "cancel",
       iconColor: "text-rose-500 bg-rose-50",
-      title: "Pembayaran Gagal",
+      title: "Payment Failed",
       description:
-        "Terjadi kesalahan saat memproses transaksi Anda. Silakan coba beberapa saat lagi.",
+        "An error occurred while processing your transaction. Please try again later.",
     },
   }[status];
 
@@ -80,7 +80,7 @@ export default function PaymentConfirmationModal({
             </div>
             <div className="flex justify-between text-xs border-t border-outline-variant/10 pt-2">
               <span className="text-on-surface-variant font-medium">
-                Total Nominal
+                Total Payment
               </span>
               <span className="text-secondary font-bold">
                 {formatRp(amount)}

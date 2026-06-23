@@ -16,11 +16,11 @@ export default function PaymentUploadCard({
   const validateAndSetFile = (selectedFile: File) => {
     setFileError("");
     if (!["image/jpeg", "image/png"].includes(selectedFile.type)) {
-      setFileError("Format tidak valid. Harap unggah file JPG atau PNG.");
+      setFileError("Invalid format. Please upload a JPG or PNG file.");
       return;
     }
     if (selectedFile.size > 1048576) {
-      setFileError("Ukuran file terlalu besar. Maksimal 1MB.");
+      setFileError("The file size is too large. Maximum 1MB.");
       return;
     }
     onFileSelect(selectedFile);

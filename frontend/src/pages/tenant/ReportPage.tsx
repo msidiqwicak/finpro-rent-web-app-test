@@ -67,10 +67,13 @@ export default function TenantSalesReportPage() {
   };
 
   return (
-    <TenantLayout title="Report" subtitle="Lihat report bulananmu">
-      <div className="p-4 md:p-6 lg:p-10 max-w-[1280px] mx-auto w-full animate-fade-in">
+    <TenantLayout
+      title="Report"
+      subtitle="All the numbers and trends you need to know."
+    >
+      <div className="p-4 md:p-2 lg:p-4 max-w-[1280px] mx-auto w-full animate-fade-in">
         {/* Header Section */}
-        <header className="flex flex-col xl:flex-row xl:items-end justify-between gap-4 md:gap-6 mb-8 md:mb-12">
+        <header className="flex flex-col xl:flex-row xl:items-end justify-between gap-4 md:gap-6 mb-6 md:mb-6">
           {/* Popover Component */}
           <DateRangePickerPopover
             startDate={startDate}

@@ -25,7 +25,7 @@ export default function DateRangePickerPopover({
       : "";
   const rangeLabel =
     !startDate && !endDate
-      ? "Semua Waktu"
+      ? "Date"
       : `${formatStr(startDate) || "Awal"} - ${formatStr(endDate) || "Sekarang"}`;
 
   const inputs = [

@@ -51,13 +51,6 @@ export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const currentDate = new Date().toLocaleDateString("id-ID", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
   useEffect(() => {
     const fetchDashboardStats = async () => {
       try {
@@ -65,7 +58,7 @@ export default function Dashboard() {
         const response = await api.get("/tenant/dashboard-stats");
         setStats(response.data.data);
       } catch (error) {
-        console.error("Gagal mengambil data dashboard:", error);
+        console.error("Failed to fetch dashboard data:", error);
         // Jika gagal, pastikan state diset null (bukan data dummy lagi)
         setStats(null);
       } finally {
@@ -93,7 +86,6 @@ export default function Dashboard() {
       ) : (
         <div className="space-y-8 animate-in fade-in duration-500">
           <WelcomeHeader
-            currentDate={currentDate}
             tenantName={user?.name || "Tenant"}
             onAddProperty={() => navigate("/tenant/properties")}
           />

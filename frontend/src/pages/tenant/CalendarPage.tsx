@@ -117,7 +117,7 @@ export default function TenantPropertyCalendarPage() {
   return (
     <TenantLayout
       title="Calendar"
-      subtitle="Lihat kalender ketersediaan properti"
+      subtitle="View your property’s occupancy and upcoming guest arrivals."
     >
       <div className="flex flex-col xl:flex-row flex-1 gap-6 lg:gap-8 max-w-[1280px] mx-auto w-full animate-fade-in pt-2 pb-10">
         <CalendarGrid

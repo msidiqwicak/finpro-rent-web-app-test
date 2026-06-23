@@ -1,14 +1,17 @@
 interface Props {
-  currentDate: string;
   tenantName: string;
   onAddProperty: () => void;
 }
 
-export default function WelcomeHeader({
-  currentDate,
-  tenantName,
-  onAddProperty,
-}: Props) {
+export default function WelcomeHeader({ tenantName, onAddProperty }: Props) {
+  // 👇 Buat tanggal hari ini otomatis dalam bahasa Inggris
+  const formattedDate = new Date().toLocaleDateString("en-US", {
+    weekday: "long", // "Monday"
+    month: "long", // "June"
+    day: "numeric", // "22"
+    year: "numeric", // "2026"
+  });
+
   return (
     <section className="flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div>
@@ -22,7 +25,7 @@ export default function WelcomeHeader({
           >
             calendar_month
           </span>
-          {currentDate}
+          {formattedDate}
         </p>
       </div>
       <div className="flex gap-3">

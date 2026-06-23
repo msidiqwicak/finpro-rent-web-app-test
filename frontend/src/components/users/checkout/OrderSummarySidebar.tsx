@@ -95,19 +95,19 @@ export default function OrderSummarySidebar({
         </button>
 
         <p className="text-center text-xs font-medium text-on-surface-variant mt-4 px-2">
-          Dengan mengeklik tombol di atas, Anda menyetujui{" "}
+          By clicking the button above, you agree{" "}
           <a
             className="underline hover:text-primary transition-colors cursor-pointer"
             href="#"
           >
-            Syarat Layanan
+            Terms of service
           </a>{" "}
-          dan{" "}
+          and{" "}
           <a
             className="underline hover:text-primary transition-colors cursor-pointer"
             href="#"
           >
-            Kebijakan Pembatalan
+            Privacy Policy
           </a>{" "}
           kami.
         </p>

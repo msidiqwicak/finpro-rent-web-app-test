@@ -6,19 +6,19 @@ export default function ReviewNoticeCard() {
           account_circle
         </span>
         <h2 className="font-headline-sm text-xl font-bold text-primary">
-          Tinjauan Akun
+          Account Review
         </h2>
       </div>
       <p className="text-on-surface-variant font-body-md leading-relaxed">
-        Pesanan ini akan ditautkan ke akun <strong>Evergreen Escapes</strong>{" "}
-        Anda. Anda dapat melanjutkan ke halaman pembayaran setelah mengonfirmasi
-        bahwa semua detail di atas sudah benar.
+        This order will be linked to an account{" "}
+        <strong>Evergreen Escapes</strong> You can proceed to the payment page
+        after confirming that all the above details are correct.
       </p>
       <div className="flex items-center gap-2 text-secondary font-label-md font-bold pt-2">
         <span className="material-symbols-outlined text-[18px]">
           check_circle
         </span>
-        <span>Siap untuk checkout yang aman</span>
+        <span>Ready for secure checkout</span>
       </div>
     </section>
   );

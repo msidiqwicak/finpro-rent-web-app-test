@@ -16,85 +16,93 @@ export default function KeyMetrics({ metrics }: Props) {
     }).format(value);
 
   return (
-    <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {/* Total Revenue */}
-      <div className="p-6 bg-surface-container-lowest rounded-[2rem] shadow-sm border border-outline-variant hover:border-secondary transition-all group cursor-default">
-        <div className="flex justify-between items-start mb-4">
-          <div className="p-3 rounded-2xl bg-secondary-container text-on-secondary-container group-hover:scale-110 transition-transform">
-            <span className="material-symbols-outlined">payments</span>
-          </div>
-          <span className="text-secondary font-label-md flex items-center gap-1 font-bold">
-            <span className="material-symbols-outlined text-sm">
-              trending_up
-            </span>
-            +{metrics.revenueGrowth}%
-          </span>
-        </div>
-        <p className="text-on-surface-variant font-label-md mb-1 text-sm">
-          Total Revenue
-        </p>
-        <h3 className="text-2xl font-bold text-primary">
-          {formatRp(metrics.totalRevenue)}
-        </h3>
-      </div>
+    // Wrapper section dengan relative positioning untuk menampung efek cahaya (glowing)
+    <section className="relative py-6 rounded-3xl overflow-hidden bg-transparent">
+      {/* Ornamen Cahaya Ambient Latar Belakang (Glass Glow) */}
+      <div className="absolute -top-24 -left-24 w-96 h-96 bg-secondary-fixed-dim opacity-30 blur-[100px] rounded-full pointer-events-none"></div>
+      <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-primary-fixed opacity-30 blur-[100px] rounded-full pointer-events-none"></div>
 
-      {/* Active Bookings */}
-      <div className="p-6 bg-surface-container-lowest rounded-[2rem] shadow-sm border border-outline-variant hover:border-secondary transition-all group cursor-default">
-        <div className="flex justify-between items-start mb-4">
-          <div className="p-3 rounded-2xl bg-secondary-container text-on-secondary-container group-hover:scale-110 transition-transform">
-            <span className="material-symbols-outlined">event_available</span>
-          </div>
-          <span className="px-3 py-1 rounded-full inline-flex items-center gap-1 bg-secondary-container text-on-secondary-container text-xs font-bold">
-            Current stays
-          </span>
-        </div>
-        <p className="text-on-surface-variant font-label-md mb-1 text-sm">
-          Active Bookings
-        </p>
-        <h3 className="text-2xl font-bold text-primary">
-          {metrics.activeBookings}
-        </h3>
-      </div>
-
-      {/* Property Occupancy */}
-      <div className="p-6 bg-surface-container-lowest rounded-[2rem] shadow-sm border border-outline-variant hover:border-secondary transition-all group cursor-default">
-        <div className="flex justify-between items-start mb-4">
-          <div className="p-3 rounded-2xl bg-primary-fixed text-on-primary-fixed group-hover:scale-110 transition-transform">
-            <span className="material-symbols-outlined">bed</span>
-          </div>
-          <span className="px-3 py-1 rounded-full inline-flex items-center gap-1 bg-secondary-container text-on-secondary-container text-xs font-bold">
-            Average
-          </span>
-        </div>
-        <p className="text-on-surface-variant font-label-md mb-1 text-sm">
-          Property Occupancy
-        </p>
-        <h3 className="text-2xl font-bold text-primary">
-          {metrics.occupancy}%
-        </h3>
-      </div>
-
-      {/* Average Rating */}
-      <div className="p-6 bg-surface-container-lowest rounded-[2rem] shadow-sm border border-outline-variant hover:border-secondary transition-all group cursor-default">
-        <div className="flex justify-between items-start mb-4">
-          <div className="p-3 rounded-2xl bg-primary-fixed text-on-primary-fixed group-hover:scale-110 transition-transform">
-            <span
-              className="material-symbols-outlined"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
-              star
+      {/* Grid Kartu Metrik */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+        {/* Total Revenue */}
+        <div className="bg-white/40 backdrop-blur-md border border-white/20 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 group">
+          <div className="flex justify-between items-start mb-4">
+            <div className="p-3 bg-secondary-container text-on-secondary-container rounded-xl group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined">payments</span>
+            </div>
+            <span className="text-secondary font-bold text-xs flex items-center gap-1">
+              <span className="material-symbols-outlined text-[14px]">
+                trending_up
+              </span>
+              +{metrics.revenueGrowth}%
             </span>
           </div>
-          <div className="px-3 py-1 rounded-full inline-flex items-center gap-1 bg-secondary-container text-on-secondary-container text-xs font-bold">
-            Top Rated
+          <div className="font-label-md text-on-surface-variant text-sm mb-1">
+            Total Revenue
+          </div>
+          <div className="text-2xl font-bold text-primary">
+            {formatRp(metrics.totalRevenue)}
           </div>
         </div>
-        <p className="text-on-surface-variant font-label-md mb-1 text-sm">
-          Average Rating
-        </p>
-        <h3 className="text-2xl font-bold text-primary">
-          {metrics.averageRating}/5.0
-        </h3>
+
+        {/* Active Bookings */}
+        <div className="bg-white/40 backdrop-blur-md border border-white/20 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 group">
+          <div className="flex justify-between items-start mb-4">
+            <div className="p-3 bg-secondary-container text-on-secondary-container rounded-xl group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined">calendar_month</span>
+            </div>
+            <span className="text-on-surface-variant font-bold text-xs uppercase tracking-wider">
+              Current stays
+            </span>
+          </div>
+          <div className="font-label-md text-on-surface-variant text-sm mb-1">
+            Active Bookings
+          </div>
+          <div className="text-2xl font-bold text-primary">
+            {metrics.activeBookings}
+          </div>
+        </div>
+
+        {/* Property Occupancy */}
+        <div className="bg-white/40 backdrop-blur-md border border-white/20 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 group">
+          <div className="flex justify-between items-start mb-4">
+            <div className="p-3 bg-secondary-container text-on-secondary-container rounded-xl group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined">hotel</span>
+            </div>
+            <span className="text-on-surface-variant font-bold text-xs uppercase tracking-wider">
+              Average
+            </span>
+          </div>
+          <div className="font-label-md text-on-surface-variant text-sm mb-1">
+            Property Occupancy
+          </div>
+          <div className="text-2xl font-bold text-primary">
+            {metrics.occupancy}%
+          </div>
+        </div>
+
+        {/* Average Rating */}
+        <div className="bg-white/40 backdrop-blur-md border border-white/20 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 group">
+          <div className="flex justify-between items-start mb-4">
+            <div className="p-3 bg-secondary-container text-on-secondary-container rounded-xl group-hover:scale-110 transition-transform">
+              <span
+                className="material-symbols-outlined"
+                style={{ fontVariationSettings: "'FILL' 1" }}
+              >
+                star
+              </span>
+            </div>
+            <span className="text-secondary font-bold text-xs uppercase tracking-wider">
+              Top Rated
+            </span>
+          </div>
+          <div className="font-label-md text-on-surface-variant text-sm mb-1">
+            Average Rating
+          </div>
+          <div className="text-2xl font-bold text-primary">
+            {metrics.averageRating}/5.0
+          </div>
+        </div>
       </div>
     </section>
   );

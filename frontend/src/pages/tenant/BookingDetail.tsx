@@ -65,8 +65,8 @@ export default function BookingDetailPage() {
   return (
     // 👈 2. Bungkus seluruh halaman menggunakan TenantLayout agar Sidebar & Navbar muncul otomatis
     <TenantLayout
-      title="Detail Transaksi"
-      subtitle={`Kelola rincian data untuk pesanan #${id?.substring(0, 8).toUpperCase()}`}
+      title="Detail Transaction"
+      subtitle={`Manage the details data for order #${id?.substring(0, 8).toUpperCase()}`}
     >
       <div className="max-w-[1100px] mx-auto pb-16">
         {/* Breadcrumbs */}

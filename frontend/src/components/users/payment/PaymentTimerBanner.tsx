@@ -44,8 +44,10 @@ export default function PaymentTimerBanner({
       <div className="bg-red-50 text-red-900 rounded-xl p-4 flex items-center gap-4 shadow-sm border border-red-100">
         <span className="material-symbols-outlined text-red-600">error</span>
         <div>
-          <p className="text-sm font-bold">Waktu Pembayaran Habis</p>
-          <p className="text-sm">Pesanan ini telah dibatalkan oleh sistem.</p>
+          <p className="text-sm font-bold">Payment Time Expired</p>
+          <p className="text-sm">
+            This order has been cancelled by the system.
+          </p>
         </div>
       </div>
     );

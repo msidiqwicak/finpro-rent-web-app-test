@@ -65,7 +65,7 @@ export default function PropertyCard({
               )}
             </div>
             <p className="text-xs text-on-surface-variant mb-4">
-              Dipesan pada: {formatDateFull(createdAt)}
+              Booked at: {formatDateFull(createdAt)}
             </p>
           </div>
 

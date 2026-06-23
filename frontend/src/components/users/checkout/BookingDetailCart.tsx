@@ -18,13 +18,13 @@ export default function BookingDetailsCard({
           calendar_today
         </span>
         <h2 className="font-headline-sm text-2xl font-bold text-primary">
-          Detail Pesanan
+          Order Details
         </h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="space-y-2">
           <p className="text-caption font-bold text-xs text-on-surface-variant uppercase tracking-widest">
-            Tanggal
+            Date
           </p>
           <p className="font-label-md text-base font-bold text-primary">
             {checkInFormatted} — {checkOutFormatted}
@@ -32,18 +32,18 @@ export default function BookingDetailsCard({
         </div>
         <div className="space-y-2">
           <p className="text-caption font-bold text-xs text-on-surface-variant uppercase tracking-widest">
-            Tamu
+            Guest
           </p>
           <p className="font-label-md text-base font-bold text-primary">
-            {guestCount} Tamu
+            {guestCount} Guest
           </p>
         </div>
         <div className="space-y-2">
           <p className="text-caption font-bold text-xs text-on-surface-variant uppercase tracking-widest">
-            Durasi
+            Duration
           </p>
           <p className="font-label-md text-base font-bold text-primary">
-            {diffDays} Malam
+            {diffDays} Night
           </p>
         </div>
       </div>

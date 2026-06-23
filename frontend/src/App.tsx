@@ -33,7 +33,7 @@ import UserProfilePage from "./pages/users/UserProfilePage";
 import TenantBookingDetail from "./pages/tenant/BookingDetail";
 import PropertyCategoryManagement from "./pages/tenant/PropertyCategoryManagement";
 import TenantReviewPage from "./pages/tenant/ReviewPage";
-import TenantSalesReportPage from "./pages/tenant/SalesReportPage";
+import TenantSalesReportPage from "./pages/tenant/ReportPage";
 import TenantPropertyCalendarPage from "./pages/tenant/CalendarPage";
 
 // ============================================================
