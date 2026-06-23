@@ -1,5 +1,5 @@
 import { prisma } from "../../utils/prisma.js";
-import type { modifier_type_enum } from "../../generated/prisma/index.js";
+import type { modifier_type_enum } from "@prisma/client";
 import type { PriceModifierInput } from "./property.helpers.js";
 import { getTenantId, assertRoomTypeOwner } from "./property.helpers.js";
 
