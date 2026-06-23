@@ -1,4 +1,13 @@
 import { useState } from 'react';
+import { useInputLimit } from '../../hooks/useInputLimit';
+
+function CharCounter({ remaining, isLimitReached }: { remaining: number; isLimitReached: boolean }) {
+  return (
+    <p className={`text-[11px] mt-1 text-right transition-colors ${isLimitReached ? 'text-red-500 font-semibold' : 'text-on-surface-variant'}`}>
+      {remaining} characters remaining
+    </p>
+  );
+}
 
 const INPUT_CLS =
   'w-full px-4 py-3 bg-surface-low border border-outline-variant rounded-xl text-[15px] text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all';
@@ -31,7 +40,7 @@ function VerificationBadge({ onResend, resending }: {
 
 export default function EmailCard({ initialEmail, isVerified, isLocal, onSuccess }: EmailCardProps) {
   const [isEditing, setEdit]    = useState(false);
-  const [email,     setEmail]   = useState(initialEmail);
+  const emailField              = useInputLimit(initialEmail, 100);
   const [loading,   setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [msg,     setMsg]       = useState('');
@@ -51,21 +60,21 @@ export default function EmailCard({ initialEmail, isVerified, isLocal, onSuccess
   };
 
   const handleSave = async () => {
-    if (email.trim() === initialEmail) { setEdit(false); return; }
+    if (emailField.value.trim() === initialEmail) { setEdit(false); return; }
     setLoading(true); setMsg('');
     try {
       const { default: api } = await import('../../api/axiosConfig');
-      await api.patch('/users/profile', { email: email.trim() });
+      await api.patch('/users/profile', { email: emailField.value.trim() });
       setMsg('Email updated! Please verify your new email address.');
       setIsError(false);
       setEdit(false);
-      onSuccess(email.trim());
+      onSuccess(emailField.value.trim());
     } catch (err: any) {
       setIsError(true); setMsg(err.message || 'Something went wrong.');
     } finally { setLoading(false); }
   };
 
-  const handleCancel = () => { setEmail(initialEmail); setMsg(''); setEdit(false); };
+  const handleCancel = () => { emailField.setValue(initialEmail); setMsg(''); setEdit(false); };
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-outline-variant/30 p-6">
@@ -117,11 +126,12 @@ export default function EmailCard({ initialEmail, isVerified, isLocal, onSuccess
             </label>
             <input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={emailField.value}
+              onChange={emailField.onChange}
               className={INPUT_CLS}
               placeholder="your@email.com"
             />
+            <CharCounter remaining={emailField.remaining} isLimitReached={emailField.isLimitReached} />
             <p className="text-[11px] text-amber-600 mt-1.5 flex items-center gap-1">
               <span className="material-symbols-outlined text-[13px]">warning</span>
               Changing your email will require re-verification before you can use it.

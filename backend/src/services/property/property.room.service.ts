@@ -7,7 +7,7 @@ const validateRoomData = (data: Partial<CreateRoomTypeInput>) => {
   if (data.description !== undefined && !data.description.trim()) throw new Error("Room description is required.");
   if (data.price_per_night !== undefined) {
     const p = Number(data.price_per_night);
-    if (p <= 0 || p > 100000000) throw new Error("Invalid price per night.");
+    if (p <= 0 || p > 1000000000) throw new Error("Harga maksimal per malam adalah Rp 1 Milyar.");
   }
   if (data.capacity !== undefined && Number(data.capacity) > 20) throw new Error("Max capacity is 20.");
   if (data.total_units !== undefined && Number(data.total_units) > 200) throw new Error("Max total units is 200.");

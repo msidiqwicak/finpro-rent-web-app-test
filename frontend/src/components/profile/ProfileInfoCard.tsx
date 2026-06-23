@@ -1,4 +1,13 @@
 import { useState } from 'react';
+import { useInputLimit } from '../../hooks/useInputLimit';
+
+function CharCounter({ remaining, isLimitReached }: { remaining: number; isLimitReached: boolean }) {
+  return (
+    <p className={`text-[11px] mt-1 text-right transition-colors ${isLimitReached ? 'text-red-500 font-semibold' : 'text-on-surface-variant'}`}>
+      {remaining} characters remaining
+    </p>
+  );
+}
 
 const INPUT_CLS =
   'w-full px-4 py-3 bg-surface-low border border-outline-variant rounded-xl text-[15px] text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all';
@@ -24,29 +33,32 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
 }
 
 export default function ProfileInfoCard({ initialName, initialPhone, onSuccess }: ProfileInfoCardProps) {
-  const [isEditing, setEdit] = useState(false);
-  const [name,  setName]     = useState(initialName);
-  const [phone, setPhone]    = useState(initialPhone);
+  const [isEditing, setEdit]  = useState(false);
+  const nameField             = useInputLimit(initialName, 50);
+  const phoneField            = useInputLimit(initialPhone, 15);
   const [loading, setLoading] = useState(false);
   const [msg,     setMsg]     = useState('');
   const [isError, setIsError] = useState(false);
+
+  // Keep name in sync when parent reloads profile
+  // (nameField.setValue is stable, so this is safe)
 
   const handleSave = async () => {
     setLoading(true); setMsg('');
     try {
       const { default: api } = await import('../../api/axiosConfig');
-      await api.patch('/users/profile', { name: name.trim(), phone: phone.trim() });
+      await api.patch('/users/profile', { name: nameField.value.trim(), phone: phoneField.value.trim() });
       setIsError(false);
       setMsg('Profile saved successfully!');
       setEdit(false);
-      onSuccess(name.trim(), phone.trim());
+      onSuccess(nameField.value.trim(), phoneField.value.trim());
     } catch (err: any) {
       setIsError(true); setMsg(err.message || 'Something went wrong.');
     } finally { setLoading(false); }
   };
 
   const handleCancel = () => {
-    setName(initialName); setPhone(initialPhone);
+    nameField.setValue(initialName); phoneField.setValue(initialPhone);
     setMsg(''); setEdit(false);
   };
 
@@ -69,18 +81,20 @@ export default function ProfileInfoCard({ initialName, initialPhone, onSuccess }
 
       {!isEditing ? (
         <div>
-          <InfoRow icon="person" label="Full Name"    value={name}  />
-          <InfoRow icon="phone"  label="Phone Number" value={phone} />
+          <InfoRow icon="person" label="Full Name"    value={initialName}  />
+          <InfoRow icon="phone"  label="Phone Number" value={initialPhone} />
         </div>
       ) : (
         <div className="space-y-4 pt-2">
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-2">Full Name</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} className={INPUT_CLS} placeholder="Your full name" />
+            <input type="text" value={nameField.value} onChange={nameField.onChange} className={INPUT_CLS} placeholder="Your full name" />
+            <CharCounter remaining={nameField.remaining} isLimitReached={nameField.isLimitReached} />
           </div>
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-2">Phone Number</label>
-            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={INPUT_CLS} placeholder="+62 812 3456 7890" />
+            <input type="tel" value={phoneField.value} onChange={phoneField.onChange} className={INPUT_CLS} placeholder="+62 812 3456 7890" />
+            <CharCounter remaining={phoneField.remaining} isLimitReached={phoneField.isLimitReached} />
           </div>
           <div className="flex gap-3 pt-1">
             <button onClick={handleSave} disabled={loading}

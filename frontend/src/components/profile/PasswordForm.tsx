@@ -67,7 +67,7 @@ export default function PasswordForm() {
       setOldPass(''); setNewPass(''); setConfPass('');
     } catch (err: any) {
       setIsError(true);
-      setMsg(err.message || 'Something went wrong.');
+      setMsg(err.response?.data?.error || err.message || 'Something went wrong.');
     } finally {
       setLoading(false);
     }

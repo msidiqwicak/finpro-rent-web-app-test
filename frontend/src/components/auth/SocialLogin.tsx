@@ -103,7 +103,11 @@ export default function SocialLogin({ action, requestedRole, redirectTo = '/' }:
         sessionStorage.setItem('social_login_state', JSON.stringify({ provider, action, requestedRole }));
         await signInWithRedirect(auth, firebaseProvider);
       } else if (err?.code !== 'auth/popup-closed-by-user') {
-        setError(err.message ?? 'An error occurred. Please try again.');
+        if (err?.code === 'auth/account-exists-with-different-credential') {
+          setError('This email is registered with another login method (e.g. Google). Please use that method.');
+        } else {
+          setError(err.message ?? 'An error occurred. Please try again.');
+        }
         setLoading(null);
       } else {
         // User menutup popup secara manual

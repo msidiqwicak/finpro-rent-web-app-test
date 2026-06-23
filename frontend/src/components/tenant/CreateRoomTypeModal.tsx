@@ -1,21 +1,50 @@
 import { useState } from 'react';
+import { useInputLimit } from '../../hooks/useInputLimit';
+
+function CharCounter({ remaining, isLimitReached }: { remaining: number; isLimitReached: boolean }) {
+  return (
+    <p className={`text-[11px] mt-1 text-right transition-colors ${isLimitReached ? 'text-red-500 font-semibold' : 'text-on-surface-variant'}`}>
+      {remaining} characters remaining
+    </p>
+  );
+}
 
 
 const INPUT = 'w-full px-4 py-2.5 bg-surface-low border border-outline-variant rounded-xl text-[14px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all';
 
 interface Props { propertyId: string; propertyName: string; onSuccess: () => void; onClose: () => void; }
 
-const INITIAL = { name: '', description: '', price_per_night: '', capacity: '2', total_units: '1' };
+const INITIAL = { price_per_night: '', capacity: '2', total_units: '1' };
 
 export default function CreateRoomTypeModal({ propertyId, propertyName, onSuccess, onClose }: Props) {
 
   const [form, setForm] = useState(INITIAL);
+  const nameField = useInputLimit('', 50);
+  const descriptionField = useInputLimit('', 1000);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value;
+    if (Number(val) > 1000000000) val = '1000000000';
+    setForm((f) => ({ ...f, price_per_night: val }));
+  };
+
+  const handleCapacityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value;
+    if (Number(val) > 20) val = '20';
+    setForm((f) => ({ ...f, capacity: val }));
+  };
+
+  const handleUnitsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value;
+    if (Number(val) > 200) val = '200';
+    setForm((f) => ({ ...f, total_units: val }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); 
@@ -37,6 +66,8 @@ export default function CreateRoomTypeModal({ propertyId, propertyName, onSucces
 
     try {
       const formData = new FormData();
+      formData.append('name', nameField.value);
+      formData.append('description', descriptionField.value);
       Object.entries(form).forEach(([key, val]) => {
         formData.append(key, val);
       });
@@ -48,7 +79,7 @@ export default function CreateRoomTypeModal({ propertyId, propertyName, onSucces
       await api.post(`/properties/${propertyId}/room-types`, formData);
       onSuccess();
     } catch (err: any) {
-      setError(err.message || 'Gagal membuat tipe kamar.');
+      setError(err.response?.data?.error || err.message || 'Gagal membuat tipe kamar.');
     } finally { setLoading(false); }
   };
 
@@ -65,25 +96,30 @@ export default function CreateRoomTypeModal({ propertyId, propertyName, onSucces
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Room Name</label>
-            <input name="name" type="text" value={form.name} onChange={handleChange} placeholder="e.g. Deluxe Room" required className={INPUT} />
+            <input name="name" type="text" value={nameField.value} onChange={nameField.onChange} placeholder="e.g. Deluxe Room" required className={INPUT} />
+            <CharCounter remaining={nameField.remaining} isLimitReached={nameField.isLimitReached} />
           </div>
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Base Price per Night (Rp)</label>
-            <input name="price_per_night" type="number" min="0" value={form.price_per_night} onChange={handleChange} required className={INPUT} />
+            <input name="price_per_night" type="number" min="0" max="1000000000" value={form.price_per_night} onChange={handlePriceChange} required className={INPUT} />
+            <p className="text-[11px] mt-1 text-on-surface-variant text-right">Max: Rp 1.000.000.000</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Guest Capacity</label>
-              <input name="capacity" type="number" min="1" value={form.capacity} onChange={handleChange} required className={INPUT} />
+              <input name="capacity" type="number" min="1" max="20" value={form.capacity} onChange={handleCapacityChange} required className={INPUT} />
+              <p className="text-[11px] mt-1 text-on-surface-variant text-right">Max: 20 guests</p>
             </div>
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Total Units / Doors</label>
-              <input name="total_units" type="number" min="1" value={form.total_units} onChange={handleChange} required className={INPUT} />
+              <input name="total_units" type="number" min="1" max="200" value={form.total_units} onChange={handleUnitsChange} required className={INPUT} />
+              <p className="text-[11px] mt-1 text-on-surface-variant text-right">Max: 200 units</p>
             </div>
           </div>
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Description</label>
-            <textarea name="description" value={form.description} onChange={handleChange} rows={2} required className={INPUT} />
+            <textarea name="description" value={descriptionField.value} onChange={descriptionField.onChange} rows={2} required className={INPUT} />
+            <CharCounter remaining={descriptionField.remaining} isLimitReached={descriptionField.isLimitReached} />
           </div>
 
           <div>

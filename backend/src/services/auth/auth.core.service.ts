@@ -12,9 +12,9 @@ const checkExistingEmail = async (email: string) => {
   if (!existingUser) return;
   if (existingUser.user_providers.length > 0 && !existingUser.password_hash) {
     const p = existingUser.user_providers[0]?.provider ?? "Social Login";
-    throw new Error(`Email terdaftar via ${p}. Silakan login dengan ${p}.`);
+    throw new Error(`Email registered via ${p}. Please login with ${p}.`);
   }
-  throw new Error("Email sudah terdaftar. Silakan login menggunakan password.");
+  throw new Error("Email already registered. Please login using password.");
 };
 
 export const registerUser = async (name: string, email: string, role: "USER" | "TENANT") => {
@@ -28,18 +28,18 @@ export const registerUser = async (name: string, email: string, role: "USER" | "
   
   const token = generateVerificationToken({ id: user.id, email: user.email, role });
   await sendVerificationEmail(user.email, token);
-  return { message: "Silakan cek email Anda untuk verifikasi akun" };
+  return { message: "Please check your email to verify your account." };
 };
 
 export const login = async (email: string, password: string, reqRole: "USER" | "TENANT") => {
   const user = await prisma.users.findUnique({ where: { email }, include: { tenant: true } });
   if (!user) throw new Error("Invalid email or password.");
-  if (!user.is_verified) throw new Error("Harap verifikasi email Anda terlebih dahulu");
-  if (!user.password_hash) throw new Error("Terdaftar via Social Login. Gunakan Social Login.");
+  if (!user.is_verified) throw new Error("Please verify your email first.");
+  if (!user.password_hash) throw new Error("Registered via Social Login. Please use Social Login.");
 
   const isValid = await comparePassword(password, user.password_hash);
   if (!isValid) throw new Error("Invalid email or password.");
-  if (reqRole === "TENANT" && !user.tenant) throw new Error("Akun ini tidak memiliki akses tenant");
+  if (reqRole === "TENANT" && !user.tenant) throw new Error("This account does not have tenant access.");
 
   const actualRole = user.tenant ? "TENANT" : "USER";
   const token = generateAccessToken({ id: user.id, email: user.email, role: actualRole });

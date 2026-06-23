@@ -8,9 +8,9 @@ const buildTokenResponse = (user: { id: string; email: string; name: string; ten
 };
 
 const rejectEmailConflict = (existing: { password_hash: string | null; user_providers: { provider: string }[] }): never => {
-  if (existing.password_hash) throw new Error("Email ini sudah terdaftar secara Lokal. Silakan login menggunakan password.");
-  const otherProvider = existing.user_providers[0]?.provider ?? "metode lain";
-  throw new Error(`Email ini sudah terdaftar via ${otherProvider}. Silakan gunakan metode tersebut.`);
+  if (existing.password_hash) throw new Error("This email is registered locally. Please login using a password.");
+  const otherProvider = existing.user_providers[0]?.provider ?? "another method";
+  throw new Error(`This email is registered via ${otherProvider}. Please use that method.`);
 };
 
 const buildTenantAwareResponse = async (user: any, name: string, reqRole: "USER" | "TENANT") => {
@@ -38,7 +38,7 @@ export const socialLogin = async (
 
   const byEmail = await prisma.users.findUnique({
     where: { email },
-    include: { tenant: true, user_providers: { select: { provider: true } } },
+    include: { tenant: true, user_providers: { select: { id: true, provider: true, provider_id: true } } },
   });
   
   if (byEmail) {
@@ -47,6 +47,19 @@ export const socialLogin = async (
       await prisma.user_providers.create({ data: { user_id: byEmail.id, provider, provider_id: providerId } });
       return buildTenantAwareResponse(byEmail, name, reqRole);
     }
+
+    const existingProviderRecord = byEmail.user_providers.find(p => p.provider === provider);
+    if (existingProviderRecord) {
+      // Sama-sama FACEBOOK (misalnya UID Firebase berubah karena user sempat hapus akun)
+      // Kita izinkan login dan update provider_id ke UID yang baru
+      await prisma.user_providers.update({
+        where: { id: existingProviderRecord.id },
+        data: { provider_id: providerId }
+      });
+      return buildTenantAwareResponse(byEmail, name, reqRole);
+    }
+
+    // Jika beda provider (misal Google coba login ke akun FB), maka tolak sesuai aturan bisnis
     return rejectEmailConflict(byEmail);
   }
 

@@ -21,7 +21,7 @@ export const getUserProfile = async (userId: string) => {
     where:  { id: userId },
     select: USER_SELECT,
   });
-  if (!user) throw new Error('User tidak ditemukan.');
+  if (!user) throw new Error('User not found.');
 
   // Build providers array — include 'LOCAL' if account has a password
   const providers: string[] = user.user_providers.map((p: any) => p.provider);
@@ -38,7 +38,7 @@ export const getUserProfile = async (userId: string) => {
 const assertEmailAvailable = async (email: string, currentUserId: string) => {
   const existing = await prisma.users.findUnique({ where: { email } });
   if (existing && existing.id !== currentUserId) {
-    throw new Error('Email sudah digunakan oleh akun lain.');
+    throw new Error('This email is already in use by another account.');
   }
 };
 
@@ -57,11 +57,11 @@ type UpdateProfileInput = {
 
 export const updateUserProfile = async (userId: string, data: UpdateProfileInput) => {
   if (!data.name && !data.phone && !data.email) {
-    throw new Error('Tidak ada data yang perlu diperbarui.');
+    throw new Error('No data provided for update.');
   }
 
   const current = await prisma.users.findUnique({ where: { id: userId } });
-  if (!current) throw new Error('User tidak ditemukan.');
+  if (!current) throw new Error('User not found.');
 
   const emailChanged = data.email && data.email !== current.email;
 
@@ -88,9 +88,9 @@ export const updateUserProfile = async (userId: string, data: UpdateProfileInput
 // ── change password ───────────────────────────────────────────
 
 const validateChangePasswordInput = (oldPassword: string, newPassword: string) => {
-  if (!oldPassword || !newPassword) throw new Error('Password lama dan baru wajib diisi.');
-  if (newPassword.length < 6)       throw new Error('Password baru minimal 6 karakter.');
-  if (oldPassword === newPassword)   throw new Error('Password baru tidak boleh sama dengan password lama.');
+  if (!oldPassword || !newPassword) throw new Error('Current and new password are required.');
+  if (newPassword.length < 6)       throw new Error('New password must be at least 6 characters.');
+  if (oldPassword === newPassword)   throw new Error('New password cannot be the same as the current password.');
 };
 
 export const changeUserPassword = async (
@@ -101,11 +101,11 @@ export const changeUserPassword = async (
   validateChangePasswordInput(oldPassword, newPassword);
 
   const user = await prisma.users.findUnique({ where: { id: userId } });
-  if (!user)               throw new Error('User tidak ditemukan.');
-  if (!user.password_hash) throw new Error('Akun ini tidak memiliki password lokal (Social Login).');
+  if (!user)               throw new Error('User not found.');
+  if (!user.password_hash) throw new Error('This account does not have a local password (Social Login).');
 
   const isValid = await comparePassword(oldPassword, user.password_hash);
-  if (!isValid) throw new Error('Password lama yang Anda masukkan salah.');
+  if (!isValid) throw new Error('The current password you entered is incorrect.');
 
   const hashed = await hashPassword(newPassword);
   await prisma.users.update({
@@ -113,5 +113,5 @@ export const changeUserPassword = async (
     data:  { password_hash: hashed, updated_at: new Date() },
   });
 
-  return { message: 'Password berhasil diperbarui.' };
+  return { message: 'Password successfully updated.' };
 };

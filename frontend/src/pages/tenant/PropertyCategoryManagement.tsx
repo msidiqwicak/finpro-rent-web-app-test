@@ -2,6 +2,17 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import TenantLayout from '../../components/layout/TenantLayout';
 import api from '../../api/axiosConfig';
+import { useInputLimit } from '../../hooks/useInputLimit';
+
+const MAX_CATEGORY_NAME = 30;
+
+function CharCounter({ remaining, isLimitReached }: { remaining: number; isLimitReached: boolean }) {
+  return (
+    <p className={`text-[11px] mt-1 text-right transition-colors ${isLimitReached ? 'text-red-500 font-semibold' : 'text-on-surface-variant'}`}>
+      {remaining} characters remaining
+    </p>
+  );
+}
 
 // ── Types ─────────────────────────────────────────────────────
 interface Category {
@@ -73,16 +84,16 @@ function CategoryModal({
   onClose: () => void;
   onSubmit: (name: string) => void;
 }) {
-  const [name, setName] = useState(initialName);
+  const nameField = useInputLimit(initialName, MAX_CATEGORY_NAME);
 
-  // Sync initialName when modal opens/changes
-  useEffect(() => { setName(initialName); }, [initialName]);
+  // Sync initialName when modal opens or switches modes
+  useEffect(() => { nameField.setValue(initialName); }, [initialName]);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim()) onSubmit(name.trim());
+    if (nameField.value.trim()) onSubmit(nameField.value.trim());
   };
 
   return (
@@ -114,13 +125,14 @@ function CategoryModal({
             <input
               id="category-name"
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={nameField.value}
+              onChange={nameField.onChange}
               placeholder="e.g. Hotel, Villa, Apartment"
               autoFocus
               disabled={loading}
               className="w-full px-4 py-3 bg-surface border border-outline-variant rounded-xl text-[15px] text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all disabled:opacity-60"
             />
+            <CharCounter remaining={nameField.remaining} isLimitReached={nameField.isLimitReached} />
           </div>
 
           <div className="flex gap-3">
@@ -134,7 +146,7 @@ function CategoryModal({
             </button>
             <button
               type="submit"
-              disabled={loading || !name.trim()}
+              disabled={loading || !nameField.value.trim()}
               className="flex-1 py-3 rounded-xl bg-primary text-on-primary font-bold text-[14px] hover:opacity-90 transition-opacity cursor-pointer border-none disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loading ? (

@@ -53,13 +53,13 @@ export default function VerifyPassword() {
           <span className="material-symbols-outlined text-[28px] text-on-secondary-container">key</span>
         </div>
 
-        <h1 className="font-display font-bold text-3xl text-on-surface mb-2">Verifikasi Reset Password</h1>
+        <h1 className="font-display font-bold text-3xl text-on-surface mb-2">Verify Password Reset</h1>
         
         {/* Render UI responsif terhadap status */}
         {status === 'loading' && (
           <div className="mt-8">
             <span className="material-symbols-outlined text-primary text-[40px] animate-spin block mb-4">progress_activity</span>
-            <p className="text-blue-600 font-medium">Sedang memverifikasi token Anda...</p>
+            <p className="text-blue-600 font-medium">Verifying your token...</p>
           </div>
         )}
 
@@ -68,8 +68,8 @@ export default function VerifyPassword() {
             <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
               <span className="material-symbols-outlined text-[36px] text-emerald-600">check_circle</span>
             </div>
-            <p className="text-green-600 font-bold text-[18px] mb-2">Verifikasi Berhasil!</p>
-            <p className="text-on-surface-variant text-[15px]">Token valid. Anda sekarang dapat mengatur ulang password Anda.</p>
+            <p className="text-green-600 font-bold text-[18px] mb-2">Verification Successful!</p>
+            <p className="text-on-surface-variant text-[15px]">Token is valid. You can now reset your password.</p>
           </div>
         )}
 
@@ -78,8 +78,8 @@ export default function VerifyPassword() {
             <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
               <span className="material-symbols-outlined text-[36px] text-red-600">error</span>
             </div>
-            <p className="text-red-600 font-bold text-[18px] mb-2">Verifikasi Gagal</p>
-            <p className="text-on-surface-variant text-[15px]">Link tidak valid atau sudah kadaluarsa. Silakan minta link baru.</p>
+            <p className="text-red-600 font-bold text-[18px] mb-2">Verification Failed</p>
+            <p className="text-on-surface-variant text-[15px]">The link is invalid or has expired. Please request a new link.</p>
           </div>
         )}
       </div>

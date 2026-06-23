@@ -7,7 +7,7 @@ export const registerSchema = z.object({
 
 export const verifySchema = z.object({
   token: z.string().min(1, 'Token wajib diisi'),
-  password: z.string().min(6, 'Password minimal 6 karakter'),
+  password: z.string().trim().min(6, 'Password minimal 6 karakter (tidak boleh hanya spasi)'),
 });
 
 export const loginSchema = z.object({
@@ -21,7 +21,7 @@ export const requestResetSchema = z.object({
 
 export const confirmResetSchema = z.object({
   token: z.string().min(1, 'Token wajib diisi'),
-  newPassword: z.string().min(6, 'Password minimal 6 karakter'),
+  newPassword: z.string().trim().min(6, 'Password minimal 6 karakter (tidak boleh hanya spasi)'),
 });
 
 export const verifyEmailUpdateSchema = z.object({

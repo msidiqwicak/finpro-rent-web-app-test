@@ -3,8 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import TenantLayout from '../../components/layout/TenantLayout';
 import api from '../../api/axiosConfig';
+import { useInputLimit } from '../../hooks/useInputLimit';
 
-const INITIAL = { name: '', description: '', address: '', city: '', province: '', category_id: '' };
+// Helper: renders a small "X / max" counter below an input
+function CharCounter({ remaining, isLimitReached }: { remaining: number; isLimitReached: boolean }) {
+  return (
+    <p className={`text-[11px] mt-1 text-right transition-colors ${isLimitReached ? 'text-red-500 font-semibold' : 'text-on-surface-variant'}`}>
+      {remaining} characters remaining
+    </p>
+  );
+}
+
+const INITIAL = { category_id: '' };
 
 export default function CreatePropertyPage() {
   const { user } = useAuth();
@@ -14,6 +24,13 @@ export default function CreatePropertyPage() {
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // ── Input Limit Hooks ──────────────────────────────────────
+  const nameField        = useInputLimit('', 50);
+  const descriptionField = useInputLimit('', 1000);
+  const addressField     = useInputLimit('', 150);
+  const cityField        = useInputLimit('', 50);
+  const provinceField    = useInputLimit('', 50);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -54,9 +71,13 @@ export default function CreatePropertyPage() {
 
     try {
       const formData = new FormData();
-      Object.entries(form).forEach(([key, val]) => {
-        formData.append(key, val);
-      });
+      // Append limited field values
+      formData.append('name',        nameField.value);
+      formData.append('description', descriptionField.value);
+      formData.append('address',     addressField.value);
+      formData.append('city',        cityField.value);
+      formData.append('province',    provinceField.value);
+      formData.append('category_id', form.category_id);
       imageFiles.forEach(file => {
         formData.append('images', file);
       });
@@ -113,7 +134,8 @@ export default function CreatePropertyPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="md:col-span-2">
                   <label className={LABEL}>Property Name</label>
-                  <input name="name" type="text" value={form.name} onChange={handleChange} required className={INPUT} placeholder="e.g. Sunrise Villa Seminyak" />
+                  <input name="name" type="text" value={nameField.value} onChange={nameField.onChange} required className={INPUT} placeholder="e.g. Sunrise Villa Seminyak" />
+                  <CharCounter remaining={nameField.remaining} isLimitReached={nameField.isLimitReached} />
                 </div>
                 <div className="md:col-span-2">
                   <label className={LABEL}>Category</label>
@@ -126,7 +148,8 @@ export default function CreatePropertyPage() {
                 </div>
                 <div className="md:col-span-2">
                   <label className={LABEL}>Description</label>
-                  <textarea name="description" value={form.description} onChange={handleChange} rows={4} className={INPUT} placeholder="Describe the best features of your property..." />
+                  <textarea name="description" value={descriptionField.value} onChange={descriptionField.onChange} rows={4} className={INPUT} placeholder="Describe the best features of your property..." />
+                  <CharCounter remaining={descriptionField.remaining} isLimitReached={descriptionField.isLimitReached} />
                 </div>
               </div>
             </div>
@@ -187,15 +210,18 @@ export default function CreatePropertyPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="md:col-span-2">
                   <label className={LABEL}>Address</label>
-                  <input name="address" type="text" value={form.address} onChange={handleChange} required className={INPUT} placeholder="Full street address" />
+                  <input name="address" type="text" value={addressField.value} onChange={addressField.onChange} required className={INPUT} placeholder="Full street address" />
+                  <CharCounter remaining={addressField.remaining} isLimitReached={addressField.isLimitReached} />
                 </div>
                 <div>
                   <label className={LABEL}>City</label>
-                  <input name="city" type="text" value={form.city} onChange={handleChange} required className={INPUT} placeholder="e.g. Badung" />
+                  <input name="city" type="text" value={cityField.value} onChange={cityField.onChange} required className={INPUT} placeholder="e.g. Badung" />
+                  <CharCounter remaining={cityField.remaining} isLimitReached={cityField.isLimitReached} />
                 </div>
                 <div>
                   <label className={LABEL}>Province</label>
-                  <input name="province" type="text" value={form.province} onChange={handleChange} required className={INPUT} placeholder="e.g. Bali" />
+                  <input name="province" type="text" value={provinceField.value} onChange={provinceField.onChange} required className={INPUT} placeholder="e.g. Bali" />
+                  <CharCounter remaining={provinceField.remaining} isLimitReached={provinceField.isLimitReached} />
                 </div>
               </div>
             </div>

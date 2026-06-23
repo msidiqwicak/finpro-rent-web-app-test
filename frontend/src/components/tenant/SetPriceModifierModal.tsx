@@ -1,5 +1,15 @@
 import { useState } from 'react';
+import { useInputLimit } from '../../hooks/useInputLimit';
+
 const INPUT = 'w-full px-4 py-2.5 bg-surface-low border border-outline-variant rounded-xl text-[14px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all';
+
+function CharCounter({ remaining, isLimitReached }: { remaining: number; isLimitReached: boolean }) {
+  return (
+    <p className={`text-[11px] mt-1 text-right transition-colors ${isLimitReached ? 'text-red-500 font-semibold' : 'text-on-surface-variant'}`}>
+      {remaining} characters remaining
+    </p>
+  );
+}
 
 interface RoomType { id: string; name: string; price_per_night: number; }
 interface Props    { roomTypes: RoomType[]; onSuccess: () => void; onClose: () => void; }
@@ -12,9 +22,24 @@ export default function SetPriceModifierModal({ roomTypes, onSuccess, onClose }:
   const [form, setForm]     = useState(INITIAL);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
+  
+  const reasonField = useInputLimit('', 150);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    if (name === 'type') {
+      setForm((f) => ({ ...f, type: value, value: '' }));
+    } else {
+      setForm((f) => ({ ...f, [name]: value }));
+    }
+  };
+
+  const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value;
+    const maxVal = form.type === 'PERCENTAGE' ? 500 : 1000000000;
+    if (Number(val) > maxVal) val = String(maxVal);
+    setForm((f) => ({ ...f, value: val }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setLoading(true); setError('');
@@ -25,7 +50,7 @@ export default function SetPriceModifierModal({ roomTypes, onSuccess, onClose }:
         endDate:   form.endDate,
         type:      form.type,
         value:     isUnavailable(form.type) ? 0 : Number(form.value),
-        reason:    form.reason,
+        reason:    reasonField.value,
         isAvailable: !isUnavailable(form.type),
       });
       onSuccess();
@@ -83,12 +108,16 @@ export default function SetPriceModifierModal({ roomTypes, onSuccess, onClose }:
               <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">
                 {form.type === 'PERCENTAGE' ? 'Percentage (e.g. 20 for +20%)' : 'Fixed Amount (Rp)'}
               </label>
-              <input name="value" type="number" min="0" value={form.value} onChange={handleChange} required={!isUnavailable(form.type)} className={INPUT} />
+              <input name="value" type="number" min="0" max={form.type === 'PERCENTAGE' ? 500 : 1000000000} value={form.value} onChange={handleValueChange} required={!isUnavailable(form.type)} className={INPUT} />
+              <p className="text-[11px] mt-1 text-on-surface-variant text-right">
+                Max: {form.type === 'PERCENTAGE' ? '500%' : 'Rp 1.000.000.000'}
+              </p>
             </div>
           )}
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Reason (optional)</label>
-            <input name="reason" type="text" value={form.reason} onChange={handleChange} className={INPUT} placeholder="e.g. Holiday season" />
+            <input name="reason" type="text" value={reasonField.value} onChange={reasonField.onChange} className={INPUT} placeholder="e.g. Holiday season" />
+            <CharCounter remaining={reasonField.remaining} isLimitReached={reasonField.isLimitReached} />
           </div>
           {error && <p className="text-sm text-red-600 font-semibold">{error}</p>}
           <div className="flex gap-3 pt-2">

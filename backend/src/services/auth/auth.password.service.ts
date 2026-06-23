@@ -6,15 +6,15 @@ import { sendVerificationEmail, sendResetPasswordEmail, sendEmailChangeVerificat
 
 export const verifyAndSetPassword = async (token: string, password: string) => {
   const decoded = verifyToken(token);
-  if (decoded.purpose !== "verification") throw new Error("Token tidak valid");
+  if (decoded.purpose !== "verification") throw new Error("Invalid token");
 
   const user = await prisma.users.findUnique({ where: { id: decoded.id } });
-  if (!user) throw new Error("User tidak ditemukan");
-  if (user.is_verified) throw new Error("Akun sudah terverifikasi");
+  if (!user) throw new Error("User not found");
+  if (user.is_verified) throw new Error("Account already verified");
 
   const hashed = await hashPassword(password);
   await prisma.users.update({ where: { id: user.id }, data: { password_hash: hashed, is_verified: true } });
-  return { message: "Akun berhasil diverifikasi. Silakan login." };
+  return { message: "Account successfully verified. Please login." };
 };
 
 export const requestPasswordReset = async (email: string) => {
@@ -30,37 +30,37 @@ export const requestPasswordReset = async (email: string) => {
 
 export const resendVerificationEmail = async (email: string) => {
   const user = await prisma.users.findUnique({ where: { email } });
-  if (!user) throw new Error("Email tidak ditemukan.");
-  if (user.is_verified) throw new Error("Akun ini sudah terverifikasi. Silakan login.");
+  if (!user) throw new Error("Email not found.");
+  if (user.is_verified) throw new Error("This account is already verified. Please login.");
 
   const token = generateVerificationToken({ id: user.id, email: user.email, role: "USER" });
   if (user.password_hash) await sendEmailChangeVerificationEmail(user.email, token);
   else await sendVerificationEmail(user.email, token);
 
-  return { message: "Email verifikasi baru telah dikirim. Silakan cek inbox Anda." };
+  return { message: "A new verification email has been sent. Please check your inbox." };
 };
 
 export const verifyEmailUpdate = async (token: string) => {
   const decoded = verifyToken(token);
-  if (decoded.purpose !== "verification") throw new Error("Token tidak valid.");
+  if (decoded.purpose !== "verification") throw new Error("Invalid token.");
 
   const user = await prisma.users.findUnique({ where: { id: decoded.id } });
-  if (!user) throw new Error("User tidak ditemukan.");
+  if (!user) throw new Error("User not found.");
 
   await prisma.users.update({ where: { id: user.id }, data: { is_verified: true } });
-  return { message: "Email berhasil diverifikasi." };
+  return { message: "Email successfully verified." };
 };
 
 export const confirmPasswordReset = async (token: string, newPassword: string) => {
   const unverified = jwt.decode(token) as { id?: string; purpose?: string } | null;
-  if (!unverified?.id || unverified.purpose !== "reset") throw new Error("Token tidak valid.");
+  if (!unverified?.id || unverified.purpose !== "reset") throw new Error("Invalid token.");
 
   const user = await prisma.users.findUnique({ where: { id: unverified.id } });
-  if (!user) throw new Error("User tidak ditemukan.");
-  if (!user.password_hash) throw new Error("Akun ini terdaftar via Social Login.");
+  if (!user) throw new Error("User not found.");
+  if (!user.password_hash) throw new Error("This account is registered via Social Login.");
 
   const decoded = verifyResetToken(token, user.password_hash);
-  if (decoded.purpose !== "reset") throw new Error("Token tidak valid.");
+  if (decoded.purpose !== "reset") throw new Error("Invalid token.");
 
   const hashed = await hashPassword(newPassword);
   await prisma.users.update({ where: { id: user.id }, data: { password_hash: hashed } });

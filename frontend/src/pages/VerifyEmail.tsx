@@ -47,13 +47,13 @@ export default function VerifyEmail() {
           <span className="material-symbols-outlined text-[28px] text-primary">mark_email_read</span>
         </div>
 
-        <h1 className="font-display font-bold text-3xl text-on-surface mb-2">Konfirmasi Email Baru</h1>
+        <h1 className="font-display font-bold text-3xl text-on-surface mb-2">Confirm New Email</h1>
         
         {/* State: Loading */}
         {status === 'loading' && (
           <div className="mt-8">
             <span className="material-symbols-outlined text-primary text-[40px] animate-spin block mb-4">progress_activity</span>
-            <p className="text-blue-600 font-medium">Memverifikasi email Anda...</p>
+            <p className="text-blue-600 font-medium">Verifying your email...</p>
           </div>
         )}
 
@@ -63,8 +63,8 @@ export default function VerifyEmail() {
             <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
               <span className="material-symbols-outlined text-[36px] text-emerald-600">check_circle</span>
             </div>
-            <p className="text-green-600 font-bold text-[18px] mb-2">Verifikasi Berhasil!</p>
-            <p className="text-on-surface-variant text-[15px]">Alamat email Anda telah berhasil diperbarui di sistem kami.</p>
+            <p className="text-green-600 font-bold text-[18px] mb-2">Verification Successful!</p>
+            <p className="text-on-surface-variant text-[15px]">Your email address has been successfully updated in our system.</p>
           </div>
         )}
 
@@ -74,8 +74,8 @@ export default function VerifyEmail() {
             <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
               <span className="material-symbols-outlined text-[36px] text-red-600">error</span>
             </div>
-            <p className="text-red-600 font-bold text-[18px] mb-2">Verifikasi Gagal</p>
-            <p className="text-on-surface-variant text-[15px]">Link tidak valid atau sudah kadaluarsa. Silakan ajukan ulang perubahan email dari profil Anda.</p>
+            <p className="text-red-600 font-bold text-[18px] mb-2">Verification Failed</p>
+            <p className="text-on-surface-variant text-[15px]">The link is invalid or has expired. Please request a new email change from your profile.</p>
           </div>
         )}
       </div>
