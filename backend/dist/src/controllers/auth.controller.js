@@ -1,6 +1,7 @@
 import * as authService from '../services/auth/auth.service.js';
 import * as authSchema from '../schemas/auth.schema.js';
 import { verifyFirebaseToken } from '../utils/firebase.js';
+const isProd = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
 export const registerUser = async (req, res) => {
     try {
         const data = authSchema.registerSchema.parse(req.body);
@@ -37,8 +38,8 @@ export const loginUser = async (req, res) => {
         const result = await authService.login(data.email, data.password, 'USER');
         res.cookie('token', result.token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
         res.status(200).json({ user: result.user });
@@ -53,8 +54,8 @@ export const loginTenant = async (req, res) => {
         const result = await authService.login(data.email, data.password, 'TENANT');
         res.cookie('token', result.token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
         res.status(200).json({ user: result.user });
@@ -99,8 +100,8 @@ export const handleSocialLogin = async (req, res) => {
         const result = await authService.socialLogin(firebaseUser.email, firebaseUser.name, provider.toUpperCase(), firebaseUser.uid, action, requestedRole);
         res.cookie('token', result.token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
         res.status(200).json({ user: result.user });
@@ -166,8 +167,8 @@ export const getMe = async (req, res) => {
 export const logout = async (req, res) => {
     res.clearCookie('token', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
     });
     res.status(200).json({ message: 'Logged out successfully' });
 };
