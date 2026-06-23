@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useAuth }              from '../../context/AuthContext';
 import CreatePropertyModal      from '../../components/tenant/CreatePropertyModal';
 import SetPriceModifierModal    from '../../components/tenant/SetPriceModifierModal';
 import CreateRoomTypeModal      from '../../components/tenant/CreateRoomTypeModal';
@@ -54,7 +53,6 @@ function PropertyCard({ prop, onAddRoom, onSetPrice, onDelete }: {
 }
 
 export default function PropertyManagement() {
-  const { user } = useAuth();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading,    setLoading]    = useState(true);
   

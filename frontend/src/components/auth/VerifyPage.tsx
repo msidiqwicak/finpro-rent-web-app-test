@@ -73,7 +73,7 @@ export default function VerifyPage() {
     if (!token)                                  return setError('Invalid verification token.');
     setLoading(true); setError('');
     try {
-      const res  = await api.post('/auth/verify', { token, password: form.password });
+      await api.post('/auth/verify', { token, password: form.password });
       setSuccess(true);
     } catch (err: any) {
       let msg = err.response?.data?.error || err.message;

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PropertyDeleteModal from './PropertyDeleteModal';
 import { getImageUrl } from '../../utils/imageUrl';
 import { useAuth } from '../../context/AuthContext';
 import TenantLayout from '../../components/layout/TenantLayout';

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axiosConfig';
 
 const INPUT_CLS =
@@ -12,7 +11,6 @@ interface Props {
 }
 
 export default function ProfileForm({ initialName, initialPhone, onSuccess }: Props) {
-  const { user } = useAuth();
   const [name,    setName]    = useState(initialName);
   const [phone,   setPhone]   = useState(initialPhone);
   const [loading, setLoading] = useState(false);
