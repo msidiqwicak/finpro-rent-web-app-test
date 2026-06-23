@@ -1,4 +1,5 @@
 import { prisma } from "../../utils/prisma.js";
+import type { BookingData } from "../../types/booking.type.js";
 
 export const getBookingDetails = async (id: string) => {
   return prisma.booking.findUnique({
@@ -38,7 +39,7 @@ export const getAllBookings = async (
   if (search && search.trim() !== "") {
     const kw = search.toLowerCase();
     bookings = bookings.filter(
-      (b: any) =>
+      (b: BookingData) =>
         b.id.toLowerCase().includes(kw) ||
         b.room_unit?.room_type?.property?.name.toLowerCase().includes(kw),
     );
