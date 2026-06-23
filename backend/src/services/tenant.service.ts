@@ -1,4 +1,5 @@
 import { prisma } from "../utils/prisma.js";
+import type { TransactionContext, PaymentItem } from "../types/tenant.type.js";
 
 export const getTenantByUserId = async (userId: string) => {
   return await prisma.tenant.findUnique({ where: { user_id: userId } });
@@ -7,7 +8,10 @@ export const getTenantByUserId = async (userId: string) => {
 import { sendConfirmationEmail } from "./email/email.service.js";
 
 // Helper untuk mengecek kepemilikan tenant
-export const verifyTenantOwnership = async (bookingId: string, userId: string) => {
+export const verifyTenantOwnership = async (
+  bookingId: string,
+  userId: string,
+) => {
   const tenant = await prisma.tenant.findUnique({ where: { user_id: userId } });
   if (!tenant) throw new Error("Anda tidak terdaftar sebagai tenant.");
 
@@ -25,7 +29,7 @@ export const verifyTenantOwnership = async (bookingId: string, userId: string) =
 
 // 1. Tenant Menerima Pembayaran Manual
 export const approvePaymentProcess = async (bookingId: string) => {
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx: TransactionContext) => {
     // Ubah status booking menjadi CONFIRMED
     const updatedBooking = await tx.booking.update({
       where: { id: bookingId },
@@ -58,7 +62,7 @@ export const approvePaymentProcess = async (bookingId: string) => {
 
 // 2. Tenant Menolak Pembayaran Manual
 export const rejectPaymentProcess = async (bookingId: string) => {
-  return await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async (tx: TransactionContext) => {
     // Kembalikan status booking ke WAITING_FOR_PAYMENT
     const updatedBooking = await tx.booking.update({
       where: { id: bookingId },
@@ -87,7 +91,7 @@ export const cancelBookingByTenantProcess = async (bookingId: string) => {
   // 🚨 Eksekusi Poin: Hanya bisa dibatalkan jika bukti pembayaran BELUM diunggah
   // (Asumsi: jika ada payment dengan status SUBMITTED/CONFIRMED, berarti tidak boleh dibatalkan)
   const hasUploadedPayment = booking.payment.some(
-    (p) => p.status === "SUBMITTED" || p.status === "CONFIRMED",
+    (p: PaymentItem) => p.status === "SUBMITTED" || p.status === "CONFIRMED",
   );
 
   if (hasUploadedPayment) {

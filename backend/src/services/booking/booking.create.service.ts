@@ -1,6 +1,7 @@
 import { prisma } from "../../utils/prisma.js";
 import { addHours, subDays, eachDayOfInterval } from "date-fns";
 import { getStayDates, calculateNightlyPrice } from "./booking.helpers.js";
+import type { PriceModifier } from "../../types/booking.type.js";
 
 const validateDates = (checkIn: Date, checkOut: Date) => {
   const today = new Date();
@@ -26,7 +27,7 @@ const checkBlockDates = async (
     end: subDays(checkOut, 1),
   });
   for (const night of stayNights) {
-    const blocker = room.price_modifier.find((mod: any) => {
+    const blocker = room.price_modifier.find((mod: PriceModifier) => {
       const start = new Date(mod.start_date);
       start.setHours(0, 0, 0, 0);
       const end = new Date(mod.end_date);
