@@ -1,48 +1,137 @@
-# 🏨 Property Rental Web App — Project Workflow & Documentation
+# 🏨 Evergreen Escapes — Project Workflow & Documentation
 
 > **Final Project — Purwadhika Bootcamp**
 > Aplikasi pemesanan tempat penginapan berbasis web dengan pendekatan mobile-first.
+> Brand: **Evergreen Escapes** — Modern Organic, nature-integrated eco-travel platform.
 
 ---
 
 ## 📋 Daftar Isi
 
 1. [Overview Proyek](#overview-proyek)
-2. [Tech Stack](#tech-stack)
-3. [Role & Akses](#role--akses)
-4. [Fitur Utama](#fitur-utama)
-5. [Alur Bisnis (Business Flow)](#alur-bisnis-business-flow)
-6. [Pricing Engine](#pricing-engine)
-7. [Struktur Halaman (Page Structure)](#struktur-halaman-page-structure)
+2. [Tech Stack Aktual](#tech-stack-aktual)
+3. [Arsitektur Project](#arsitektur-project)
+4. [Role & Akses](#role--akses)
+5. [Fitur 1 — Cakupan Pengerjaan](#fitur-1--cakupan-pengerjaan)
+6. [Alur Bisnis (Business Flow)](#alur-bisnis-business-flow)
+7. [Pricing Engine](#pricing-engine)
 8. [Database Schema](#database-schema)
-9. [API Endpoint Plan](#api-endpoint-plan)
-10. [Development Roadmap](#development-roadmap)
+9. [Struktur Halaman & Routing](#struktur-halaman--routing)
+10. [API Endpoint Plan](#api-endpoint-plan)
+11. [Standarisasi & Evaluasi](#standarisasi--evaluasi)
+12. [Development Roadmap](#development-roadmap)
 
 ---
 
 ## 📌 Overview Proyek
 
-Aplikasi ini adalah platform penyewaan tempat penginapan (mirip Airbnb/Traveloka) yang menghubungkan **User (tamu)** dengan **Tenant (pemilik properti)**. Dibangun dengan pendekatan **mobile-first**, aplikasi ini mendukung dua jenis pengguna dengan hak akses yang berbeda dan sistem harga dinamis berbasis tanggal.
+Platform penyewaan tempat penginapan (mirip Airbnb/Traveloka) yang menghubungkan **User (tamu)** dengan **Tenant (pemilik properti)**. Dibangun dengan pendekatan **mobile-first**, mendukung dua jenis pengguna dengan hak akses terpisah dan sistem harga dinamis berbasis tanggal (Peak Season Rate).
 
 ### Tujuan Utama
 - Memudahkan user mencari dan memesan tempat menginap berdasarkan destinasi & tanggal
 - Memberikan tenant kontrol penuh atas properti, ketersediaan, dan harga
-- Sistem harga fleksibel yang dapat berubah berdasarkan tanggal tertentu (persentase/nominal)
+- Sistem harga fleksibel yang berubah otomatis berdasarkan tanggal tertentu (persentase/nominal)
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Tech Stack Aktual
 
-| Layer | Teknologi |
-|-------|-----------|
-| **Frontend** | Next.js (React) + TypeScript |
-| **Styling** | Tailwind CSS (Mobile-first) |
-| **Backend** | Node.js + Express / Next.js API Routes |
-| **Database** | PostgreSQL |
-| **ORM** | Prisma |
-| **Auth** | JWT (JSON Web Token) |
-| **File Storage** | Cloudinary / AWS S3 (upload bukti bayar & foto properti) |
-| **State Management** | Zustand / React Context |
+> Berdasarkan `package.json` backend & frontend serta `TOOLS.md` yang aktif di repository ini.
+
+### Frontend (`/frontend`)
+| Kategori | Library | Versi | Keterangan |
+|----------|---------|-------|------------|
+| **Core** | React + React DOM | ^19.2.6 | UI Library |
+| **Build** | Vite | ^8.0.12 | Dev server & production build |
+| **Language** | TypeScript | ~6.0.2 | Static typing |
+| **Styling** | Tailwind CSS | *(akan diinstall)* | Utility-first CSS framework |
+| **Routing** | React Router DOM | *(akan diinstall)* | Client-side routing |
+| **Forms** | React Hook Form + @hookform/resolvers | *(akan diinstall)* | Form management + Zod integration |
+| **Validation** | Zod | *(akan diinstall)* | Schema validation (client-side) |
+| **HTTP Client** | Axios | *(akan diinstall)* | HTTP requests dengan interceptors |
+| **Icons** | Lucide React | *(akan diinstall)* | Icon library |
+| **Charts** | Chart.js + react-chartjs-2 | *(akan diinstall)* | Grafik untuk laporan |
+| **Utilities** | clsx, tailwind-merge | *(akan diinstall)* | Class name utilities |
+| **Linting** | ESLint (+ plugins) | ^10.3.0 | Code linting |
+| **Compiler** | Babel + React Compiler | ^7.29.0 | Optimized React compilation |
+
+### Backend (`/backend`)
+| Kategori | Library | Versi | Keterangan |
+|----------|---------|-------|------------|
+| **Core** | Express | ^5.2.1 | HTTP server (v5) |
+| **Language** | TypeScript + tsx | ^6.0.3 / ^4.22.2 | Static typing + dev runner |
+| **ORM** | Prisma (@prisma/client + @prisma/adapter-pg) | ^7.8.0 | PostgreSQL ORM |
+| **Database Driver** | pg | ^8.21.0 | PostgreSQL native driver |
+| **Auth** | jsonwebtoken | *(akan diinstall)* | JWT authentication |
+| **Password** | bcryptjs | *(akan diinstall)* | Password hashing |
+| **Validation** | Zod | *(akan diinstall)* | Server-side input validation |
+| **File Upload** | Multer | *(akan diinstall)* | Multipart form data handling |
+| **Cloud Storage** | Cloudinary | *(akan diinstall)* | Image upload & hosting |
+| **Email** | Nodemailer | *(akan diinstall)* | SMTP email (Gmail) |
+| **Middleware** | CORS | ^2.8.6 | Cross-Origin Resource Sharing |
+| **Env** | dotenv | ^17.4.2 | Environment variables |
+| **Logging** | Winston | *(akan diinstall)* | Structured logging |
+| **Cache** | @upstash/redis | *(akan diinstall)* | HTTP Redis client |
+| **QR Code** | qrcode | *(akan diinstall)* | QR code generation |
+
+### Infrastruktur & DevOps
+| Kategori | Service | Keterangan |
+|----------|---------|------------|
+| **Database** | PostgreSQL (Supabase) | Managed Postgres hosting |
+| **Cache** | Upstash Redis | Cloud Redis (HTTP-based) |
+| **Media Storage** | Cloudinary | Image/file CDN |
+| **Deployment** | Vercel | Hosting & CI/CD |
+| **Geolocation** | OpenCage API *(atau alternatif free)* | Koordinat berdasarkan kota/provinsi |
+
+### Design System
+| Kategori | Detail |
+|----------|--------|
+| **Brand** | Evergreen Escapes — Modern Organic |
+| **Fonts** | Plus Jakarta Sans (headlines), Manrope (body) |
+| **Color** | Forest Green primary (`#061b0e`), Moss Green secondary (`#56642b`), Soft Sage background (`#f9faf8`) |
+| **Icons** | Material Symbols Outlined + Lucide React |
+| **Style** | Referensi lengkap di `DESIGN.md` dan `layout.md` |
+
+---
+
+## 🏗️ Arsitektur Project
+
+```
+finpro-rent-web-app/
+├── backend/                        ← Express API Server
+│   ├── prisma/
+│   │   └── schema.prisma           ← Database schema (final)
+│   ├── prisma.config.ts            ← Prisma migration config (DIRECT_URL)
+│   ├── src/
+│   │   ├── app.ts                  ← Entry point (Express server)
+│   │   └── generated/prisma/       ← Prisma client (auto-generated)
+│   ├── .env                        ← DATABASE_URL + DIRECT_URL (Supabase)
+│   ├── package.json
+│   └── tsconfig.json               ← module: nodenext, strict: true
+│
+├── frontend/                       ← React + Vite SPA
+│   ├── src/
+│   │   ├── App.tsx                 ← Root component (boilerplate, belum diubah)
+│   │   ├── main.tsx                ← Entry point
+│   │   └── index.css               ← Global styles
+│   ├── vite.config.ts              ← Vite + React Compiler plugin
+│   ├── package.json
+│   └── tsconfig.app.json
+│
+├── DESIGN.md                       ← Brand identity & design tokens
+├── layout.md                       ← HTML reference layout (Evergreen theme)
+├── PROJECT_WORKFLOW.md             ← Dokumen ini
+└── TOOLS.md                        ← Daftar lengkap library & tools
+```
+
+### Scripts
+| Command | Lokasi | Fungsi |
+|---------|--------|--------|
+| `npm run dev` | `/frontend` | Jalankan Vite dev server |
+| `npm run dev` | `/backend` | Jalankan Express via `tsx --watch src/app.ts` |
+| `npm run build` | `/frontend` | Build production (`tsc -b && vite build`) |
+| `npm run build` | `/backend` | Compile TypeScript (`tsc`) |
+| `npm run start` | `/backend` | Build + run (`tsc && node dist/app.js`) |
 
 ---
 
@@ -74,63 +163,103 @@ Aplikasi ini adalah platform penyewaan tempat penginapan (mirip Airbnb/Traveloka
 ```
 
 ### Aturan Penting:
-- **User TIDAK BISA** melihat halaman tenant sama sekali
-- **Tenant HANYA BISA** melihat informasi properti miliknya sendiri
+- User TIDAK BISA melihat halaman tenant
+- Tenant HANYA BISA melihat data properti miliknya sendiri
 - Satu akun user bisa mendaftar sebagai tenant (1:1 relationship)
+- User/tenant yang belum terdaftar & belum terverifikasi → di-redirect ke homepage
+- Fitur tertentu yang tidak bisa digunakan → akan disabled + notifikasi
 
 ---
 
-## ✨ Fitur Utama
+## ✨ Fitur 1 — Cakupan Pengerjaan
 
-### 🔵 Fitur USER (Calon Penyewa)
+> Fitur 1 adalah tanggung jawab pengerjaan saat ini. Total bobot: **100 Poin**.
 
-#### 1. Pencarian Tempat Penginapan (Landing Page)
-- User diharuskan mengisi **form pencarian** di landing page terlebih dahulu:
-  - **Kota destinasi tujuan**
-  - **Tanggal perkiraan menginap** (Check-in & durasinya)
-  - **Jumlah orang** yang akan menginap
-- Setelah submit form, sistem akan menampilkan daftar properti penginapan berdasarkan **kota destinasi** pilihan user tersebut.
-- Filter hasil: **harga termurah → termahal** dan sebaliknya.
+### A. Homepage / Landing Page (10 Poin)
 
-#### 2. Informasi Detail Properti & Pengecekan Harga
-- Setelah memilih tempat dari daftar, user akan diarahkan ke halaman informasi detail properti.
-- Pada halaman detail, user disediakan **kalender** yang menampilkan **harga pada setiap tanggal**.
-- User dapat melihat **perbandingan harga** suatu properti pada tanggal yang berbeda melalui kalender tersebut.
-- Jika properti **tidak tersedia** pada suatu tanggal → tampilkan tanda "Tidak Tersedia" (bukan error).
+| Komponen | Deskripsi |
+|----------|-----------|
+| **Navbar** | Menu-menu utama aplikasi, sticky, glassmorphism |
+| **Hero Section** | Informasi umum / promosi dalam bentuk **carousel** |
+| **Search Form** | Kota destinasi (dropdown), tanggal (kalender), durasi, jumlah orang |
+| **Property List** | Menampilkan daftar properti yang tersedia |
+| **Footer** | Informasi tambahan aplikasi |
 
-#### 3. Pemesanan (Booking) & Kewajiban Registrasi
-- **Wajib Registrasi/Login:** User diwajibkan untuk mendaftar dan login ke dalam aplikasi jika ingin melakukan pemesanan (booking) tempat.
-- Setelah menentukan tempat dan tanggal melalui kalender, user dapat melakukan pembookingan.
-- **Batas Waktu Pembayaran (2 Jam):** Tempat penginapan yang di-booking harus segera dibayarkan paling lambat **dua jam** setelah pemesanan dilakukan.
-- **Auto-Cancel:** Jika pembayaran tidak dilakukan dalam batas waktu, otomatis pemesanan dibatalkan dan penginapan dapat disewakan kembali.
+### B. User / Tenant Authentication & Profiles (40 Poin)
 
-#### 4. Review Pasca Menginap
-- Review hanya bisa dilakukan **setelah selesai menginap** (check-out sudah lewat).
-- Review berupa **komentar satu arah** (user → properti, tanpa balasan dari tenant).
-- Satu booking = **maksimal satu review**.
+#### Authorization
+- User & Tenant yang belum terdaftar/terverifikasi → **redirect ke homepage**
+- Fitur yang tidak bisa digunakan → **disabled** + notifikasi
+- Masing-masing jenis user memiliki **akses terpisah**. Tenant ≠ User.
 
----
+#### Registration
+- Halaman registrasi **User** dan **Tenant** terpisah
+- Registrasi via **email** (tanpa password di tahap awal) + **Google social login**
+- Email yang sudah terdaftar **tidak bisa digunakan lagi**
+- Registrasi email → kirim email verifikasi → user set password di halaman verifikasi
 
-### 🟠 Fitur TENANT (Pengelola Penginapan)
-- **Wajib Registrasi/Login:** Tenant diwajibkan mendaftar dan masuk ke dalam aplikasi untuk bisa memasarkan dan mengelola penginapan mereka secara daring.
+#### Email Verification & Set Password
+- Verifikasi dikirim via email
+- **Hanya boleh dilakukan sekali**, batas waktu **1 jam**
+- Halaman verifikasi menyediakan form untuk **memasukkan password**
+- Password **harus dienkripsi** (bcrypt) di database
+- Setelah verifikasi → **diminta login ulang**
+- User yang belum terverifikasi **tidak bisa membuat pesanan**
+- User bisa **memverifikasi ulang** jika belum terverifikasi
 
-#### 1. Kelola Properti & Ruangan
-- Menambahkan detail properti (nama, deskripsi, alamat lokasi, dll).
-- Menyewakan **lebih dari satu jenis kamar/ruangan** per properti.
-- Mengatur kapasitas atau **jumlah orang yang dapat ditampung** per ruangan.
+#### Login
+- Login via **email + password** atau **social login (Google)**
+- Halaman login **User** dan **Tenant** terpisah
+- Setelah login → diarahkan ke halaman sesuai jenisnya
 
-#### 2. Atur Harga & Tanggal Spesifik
-- Menentukan **harga dasar (base price)** untuk tempat penginapan yang mereka sewakan.
-- Mengatur **harga pada tanggal-tanggal tertentu** (Price Modifier: persentase/nominal) secara dinamis.
-- Mengelola ketersediaan (memblokir tanggal yang tidak bisa dipesan).
+#### Reset Password
+- Fitur reset password → kirim email link reset
+- **Sekali per request** (token sekali pakai)
+- 2 halaman: (1) Request reset → input email, (2) Confirm reset → input password baru
+- **Hanya untuk user yang registrasi via email** (bukan social login)
 
-#### 3. Manajemen Pesanan (Booking)
-- Tenant dapat **menerima ataupun menolak pesanan** yang dilakukan oleh user.
-- Melihat dan memverifikasi daftar pembayaran (bukti bayar) yang diunggah oleh user.
+#### Profile Management
+- Lihat & update data personal (termasuk password, foto profil)
+- **Validasi foto:** hanya `.jpg`, `.jpeg`, `.png`, `.gif` — maks **1MB**
+- Update email → **wajib diverifikasi ulang**
+- Bisa re-send verification email jika belum terverifikasi
 
-#### 4. Laporan Pendapatan
-- Tenant dapat melihat **laporan pendapatan** dari hasil penyewaan tempat penginapannya.
-- Melacak riwayat pesanan yang telah selesai.
+### C. Property Management (40 Poin)
+
+#### Property Catalog & Search (User-Side)
+- Daftar properti berdasarkan filter landing page
+- Hanya tampilkan properti yang **belum disewa penuh**
+- Harga yang muncul = **harga room terendah yang available**
+- Wajib ada:
+  - **Pagination** (server-side)
+  - **Filter by:** property name, category
+  - **Sort by:** name & price (asc/desc)
+  - **Semua diproses di server** (bukan client-side)
+
+#### Property Detail (User-Side)
+- Halaman detail informasi properti
+- Menampilkan **jenis-jenis room**
+- **Kalender harga:** user bisa memilih tanggal lain & melihat perbandingan harga per tanggal (min. 1 bulan)
+
+#### Property Category Management (Tenant-Side)
+- Tenant bisa **CRUD property category**
+
+#### Property Management (Tenant-Side)
+- Tenant bisa **CRUD property** dan **room**
+- Field wajib property: Name, Category, Description, Picture, Room
+- Field wajib room: Room type/name, Price, Description
+
+#### Room Availability & Peak Season Rate (Tenant-Side)
+- Tenant bisa menentukan tanggal dimana room **bisa/tidak bisa** disewakan
+- Tenant bisa menentukan tanggal dengan **kenaikan harga** (libur, tanggal merah)
+- Perubahan harga via **nominal** atau **persentase**
+- Bisa diterapkan pada **keseluruhan rentang tanggal** atau **tanggal spesifik**
+
+### D. Mentor Evaluation (10 Poin)
+- Kerapian tampilan UI
+- Komunikasi dengan anggota tim
+- Inisiatif
+- Pengembangan fitur
 
 ---
 
@@ -143,48 +272,44 @@ Aplikasi ini adalah platform penyewaan tempat penginapan (mirip Airbnb/Traveloka
         │
         ▼
 [Cari Properti di Landing Page]
-  - Input Wajib: Kota Destinasi, Tanggal & Durasi, Jumlah Orang
-  - Output: Daftar properti di kota destinasi tersebut
+  - Input: Kota Destinasi, Tanggal & Durasi, Jumlah Orang
+  - Output: Daftar properti di kota tersebut
         │
         ▼
-[Lihat Daftar Hasil & Pilih Properti]
-  - Filter harga (murah → mahal / mahal → murah)
+[Lihat Daftar & Pilih Properti]
+  - Server-side pagination, filter, sort
+  - Harga = lowest available room price
         │
         ▼
 [Halaman Detail Properti]
-  - Lihat info properti, foto, dll.
-  - Lihat Kalender Harga (cek perbandingan harga per tanggal)
+  - Info properti, foto, jenis room
+  - Kalender Harga (perbandingan harga per tanggal)
   - Tanda "Tidak Tersedia" jika tanggal terblokir
         │
         ▼
-[Pilih Tanggal & Klik Booking]
+[Pilih Tanggal & Booking]
         │
         ▼
 [Cek Autentikasi]
-  - Jika belum login → arahkan ke halaman Login / Registrasi
-  - Wajib memiliki akun untuk melanjutkan
+  - Belum login → redirect Login/Register
+  - Belum terverifikasi → tidak bisa booking
         │
         ▼
 [Konfirmasi Booking]
   - Harga total dihitung otomatis
-  - Timer batas waktu bayar: 2 Jam dimulai
+  - Timer 2 jam dimulai
         │
         ▼
 [Pembayaran (Max 2 Jam)]
-  - Jika tidak dibayar dalam 2 jam → Otomatis DIBATALKAN (slot terbuka lagi)
-  - Jika dibayar (Upload bukti) → Status: MENUNGGU_KONFIRMASI
+  - Tidak bayar → auto-cancel (slot terbuka lagi)
+  - Bayar (upload bukti) → WAITING_FOR_CONFIRMATION
         │
         ▼
-[Tenant Konfirmasi Pembayaran]
-  - Status: DIKONFIRMASI
-        │
-        ▼
-[User Menginap]
+[Tenant Konfirmasi] → CONFIRMED
         │
         ▼
 [Setelah Check-out: User Tulis Review]
-  - Rating (1-5 bintang) + komentar
-  - Satu booking = satu review
+  - Rating 1-5 + komentar (satu arah, satu kali per booking)
 ```
 
 ### Alur Tenant (Mengelola)
@@ -194,141 +319,104 @@ Aplikasi ini adalah platform penyewaan tempat penginapan (mirip Airbnb/Traveloka
         │
         ▼
 [Dashboard Tenant]
-  - Ringkasan: booking terbaru, pendapatan, status properti
         │
-        ├──→ [Kelola Properti]
-        │         - Tambah / Edit / Hapus properti
-        │         - Tambah tipe kamar & unit
-        │
-        ├──→ [Atur Harga]
-        │         - Set base price per tipe kamar
-        │         - Tambah price modifier untuk tanggal spesifik
-        │
-        ├──→ [Kelola Ketersediaan]
-        │         - Lihat kalender
-        │         - Blokir / Buka tanggal
-        │
-        ├──→ [Konfirmasi Pembayaran]
-        │         - Lihat bukti bayar user
-        │         - Konfirmasi / Tolak
-        │
-        └──→ [Laporan Penjualan]
-                  - Grafik pendapatan
-                  - Riwayat booking
+        ├──→ [Kelola Properti]     → CRUD property & room
+        ├──→ [Atur Harga]          → Base price + Peak Season Rate modifier
+        ├──→ [Kelola Ketersediaan] → Blokir / buka tanggal
+        ├──→ [Konfirmasi Bayar]    → Lihat bukti, konfirmasi/tolak
+        └──→ [Laporan Penjualan]   → Grafik pendapatan
 ```
 
 ---
 
 ## 💰 Pricing Engine
 
-Sistem harga bekerja secara **otomatis** dan **berlapis**:
-
+### Formula:
 ```
-Harga Final Per Malam = Base Price ± Price Modifier
+Harga Final Per Malam = Base Price (room_type.price_per_night) ± Price Modifier
 ```
 
-### Contoh Perhitungan:
+### Logika Price Modifier:
+- `modifier_type = PERCENTAGE` → final = base × (1 + modifier_value/100)
+- `modifier_type = FIXED` → final = base + modifier_value
+- Modifier punya `start_date` dan `end_date` (rentang tanggal)
+- Jika `is_available = false` → room **tidak tersedia** pada tanggal tersebut
 
+### Contoh:
 | Tanggal | Base Price | Modifier | Harga Final |
 |---------|-----------|----------|-------------|
-| 25 Des (Natal) | Rp 500.000 | +30% | Rp 650.000 |
+| 25 Des (Natal) | Rp 500.000 | +30% (PERCENTAGE) | Rp 650.000 |
 | 1 Jan (Tahun Baru) | Rp 500.000 | +Rp 200.000 (FIXED) | Rp 700.000 |
 | Hari Biasa | Rp 500.000 | Tidak ada | Rp 500.000 |
-| Weekday Promo | Rp 500.000 | -20% | Rp 400.000 |
-
-### Logika Pricing:
-
-```
-FUNCTION getEffectivePrice(room_type_id, target_date):
-  1. Ambil BASE_PRICE yang aktif pada target_date
-     (effective_from <= target_date <= effective_to OR effective_to IS NULL)
-  
-  2. Cek apakah ada PRICE_MODIFIER untuk target_date
-     - Jika PERCENTAGE: final = base * (1 + modifier_value/100)
-     - Jika FIXED:      final = base + modifier_value
-  
-  3. Return harga final (minimum Rp 0)
-```
-
-### Snapshot Harga di Booking:
-Setiap malam menginap disimpan di tabel `BOOKING_DATE` dengan **snapshot harga saat itu** → harga tidak berubah meskipun modifier diedit kemudian.
-
----
-
-## 🗺️ Struktur Halaman (Page Structure)
-
-### Halaman Publik (Dapat diakses User & Tamu)
-
-```
-/                          → Landing Page / Beranda
-/search?city=&checkin=&checkout=  → Hasil Pencarian
-/property/[id]             → Detail Properti
-/property/[id]/compare     → Perbandingan Harga Tanggal
-/login                     → Halaman Login
-/register                  → Halaman Registrasi
-```
-
-### Halaman User (Perlu Login)
-
-```
-/account                   → Profil User
-/account/bookings          → Riwayat Pemesanan
-/account/bookings/[id]     → Detail Pemesanan
-/account/bookings/[id]/pay → Upload Bukti Bayar
-/account/reviews           → Review yang Pernah Ditulis
-```
-
-### Halaman Tenant (Perlu Login sebagai Tenant)
-
-```
-/tenant                         → Dashboard Tenant
-/tenant/properties              → Daftar Properti Milik Tenant
-/tenant/properties/new          → Tambah Properti Baru
-/tenant/properties/[id]         → Edit Properti
-/tenant/properties/[id]/rooms   → Kelola Tipe Kamar
-/tenant/properties/[id]/availability  → Kelola Ketersediaan
-/tenant/pricing/[room_type_id]  → Atur Harga & Modifier
-/tenant/bookings                → Daftar Pemesanan Masuk
-/tenant/bookings/[id]           → Detail & Konfirmasi Pembayaran
-/tenant/reports                 → Laporan Penjualan
-```
 
 ---
 
 ## 🗄️ Database Schema
 
-Lihat file lengkap: [ERD_Database_Schema.md](./ERD_Database_Schema.md)
+> Definisi lengkap ada di `backend/prisma/schema.prisma`
 
-### Ringkasan Tabel:
+### Tabel Aktif:
 
-| Grup | Tabel | Fungsi |
-|------|-------|--------|
-| **A — Akun** | `USER`, `TENANT` | Auth, profil, registrasi host |
-| **B — Properti** | `PROPERTY`, `ROOM_TYPE`, `ROOM_UNIT` | Listing, kategori kamar, unit fisik |
-| **C — Harga** | `BASE_PRICE`, `PRICE_MODIFIER` | Harga dasar + modifier tanggal |
-| **D — Transaksi** | `BOOKING`, `BOOKING_DATE`, `PAYMENT` | Pemesanan, ledger per malam, pembayaran |
-| **E — Review** | `REVIEW` | Ulasan pasca menginap |
+| Tabel | Fungsi |
+|-------|--------|
+| `users` | Akun pengguna (nama, email, password_hash, is_verified, avatar) |
+| `tenant` | Profil tenant (1:1 ke users, nama, image_url) |
+| `property` | Listing properti (nama, lokasi, kategori, soft-delete via deleted_at) |
+| `property_category` | Kategori properti milik tenant |
+| `room_type` | Jenis kamar per properti (nama, price_per_night, kapasitas, amenities) |
+| `room_unit` | Unit fisik per room type (nomor unit, is_active) |
+| `price_modifier` | Pengaturan harga dinamis (start_date, end_date, PERCENTAGE/FIXED) |
+| `booking` | Pemesanan (user → room_unit, check_in/out, status, expires_at) |
+| `payment` | Pembayaran per booking (bukti bayar, metode, status konfirmasi) |
+| `review` | Ulasan pasca menginap (1 booking = 1 review, rating + komentar) |
 
-### Status Pesanan (Order Statuses)
+### Enum Status:
+- **Booking:** `WAITING_FOR_PAYMENT` → `WAITING_FOR_CONFIRMATION` → `CONFIRMED` / `CANCELED`
+- **Payment:** `PENDING` → `SUBMITTED` → `CONFIRMED` / `REJECTED`
+- **Modifier Type:** `PERCENTAGE` / `FIXED`
+- **Payment Method:** `TRANSFER_BANK` / `VIRTUAL_ACCOUNT` / `EWALLET`
 
-Sistem memiliki beberapa status pesanan utama (bisa disesuaikan pengembangannya):
+---
 
-1. **Menunggu Pembayaran**
-   - Status ketika user pertama kali membuat pesanan.
-   - Pada tahap ini, user harus melakukan pembayaran dan mengupload bukti bayar terlebih dahulu (batas maks 2 jam).
+## 🗺️ Struktur Halaman & Routing
 
-2. **Menunggu Konfirmasi Pembayaran**
-   - Muncul setelah user mengunggah bukti pembayaran.
-   - Tenant bertugas mengecek dan mengkonfirmasi pembayaran tersebut, kemudian mengubah statusnya menjadi "Dikonfirmasi".
+### Halaman Publik
+```
+/                       → Landing Page (Hero + Search + Property List)
+/search                 → Hasil Pencarian (server-side pagination/filter/sort)
+/property/:id           → Detail Properti + Kalender Harga
+```
 
-3. **Dikonfirmasi**
-   - Status ketika pesanan sudah berhasil diverifikasi dan diterima oleh tenant.
+### Halaman Auth
+```
+/login                  → Login User
+/register               → Register User
+/tenant/login           → Login Tenant
+/tenant/register        → Register Tenant
+/verify/:token          → Verifikasi Email + Set Password
+/reset-password         → Request Reset Password (input email)
+/reset-password/:token  → Confirm Reset Password (input password baru)
+```
 
-4. **Dibatalkan**
-   - Status ini muncul dalam beberapa kondisi:
-     - **User membatalkan pesanan** (hanya boleh dilakukan *sebelum* proses pembayaran/upload bukti bayar).
-     - **Tenant membatalkan pesanan** / menolak pesanan. *(Catatan: Untuk pembayaran yang sudah diterima/diupload tetapi pesanan dibatalkan tenant, pengembalian dana atau refund akan dilakukan **di luar sistem** aplikasi)*.
-     - **Auto-cancel** karena sistem secara otomatis membatalkan jika melebihi batas waktu pembayaran.
+### Halaman User (Protected)
+```
+/profile                → Profil User
+/bookings               → Riwayat Pemesanan
+/bookings/:id           → Detail Pemesanan + Upload Bukti Bayar
+```
+
+### Halaman Tenant (Protected)
+```
+/tenant                             → Dashboard Tenant
+/tenant/categories                  → Kelola Kategori Properti
+/tenant/properties                  → Daftar Properti Milik Tenant
+/tenant/properties/new              → Tambah Properti Baru
+/tenant/properties/:id              → Edit Properti
+/tenant/properties/:id/rooms        → Kelola Room Types
+/tenant/properties/:id/availability → Kelola Ketersediaan & Peak Season Rate
+/tenant/bookings                    → Daftar Booking Masuk
+/tenant/reports                     → Laporan Penjualan
+```
 
 ---
 
@@ -336,195 +424,153 @@ Sistem memiliki beberapa status pesanan utama (bisa disesuaikan pengembangannya)
 
 ### Auth
 ```
-POST   /api/auth/register         → Daftar akun baru
-POST   /api/auth/login            → Login
-POST   /api/auth/logout           → Logout
-GET    /api/auth/me               → Info user yang sedang login
-POST   /api/auth/become-tenant    → Upgrade akun menjadi tenant
+POST   /api/auth/register              → Registrasi (email, tanpa password)
+POST   /api/auth/register/tenant       → Registrasi Tenant
+POST   /api/auth/verify                → Verifikasi email + set password
+POST   /api/auth/resend-verification   → Kirim ulang email verifikasi
+POST   /api/auth/login                 → Login User
+POST   /api/auth/login/tenant          → Login Tenant
+POST   /api/auth/google                → Social Login (Google OAuth)
+POST   /api/auth/reset-password        → Request reset password
+POST   /api/auth/confirm-reset         → Confirm reset + password baru
+GET    /api/auth/me                    → Info user yang sedang login
 ```
 
-### Properties (Publik)
+### Profile
 ```
-GET    /api/properties            → Cari properti (filter: city, checkin, checkout, sort)
-GET    /api/properties/[id]       → Detail properti
-GET    /api/properties/[id]/rooms → Daftar tipe kamar + harga efektif
-GET    /api/properties/[id]/availability  → Kalender ketersediaan
-GET    /api/properties/[id]/reviews       → Daftar review
+GET    /api/profile                    → Detail profil
+PUT    /api/profile                    → Update data personal
+PUT    /api/profile/password           → Update password
+PUT    /api/profile/email              → Update email (trigger re-verify)
+POST   /api/profile/avatar             → Upload foto profil (Multer + Cloudinary)
+```
+
+### Properties (Publik / User)
+```
+GET    /api/properties                 → Search (server-side pagination, filter, sort)
+GET    /api/properties/:id             → Detail properti + rooms
+GET    /api/properties/:id/calendar    → Kalender harga (per bulan)
+GET    /api/properties/:id/reviews     → Daftar review
 ```
 
 ### Booking (User)
 ```
-POST   /api/bookings              → Buat pemesanan baru
-GET    /api/bookings              → Riwayat pemesanan user
-GET    /api/bookings/[id]         → Detail pemesanan
-POST   /api/bookings/[id]/pay     → Upload bukti bayar
-DELETE /api/bookings/[id]         → Batalkan pemesanan
+POST   /api/bookings                   → Buat pemesanan baru
+GET    /api/bookings                   → Riwayat pemesanan user
+GET    /api/bookings/:id               → Detail pemesanan
+POST   /api/bookings/:id/pay           → Upload bukti bayar
+DELETE /api/bookings/:id               → Batalkan pemesanan
 ```
 
 ### Review (User)
 ```
-POST   /api/reviews               → Tulis review (setelah checkout)
-GET    /api/reviews/my            → Review yang pernah ditulis user
+POST   /api/reviews                    → Tulis review (setelah checkout)
 ```
 
-### Tenant — Properti
+### Tenant — Kategori
 ```
-GET    /api/tenant/properties     → Daftar properti milik tenant
-POST   /api/tenant/properties     → Tambah properti baru
-PUT    /api/tenant/properties/[id]  → Edit properti
-DELETE /api/tenant/properties/[id]  → Hapus properti
-```
-
-### Tenant — Kamar
-```
-GET    /api/tenant/properties/[id]/room-types     → Daftar tipe kamar
-POST   /api/tenant/properties/[id]/room-types     → Tambah tipe kamar
-PUT    /api/tenant/room-types/[id]                → Edit tipe kamar
-DELETE /api/tenant/room-types/[id]                → Hapus tipe kamar
-
-GET    /api/tenant/room-types/[id]/units          → Daftar unit fisik
-POST   /api/tenant/room-types/[id]/units          → Tambah unit fisik
+GET    /api/tenant/categories          → Daftar kategori
+POST   /api/tenant/categories          → Tambah kategori
+PUT    /api/tenant/categories/:id      → Update kategori
+DELETE /api/tenant/categories/:id      → Hapus kategori
 ```
 
-### Tenant — Harga
+### Tenant — Properti & Room
 ```
-GET    /api/tenant/room-types/[id]/pricing        → Lihat harga & modifier
-POST   /api/tenant/room-types/[id]/base-price     → Set base price
-POST   /api/tenant/room-types/[id]/modifier       → Tambah price modifier
-DELETE /api/tenant/modifiers/[id]                 → Hapus modifier
+GET    /api/tenant/properties          → Daftar properti tenant
+POST   /api/tenant/properties          → Tambah properti
+PUT    /api/tenant/properties/:id      → Edit properti
+DELETE /api/tenant/properties/:id      → Hapus properti (soft-delete)
+POST   /api/tenant/properties/:id/rooms      → Tambah room type
+PUT    /api/tenant/rooms/:id                 → Edit room type
+DELETE /api/tenant/rooms/:id                 → Hapus room type
 ```
 
-### Tenant — Ketersediaan
+### Tenant — Harga & Ketersediaan
 ```
-GET    /api/tenant/room-types/[id]/availability   → Kalender ketersediaan
-POST   /api/tenant/room-types/[id]/block          → Blokir tanggal
-DELETE /api/tenant/room-types/[id]/block          → Buka blokir tanggal
+GET    /api/tenant/rooms/:id/modifiers       → Lihat price modifiers
+POST   /api/tenant/rooms/:id/modifiers       → Tambah modifier
+PUT    /api/tenant/modifiers/:id             → Edit modifier
+DELETE /api/tenant/modifiers/:id             → Hapus modifier
 ```
 
 ### Tenant — Booking & Laporan
 ```
-GET    /api/tenant/bookings               → Semua booking masuk
-GET    /api/tenant/bookings/[id]          → Detail booking
-PUT    /api/tenant/bookings/[id]/confirm  → Konfirmasi pembayaran
-PUT    /api/tenant/bookings/[id]/reject   → Tolak pembayaran
-
-GET    /api/tenant/reports                → Laporan penjualan (filter: periode, properti)
+GET    /api/tenant/bookings                  → Semua booking masuk
+PUT    /api/tenant/bookings/:id/confirm      → Konfirmasi pembayaran
+PUT    /api/tenant/bookings/:id/reject       → Tolak pembayaran
+GET    /api/tenant/reports                   → Laporan penjualan
 ```
+
+---
+
+## 📊 Standarisasi & Evaluasi
+
+### A. Validation
+- Semua input divalidasi **ganda** (client + server) menggunakan **Zod**
+- File upload: validasi **ekstensi** (.jpg, .jpeg, .png, .gif) dan **ukuran** (maks 1MB)
+- Tindakan krusial (hapus data, pembatalan) wajib ada **dialog konfirmasi**
+
+### B. Pagination, Filtering & Sorting
+- Wajib untuk semua tampilan list (property list, booking list, laporan)
+- **Server-side processing only** — dilarang filter/sort di client
+
+### C. Frontend (UI/UX)
+- Wajib **responsive** (mobile + desktop)
+- Desain **premium & menarik** (bukan basic/sederhana) — ikuti `DESIGN.md`
+- Penamaan file harus jelas dan merepresentasikan fungsinya
+- Gunakan ekstensi `.tsx` jika ada unsur JSX
+- **Title** dan **Favicon** disesuaikan dengan brand Evergreen Escapes
+
+### D. Backend (API)
+- HTTP method sesuai kaidah **REST API** standar
+- **Authorization ketat** — endpoint tenant tidak bisa diakses oleh user biasa
+
+### E. Clean Code
+- **Maksimal 200 baris per file** → wajib refactor jika lebih
+- **Maksimal 15 baris per fungsi** → wajib refactor jika lebih
+- Semua `console.log` tidak terpakai dan dead code **wajib dibersihkan**
 
 ---
 
 ## 🗓️ Development Roadmap
 
-### Phase 1 — Foundation
-- [ ] Setup project (Next.js + TypeScript + Tailwind)
-- [ ] Setup database (PostgreSQL + Prisma)
-- [ ] Implementasi schema database lengkap
-- [ ] Auth system (register, login, JWT, middleware role)
+### Tahap 1 — Foundation
+- [ ] Setup Express server (`app.ts`) + middleware (CORS, error handling)
+- [ ] Setup Prisma client + koneksi Supabase
+- [ ] Konfigurasi Tailwind CSS di frontend
 
-### Phase 2 — Core User Features
-- [ ] Halaman pencarian properti (search + filter harga)
-- [ ] Halaman detail properti + galeri foto
-- [ ] Halaman perbandingan harga berdasarkan tanggal
-- [ ] Kalender ketersediaan (tampilan user)
-- [ ] Fitur booking + upload bukti bayar
-- [ ] Riwayat pemesanan user
-- [ ] Sistem review pasca menginap
+### Tahap 2 — Authentication & Profile
+- [ ] API: Register, Verify Email + Set Password, Login, Reset Password
+- [ ] Setup Nodemailer (SMTP Gmail) + email templates
+- [ ] Google OAuth integration
+- [ ] JWT middleware + role-based authorization
+- [ ] UI: Halaman Register, Login, Verify, Reset Password (User & Tenant)
+- [ ] API & UI: Profile management + avatar upload (Multer + Cloudinary)
 
-### Phase 3 — Core Tenant Features
-- [ ] Dashboard tenant
-- [ ] CRUD Properti
-- [ ] CRUD Tipe Kamar & Unit
-- [ ] Pricing engine (base price + modifier)
-- [ ] Kelola ketersediaan (blokir/buka tanggal)
-- [ ] Konfirmasi / tolak pembayaran
-- [ ] Laporan penjualan
+### Tahap 3 — Tenant Property Management
+- [ ] API & UI: CRUD Kategori Properti
+- [ ] API & UI: CRUD Properti + upload gambar
+- [ ] API & UI: CRUD Room Types
+- [ ] API & UI: Peak Season Rate (Price Modifier)
+- [ ] API & UI: Room Availability (blokir tanggal)
 
-### Phase 4 — Polish & Testing
-- [ ] Responsive design (mobile-first audit)
-- [ ] Validasi form lengkap
+### Tahap 4 — Homepage & Property Search
+- [ ] UI: Homepage (Navbar, Hero Carousel, Search Form, Property List, Footer)
+- [ ] API: Property search (server-side pagination, filter, sort, lowest price)
+- [ ] API & UI: Property Detail + Kalender Harga
+
+### Tahap 5 — Polish & Testing
+- [ ] Responsive audit (mobile-first)
+- [ ] Validasi lengkap (client + server)
 - [ ] Error handling & loading states
-- [ ] Unit test & integration test
-- [ ] Deployment
+- [ ] Clean code audit (max 200 baris/file, max 15 baris/fungsi)
+- [ ] Deployment ke Vercel
 
 ---
 
-## 📐 Desain & UI Notes
-
-### Pendekatan: Mobile-First
-- Breakpoint utama: `mobile (< 768px)` → `tablet (768px)` → `desktop (1200px)`
-- Navigasi mobile: bottom navigation bar
-- Komponen prioritas mobile: search bar, card properti, kalender
-
-### Referensi Desain
-- Lihat file: [layout_example.md](./layout_example.md) — contoh layout homepage (Haven & Hearth theme)
-- Color palette: earth tones (warm browns, muted greens, cream)
-- Typography: Literata (display/headline) + Be Vietnam Pro (body)
-
----
-
-## ⚙️ Aturan Bisnis Penting (Key Business Rules)
-
-| # | Aturan |
-|---|--------|
-| 1 | User **tidak bisa** mengakses halaman tenant sama sekali |
-| 2 | Tenant **hanya bisa** melihat data properti miliknya sendiri |
-| 3 | Harga per malam di-**snapshot** saat booking dibuat (tidak berubah retrospektif) |
-| 4 | Booking expire otomatis **2 jam** setelah dibuat jika belum bayar |
-| 5 | Review hanya bisa ditulis **setelah check-out** dan **hanya sekali per booking** |
-| 6 | Price modifier berlaku **otomatis** berdasarkan tanggal, bukan manual |
-| 7 | Jika properti tidak tersedia → tampilkan **tanda tidak tersedia** (bukan error/hidden) |
-| 8 | Satu user bisa mendaftar sebagai tenant (one-to-one relationship) |
-| 9 | Satu tenant bisa punya **banyak properti** |
-| 10 | Satu properti bisa punya **banyak tipe kamar**, satu tipe kamar punya **banyak unit fisik** |
-
----
-
-## 📊 Standarisasi & Evaluasi Project
-
-**Penting:** Project ini dikerjakan secara tim (berdua), dan Anda bertanggung jawab atas **Fitur 1** (rincian Fitur 1 akan didokumentasikan lebih lanjut). 
-
-### 1. Penilaian Mentor (Mentor Evaluation)
-Mentor memiliki hak untuk memberikan penilaian secara subjektif terhadap hasil kerja student pada final project development dengan bobot nilai maksimal **10 poin**. 
-
-Kriteria Penilaian mencakup:
-- **Kerapian Tampilan UI** (Harap ikuti kaidah *Mobile First* dan desain estetis sesuai *layout_example.md*).
-- **Komunikasi dengan Anggota Tim** (Kerja sama partner).
-- **Inisiatif** dalam penyelesaian masalah dan ide fitur.
-- **Pengembangan Fitur** (Eksekusi fitur sesuai requirements).
-
-### 2. Referensi & Integrasi Pihak Ketiga (References)
-- **Geolocation:** Wajib menggunakan **OpenCage** atau **Free API lainnya** untuk mendapatkan posisi geolocation (koordinat/nama) berdasarkan provinsi dan kota secara akurat.
-
-### 3. Poin Standarisasi (Standardization)
-Berikut adalah standar wajib yang akan dicek dan dinilai oleh juri:
-
-**A. Validation (Validasi Data)**
-- **Validasi Dua Arah:** Semua input dari user harus divalidasi ganda, baik di sisi **Client** (frontend) maupun **Server** (backend).
-- **Validasi File:** Input berupa file atau gambar wajib divalidasi untuk memastikan **ekstensi** (format file) dan **ukuran file** sesuai batas yang diizinkan.
-- **Konfirmasi Tindakan Krusial:** Semua proses yang bersifat krusial (misalnya: hapus properti, hapus akun, pembatalan) **wajib** memiliki *approval* / konfirmasi dari user sebelum diproses.
-
-**B. Pagination, Filtering, and Sorting**
-- **Wajib Diterapkan:** Semua tampilan data dalam bentuk *list* (contoh: daftar properti di pencarian, riwayat pemesanan, laporan pendapatan) **wajib** menggunakan fitur Pagination, Filter, dan Sort.
-- **Server-Side Processing:** Semua proses Pagination, Filtering, dan Sorting **harus diproses di Server** (database query/backend). Dilarang keras melakukan proses tersebut di sisi *Client* (misalnya mengambil semua data lalu difilter menggunakan JavaScript array methods di frontend).
-
-**C. Frontend (UI/UX)**
-- **Responsive Design:** Wajib responsif minimal untuk tampilan Mobile dan Web Desktop.
-- **User-Friendly & Menarik:** UI/UX harus mudah dimengerti (intuitif) oleh penguji maupun user umum. Desain harus dibuat **semenarik dan se-premium mungkin**, tidak boleh terlihat hanya sekadar 'sederhana' atau 'basic'.
-- **File Naming & Extension:** Penamaan file harus jelas dan merepresentasikan fungsinya. Gunakan ekstensi `.jsx` atau `.tsx` jika file tersebut memiliki unsur HTML/React Element di dalamnya.
-- **Branding:** `Title` dan `Favicon` pada HTML harus disesuaikan dengan identitas project (bukan bawaan default React/Next.js).
-
-**D. Backend (API)**
-- **REST API Standard:** Penggunaan HTTP Method (GET, POST, PUT, PATCH, DELETE) harus tepat dan sesuai kaidah REST API standar.
-- **Authorization & Security:** Wajib menerapkan otorisasi yang ketat. Endpoint yang dirancang khusus untuk entitas tertentu (misal: Dashboard Tenant) tidak boleh bisa ditembus atau diakses oleh User biasa.
-
-**E. Clean Code (Sangat Krusial)**
-- **Maksimal 200 Baris per File:** Jika file kode melebihi 200 baris, **wajib di-refactor** (dipecah menjadi komponen atau helper terpisah).
-- **Maksimal 15 Baris per Fungsi:** Penulisan dalam satu *function* maksimal 15 baris. Jika lebih, fungsi tersebut harus di-refactor.
-- **Pembersihan Log & Dead Code:** Semua *console.log()* yang tidak untuk debugging kritis dan seluruh kode yang tidak terpakai (*dead code* / *commented code*) **wajib dibersihkan** sebelum masuk ke fase *production*.
-
----
-
-> 📝 **Catatan Tambahan:** Dokumen ini akan diperbarui seiring instruksi bertahap dari user.
-> File terkait:
-> - `ERD_Database_Schema.md` — Skema database lengkap dengan Mermaid ERD
-> - `layout_example.md` — Contoh layout HTML/CSS referensi desain
+> 📝 **File Terkait:**
+> - `DESIGN.md` — Brand identity, color tokens, typography, spacing, components
+> - `layout.md` — HTML reference layout (Evergreen Escapes theme)
+> - `TOOLS.md` — Daftar lengkap library & tools
+> - `backend/prisma/schema.prisma` — Database schema lengkap
