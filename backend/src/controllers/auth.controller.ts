@@ -3,6 +3,8 @@ import * as authService from '../services/auth/auth.service.js';
 import * as authSchema from '../schemas/auth.schema.js';
 import { verifyFirebaseToken } from '../utils/firebase.js';
 
+const isProd = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
+
 export const registerUser = async (req: Request, res: Response) => {
   try {
     const data = authSchema.registerSchema.parse(req.body);
@@ -33,8 +35,8 @@ export const loginUser = async (req: Request, res: Response) => {
     const result = await authService.login(data.email, data.password, 'USER');
     res.cookie('token', result.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
     res.status(200).json({ user: result.user });
@@ -47,8 +49,8 @@ export const loginTenant = async (req: Request, res: Response) => {
     const result = await authService.login(data.email, data.password, 'TENANT');
     res.cookie('token', result.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
     res.status(200).json({ user: result.user });
@@ -102,8 +104,8 @@ export const handleSocialLogin = async (req: Request, res: Response) => {
 
     res.cookie('token', result.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
     res.status(200).json({ user: result.user });
@@ -173,8 +175,8 @@ export const getMe = async (req: Request, res: Response) => {
 export const logout = async (req: Request, res: Response) => {
   res.clearCookie('token', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
   });
   res.status(200).json({ message: 'Logged out successfully' });
 };
