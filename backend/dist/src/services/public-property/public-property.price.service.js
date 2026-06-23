@@ -31,7 +31,7 @@ export const getRoomCalendarPrices = async (roomId, monthStr) => {
             calendar.push({ date: dateStr, price: 0, available: false });
             continue;
         }
-        const activeMods = roomType.price_modifier.filter(m => m.is_available !== false);
+        const activeMods = roomType.price_modifier.filter((m) => m.is_available !== false);
         calendar.push({ date: dateStr, price: calcAdjustedPrice(roomType.price_per_night, activeMods, target), available: true });
     }
     return calendar;

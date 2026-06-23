@@ -61,7 +61,7 @@ export const searchProperties = async (params: SearchParams): Promise<SearchResu
   const total = rows.length > 0 ? Number(rows[0]!.total_count) : 0;
   
   return {
-    data: rows.map((r) => ({
+    data: rows.map((r: any) => ({
       id: r.id, name: r.name, description: r.description, image_urls: r.image_urls, address: r.address,
       city: r.city, province: r.province, category_name: r.category_name, lowest_price: r.lowest_price,
     })),

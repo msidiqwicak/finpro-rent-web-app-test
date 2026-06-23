@@ -28,39 +28,7 @@ export declare const listProperties: (filters?: ListFilters) => Promise<({
     longitude: number | null;
 })[]>;
 export declare const getPropertyDetails: (propertyId: string, targetDateStr?: string) => Promise<{
-    room_type: {
-        price_per_night: number;
-        adjusted_price: number;
-        price_modifiers: {
-            id: string;
-            room_type_id: string;
-            start_date: Date;
-            end_date: Date;
-            modifier_type: import("../../generated/prisma/index.js").$Enums.modifier_type_enum;
-            modifier_value: import("@prisma/client-runtime-utils").Decimal;
-            is_available: boolean | null;
-            reason: string | null;
-        }[];
-        price_modifier: {
-            id: string;
-            room_type_id: string;
-            start_date: Date;
-            end_date: Date;
-            modifier_type: import("../../generated/prisma/index.js").$Enums.modifier_type_enum;
-            modifier_value: import("@prisma/client-runtime-utils").Decimal;
-            is_available: boolean | null;
-            reason: string | null;
-        }[];
-        id: string;
-        name: string;
-        property_id: string;
-        description: string | null;
-        capacity: number;
-        total_units: number;
-        amenities: string[];
-        image_urls: string[];
-        deleted_at: Date | null;
-    }[];
+    room_type: any[];
     review: ({
         users: {
             name: string;

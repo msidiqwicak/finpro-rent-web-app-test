@@ -32,7 +32,7 @@ export const getPropertyDetails = async (propertyId: string, targetDateStr?: str
   if (!prop) throw new Error("Properti tidak ditemukan.");
 
   const target = targetDateStr ? new Date(targetDateStr) : new Date();
-  const roomTypesWithPrice = prop.room_type.map((rt) => ({
+  const roomTypesWithPrice = prop.room_type.map((rt: any) => ({
     ...rt,
     price_per_night: Number(rt.price_per_night),
     adjusted_price: calcAdjustedPrice(rt.price_per_night, rt.price_modifier, target),

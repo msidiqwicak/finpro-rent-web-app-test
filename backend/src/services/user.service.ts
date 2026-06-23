@@ -24,7 +24,7 @@ export const getUserProfile = async (userId: string) => {
   if (!user) throw new Error('User tidak ditemukan.');
 
   // Build providers array — include 'LOCAL' if account has a password
-  const providers: string[] = user.user_providers.map((p) => p.provider);
+  const providers: string[] = user.user_providers.map((p: any) => p.provider);
   if (user.password_hash) providers.unshift('LOCAL');
 
   // Omit password_hash before returning to client

@@ -22,7 +22,7 @@ export const getRoomCalendarPrices = async (roomId: string, monthStr: string) =>
     const target = new Date(dateStr);
     target.setHours(12, 0, 0, 0);
 
-    const isBlocked = roomType.price_modifier.some((m) => {
+    const isBlocked = roomType.price_modifier.some((m: any) => {
       if (m.is_available !== false) return false;
       const start = new Date(m.start_date), end = new Date(m.end_date);
       start.setHours(0, 0, 0, 0); end.setHours(23, 59, 59, 999);
@@ -34,7 +34,7 @@ export const getRoomCalendarPrices = async (roomId: string, monthStr: string) =>
       continue;
     }
 
-    const activeMods = roomType.price_modifier.filter(m => m.is_available !== false);
+    const activeMods = roomType.price_modifier.filter((m: any) => m.is_available !== false);
     calendar.push({ date: dateStr, price: calcAdjustedPrice(roomType.price_per_night, activeMods, target), available: true });
   }
 

@@ -26,6 +26,7 @@ export const getCategoriesByTenant = async (tenantId) => {
     const merges = [];
     for (const [_, cats] of Object.entries(grouped)) {
         if (cats.length === 1) {
+<<<<<<< HEAD
             uniqueExisting.push(cats[0]);
         }
         else {
@@ -33,6 +34,32 @@ export const getCategoriesByTenant = async (tenantId) => {
             if (cat) {
                 uniqueExisting.push(cat);
             }
+=======
+            const firstCat = cats[0];
+            if (firstCat)
+                uniqueExisting.push(firstCat);
+        }
+        else {
+            // Sort by count descending so we keep the most populated one
+            cats.sort((a, b) => (b._count?.property || 0) - (a._count?.property || 0));
+            const keep = cats[0];
+            if (!keep)
+                continue; // TS strict check
+            let mergedCount = keep._count?.property || 0;
+            for (let i = 1; i < cats.length; i++) {
+                const dup = cats[i];
+                if (dup && dup._count?.property && dup._count.property > 0) {
+                    merges.push({ from: dup.id, to: keep.id });
+                    mergedCount += dup._count.property;
+                }
+                if (dup)
+                    toDelete.push(dup.id);
+            }
+            // Update local count for immediate return
+            if (keep._count)
+                keep._count.property = mergedCount;
+            uniqueExisting.push(keep);
+>>>>>>> 090db1e51621564db031a143253f5afb539dbb29
         }
     }
     // Execute merges and deletions if any

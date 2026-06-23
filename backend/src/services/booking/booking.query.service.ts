@@ -69,7 +69,7 @@ export const getBookingsByTenant = async (
   if (search && search.trim() !== "") {
     const kw = search.toLowerCase();
     bookings = bookings.filter(
-      (b) =>
+      (b: any) =>
         b.id.toLowerCase().includes(kw) ||
         b.users.name.toLowerCase().includes(kw) ||
         b.room_unit?.room_type?.property?.name.toLowerCase().includes(kw),

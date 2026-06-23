@@ -28,7 +28,7 @@ export const createRoomType = async (userId: string, propertyId: string, data: C
   const totalUnits = data.total_units ? Number(data.total_units) : 1;
   const image_urls = files && files.length > 0 ? files.map(f => f.path) : (data.image_urls ?? []);
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     const roomType = await tx.room_type.create({
       data: { property_id: propertyId, name: data.name, description: data.description ?? null, price_per_night, capacity, total_units: totalUnits, amenities: data.amenities ?? [], image_urls },
     });
@@ -76,7 +76,7 @@ export const updateRoomType = async (userId: string, roomTypeId: string, data: a
 
   const newTotalUnits = data.total_units !== undefined ? Number(data.total_units) : undefined;
   
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     const updated = await tx.room_type.update({ where: { id: roomTypeId }, data: cleanData });
     if (newTotalUnits !== undefined) await handleRoomUnits(tx, roomTypeId, newTotalUnits, existing.total_units ?? 0);
     return updated;
