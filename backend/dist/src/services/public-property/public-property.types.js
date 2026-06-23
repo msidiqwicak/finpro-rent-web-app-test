@@ -1,4 +1,4 @@
-import { Prisma } from "../../generated/prisma/index.js";
+import { Prisma } from "@prisma/client";
 export const calcAdjustedPrice = (base, modifiers, target) => {
     const baseNum = Number(base);
     const active = modifiers.find((m) => target >= m.start_date && target <= m.end_date);

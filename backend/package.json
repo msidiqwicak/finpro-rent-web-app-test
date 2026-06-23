@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "postinstall": "prisma generate",
     "build": "npx prisma generate && tsc",
     "dev": "tsx --watch src/app.ts",
     "start": "npm run build && node dist/src/app.js"

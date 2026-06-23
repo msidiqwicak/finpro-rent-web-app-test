@@ -83,7 +83,7 @@ export declare const getBookingDetails: (id: string) => Promise<({
     check_in: Date;
     check_out: Date;
     total_price: import("@prisma/client-runtime-utils").Decimal;
-    status: import("../../generated/prisma/index.js").$Enums.booking_status_enum;
+    status: import("@prisma/client").$Enums.booking_status_enum;
     expires_at: Date;
     created_at: Date;
     is_reminder_sent: boolean;
@@ -132,7 +132,7 @@ export declare const getAllBookings: (userId: string, search?: string, date?: st
     check_in: Date;
     check_out: Date;
     total_price: import("@prisma/client-runtime-utils").Decimal;
-    status: import("../../generated/prisma/index.js").$Enums.booking_status_enum;
+    status: import("@prisma/client").$Enums.booking_status_enum;
     expires_at: Date;
     created_at: Date;
     is_reminder_sent: boolean;
@@ -186,7 +186,7 @@ export declare const getBookingsByTenant: (tenantId: string, search?: string, st
     check_in: Date;
     check_out: Date;
     total_price: import("@prisma/client-runtime-utils").Decimal;
-    status: import("../../generated/prisma/index.js").$Enums.booking_status_enum;
+    status: import("@prisma/client").$Enums.booking_status_enum;
     expires_at: Date;
     created_at: Date;
     is_reminder_sent: boolean;

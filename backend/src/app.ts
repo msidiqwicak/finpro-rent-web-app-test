@@ -35,7 +35,6 @@ app.use("/api/properties", propertyRoutes);
 app.use("/api/tenant", tenantRoute);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/reports", reportRoutes);
-startBookingCron();
 app.use(
   (
     err: Error,
@@ -48,9 +47,9 @@ app.use(
   },
 );
 
-initCronJobs();
-
 if (process.env.VERCEL !== "1") {
+  startBookingCron();
+  initCronJobs();
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
