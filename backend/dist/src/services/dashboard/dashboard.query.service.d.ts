@@ -75,7 +75,7 @@ export declare const getUpcomingCheckins: (tenantId: string, now: Date) => Promi
     check_in: Date;
     check_out: Date;
     total_price: import("@prisma/client-runtime-utils").Decimal;
-    status: import("../../generated/prisma/index.js").$Enums.booking_status_enum;
+    status: import("@prisma/client").$Enums.booking_status_enum;
     expires_at: Date;
     created_at: Date;
     is_reminder_sent: boolean;

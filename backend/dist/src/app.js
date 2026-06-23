@@ -30,14 +30,16 @@ app.use("/api/properties", propertyRoutes);
 app.use("/api/tenant", tenantRoute);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/reports", reportRoutes);
-startBookingCron();
 app.use((err, _req, res, _next) => {
     console.error("Global Error:", err);
     res.status(500).json({ error: err.message || "Internal Server Error" });
 });
-initCronJobs();
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+if (process.env.VERCEL !== "1") {
+    startBookingCron();
+    initCronJobs();
+    app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+}
 export default app;
 //# sourceMappingURL=app.js.map
