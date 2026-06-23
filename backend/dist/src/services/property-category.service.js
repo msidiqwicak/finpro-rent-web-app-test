@@ -1,52 +1,72 @@
-import { prisma } from '../utils/prisma.js';
+import { prisma } from "../utils/prisma.js";
 export const getCategoriesByTenant = async (tenantId) => {
     const existing = await prisma.property_category.findMany({
         where: { tenant_id: tenantId },
         include: {
-            _count: { select: { property: true } },
+            _count: {
+                select: {
+                    property: {
+                        where: { deleted_at: null }
+                    }
+                }
+            },
         },
-        orderBy: { name: 'asc' },
+        orderBy: { name: "asc" },
     });
-    // 1. CLEANUP DUPLICATES (Handling React Strict Mode race conditions)
-    const seenNames = new Set();
-    const toDelete = [];
-    const uniqueExisting = [];
+    // 1. ROBUST DEDUPLICATION (Merge properties of duplicate categories)
+    const grouped = {};
     for (const cat of existing) {
         const lower = cat.name.toLowerCase();
-        if (seenNames.has(lower)) {
-            // Only delete if it has no properties attached
-            if (cat._count?.property === 0) {
-                toDelete.push(cat.id);
-            }
+        if (!grouped[lower])
+            grouped[lower] = [];
+        grouped[lower].push(cat);
+    }
+    const uniqueExisting = [];
+    const toDelete = [];
+    const merges = [];
+    for (const [_, cats] of Object.entries(grouped)) {
+        if (cats.length === 1) {
+            uniqueExisting.push(cats[0]);
         }
         else {
             seenNames.add(lower);
-            uniqueExisting.push(cat);
+            if (cat) {
+                uniqueExisting.push(cat);
+            }
+        }
+    }
+    // Execute merges and deletions if any
+    if (merges.length > 0) {
+        for (const m of merges) {
+            await prisma.property.updateMany({
+                where: { category_id: m.from },
+                data: { category_id: m.to }
+            });
         }
     }
     if (toDelete.length > 0) {
         await prisma.property_category.deleteMany({
-            where: { id: { in: toDelete } }
+            where: { id: { in: toDelete } },
         });
     }
     // 2. AUTO-SEED: Pastikan 4 kategori standar selalu ada.
-    const defaults = ['Home', 'Hotel', 'Villa', 'Apartment'];
-    const existingNames = uniqueExisting.map(c => c.name.toLowerCase());
-    const missingDefaults = defaults.filter(d => !existingNames.includes(d.toLowerCase()));
+    const defaults = ["Home", "Hotel", "Villa", "Apartment"];
+    const existingNames = uniqueExisting.map((c) => c.name.toLowerCase());
+    const missingDefaults = defaults.filter((d) => !existingNames.includes(d.toLowerCase()));
     if (missingDefaults.length > 0) {
         try {
             await prisma.property_category.createMany({
-                data: missingDefaults.map(name => ({ tenant_id: tenantId, name }))
+                data: missingDefaults.map((name) => ({ tenant_id: tenantId, name })),
             });
         }
         catch (e) {
-            // Ignore concurrent insert errors if any
+            // Ignore concurrent insert errors
         }
         // Fetch ulang setelah di-seed (and auto-deduplicate via logic above on next fetch if needed)
         return prisma.property_category.findMany({
             where: { tenant_id: tenantId, id: { notIn: toDelete } },
             include: { _count: { select: { property: true } } },
-            orderBy: { name: 'asc' },
+            orderBy: { name: "asc" },
         });
     }
     return uniqueExisting;
@@ -55,12 +75,12 @@ export const getCategoriesByTenant = async (tenantId) => {
 export const createCategory = async (tenantId, name) => {
     const trimmed = name.trim();
     if (!trimmed)
-        throw new Error('Category name cannot be empty.');
+        throw new Error("Category name cannot be empty.");
     // Cek duplikat (case-insensitive) untuk tenant yang sama
     const existing = await prisma.property_category.findFirst({
         where: {
             tenant_id: tenantId,
-            name: { equals: trimmed, mode: 'insensitive' },
+            name: { equals: trimmed, mode: "insensitive" },
         },
     });
     if (existing) {
@@ -74,15 +94,15 @@ export const createCategory = async (tenantId, name) => {
 export const updateCategory = async (tenantId, categoryId, newName) => {
     const trimmed = newName.trim();
     if (!trimmed)
-        throw new Error('Category name cannot be empty.');
+        throw new Error("Category name cannot be empty.");
     // Pastikan kategori ini milik tenant yang sedang login
     const category = await prisma.property_category.findFirst({
         where: { id: categoryId, tenant_id: tenantId },
     });
     if (!category) {
-        throw new Error('Category not found or does not belong to you.');
+        throw new Error("Category not found or does not belong to you.");
     }
-    const defaults = ['home', 'hotel', 'villa', 'apartment'];
+    const defaults = ["home", "hotel", "villa", "apartment"];
     if (defaults.includes(category.name.toLowerCase())) {
         throw new Error(`"${category.name}" is a standard category and cannot be renamed.`);
     }
@@ -90,7 +110,7 @@ export const updateCategory = async (tenantId, categoryId, newName) => {
     const duplicate = await prisma.property_category.findFirst({
         where: {
             tenant_id: tenantId,
-            name: { equals: trimmed, mode: 'insensitive' },
+            name: { equals: trimmed, mode: "insensitive" },
             id: { not: categoryId },
         },
     });
@@ -109,9 +129,9 @@ export const deleteCategory = async (tenantId, categoryId) => {
         where: { id: categoryId, tenant_id: tenantId },
     });
     if (!category) {
-        throw new Error('Category not found or does not belong to you.');
+        throw new Error("Category not found or does not belong to you.");
     }
-    const defaults = ['home', 'hotel', 'villa', 'apartment'];
+    const defaults = ["home", "hotel", "villa", "apartment"];
     if (defaults.includes(category.name.toLowerCase())) {
         throw new Error(`"${category.name}" is a standard category and cannot be deleted.`);
     }

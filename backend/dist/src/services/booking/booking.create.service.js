@@ -11,11 +11,15 @@ const validateDates = (checkIn, checkOut) => {
 };
 const checkBlockDates = async (roomTypeId, checkIn, checkOut) => {
     const room = await prisma.room_type.findUnique({
-        where: { id: roomTypeId }, include: { price_modifier: { where: { is_available: false } } },
+        where: { id: roomTypeId },
+        include: { price_modifier: { where: { is_available: false } } },
     });
     if (!room || room.price_modifier.length === 0)
         return;
-    const stayNights = eachDayOfInterval({ start: checkIn, end: subDays(checkOut, 1) });
+    const stayNights = eachDayOfInterval({
+        start: checkIn,
+        end: subDays(checkOut, 1),
+    });
     for (const night of stayNights) {
         const blocker = room.price_modifier.find((mod) => {
             const start = new Date(mod.start_date);
@@ -25,7 +29,11 @@ const checkBlockDates = async (roomTypeId, checkIn, checkOut) => {
             return night >= start && night <= end;
         });
         if (blocker) {
-            const fmtOpts = { day: "2-digit", month: "short", year: "numeric" };
+            const fmtOpts = {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+            };
             const from = new Date(blocker.start_date).toLocaleDateString("en-GB", fmtOpts);
             const to = new Date(blocker.end_date).toLocaleDateString("en-GB", fmtOpts);
             throw new Error(`Kamar tidak tersedia dari ${from} hingga ${to}.${blocker.reason ? ` Alasan: ${blocker.reason}` : ""}`);
@@ -35,7 +43,8 @@ const checkBlockDates = async (roomTypeId, checkIn, checkOut) => {
 const autoAssignUnit = async (roomTypeId, checkIn, checkOut) => {
     const unit = await prisma.room_unit.findFirst({
         where: {
-            room_type_id: roomTypeId, is_active: true,
+            room_type_id: roomTypeId,
+            is_active: true,
             booking: {
                 none: {
                     status: { not: "CANCELED" },
@@ -51,10 +60,12 @@ const autoAssignUnit = async (roomTypeId, checkIn, checkOut) => {
 };
 const calculateTotalPrice = async (roomTypeId, checkIn, checkOut) => {
     const room = await prisma.room_type.findUniqueOrThrow({
-        where: { id: roomTypeId }, include: { price_modifier: true },
+        where: { id: roomTypeId },
+        include: { price_modifier: true },
     });
     const stayDates = getStayDates(checkIn, checkOut);
-    return stayDates.reduce((sum, date) => sum + calculateNightlyPrice(Number(room.price_per_night), date, room.price_modifier), 0);
+    return stayDates.reduce((sum, date) => sum +
+        calculateNightlyPrice(Number(room.price_per_night), date, room.price_modifier), 0);
 };
 export const createBookingProcess = async (userId, roomTypeId, checkIn, checkOut) => {
     validateDates(checkIn, checkOut);
@@ -63,8 +74,13 @@ export const createBookingProcess = async (userId, roomTypeId, checkIn, checkOut
     const totalPrice = await calculateTotalPrice(roomTypeId, checkIn, checkOut);
     return prisma.booking.create({
         data: {
-            user_id: userId, room_unit_id: assignedUnitId, check_in: checkIn, check_out: checkOut,
-            total_price: totalPrice, expires_at: addHours(new Date(), 1), status: "WAITING_FOR_PAYMENT",
+            user_id: userId,
+            room_unit_id: assignedUnitId,
+            check_in: checkIn,
+            check_out: checkOut,
+            total_price: totalPrice,
+            expires_at: addHours(new Date(), 1),
+            status: "WAITING_FOR_PAYMENT",
         },
     });
 };
