@@ -92,8 +92,12 @@ export const handleSocialLogin = async (req: Request, res: Response) => {
       return;
     }
 
+    console.log(`[SocialLogin] Received request: provider=${provider}, action=${action}, role=${requestedRole}`);
+
     const firebaseUser = await verifyFirebaseToken(idToken);
-    const result       = await authService.socialLogin(
+    console.log(`[SocialLogin] Firebase token verified for: ${firebaseUser.email}`);
+
+    const result = await authService.socialLogin(
       firebaseUser.email,
       firebaseUser.name,
       provider.toUpperCase(),
@@ -101,6 +105,8 @@ export const handleSocialLogin = async (req: Request, res: Response) => {
       action,
       requestedRole,
     );
+
+    console.log(`[SocialLogin] Success for user: ${result.user.email}, role: ${result.user.role}`);
 
     res.cookie('token', result.token, {
       httpOnly: true,
@@ -110,7 +116,11 @@ export const handleSocialLogin = async (req: Request, res: Response) => {
     });
     res.status(200).json({ user: result.user });
   } catch (error: any) {
-    res.status(401).json({ error: error.message ?? 'Social login failed.' });
+    // Bedakan error business logic (401) vs error server/Firebase (500)
+    const isAuthError = error.message?.includes('registered') || error.message?.includes('login');
+    const statusCode = isAuthError ? 401 : 500;
+    console.error(`[SocialLogin] Error (${statusCode}):`, error.message);
+    res.status(statusCode).json({ error: error.message ?? 'Social login failed.' });
   }
 };
 

@@ -19,30 +19,27 @@ const PORT = process.env.PORT || 5000;
 // ============================================================
 // CORS CONFIGURATION
 // ============================================================
-// Mendukung banyak URL sekaligus (pisahkan dengan koma di env variable).
-// Contoh FRONTEND_URL: "https://myapp.vercel.app,http://localhost:5173"
 const rawOrigins = process.env.FRONTEND_URL || "http://localhost:5173,http://localhost:5174";
 const allowedOrigins = rawOrigins.split(",").map((o) => o.trim().replace(/\/$/, ""));
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Izinkan request tanpa origin (misal: Postman, server-to-server)
+      // Izinkan request tanpa Origin (Vercel Proxy / Postman / server-to-server)
       if (!origin) return callback(null, true);
 
-      // Hapus trailing slash dari origin yang masuk untuk perbandingan yang konsisten
       const cleanOrigin = origin.replace(/\/$/, "");
-
       if (allowedOrigins.includes(cleanOrigin)) {
         callback(null, true);
       } else {
-        console.warn(`CORS blocked origin: ${origin}. Allowed: ${allowedOrigins.join(", ")}`);
+        console.warn(`[CORS] Blocked: ${origin} | Allowed: ${allowedOrigins.join(", ")}`);
         callback(new Error(`Origin ${origin} not allowed by CORS`));
       }
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+    exposedHeaders: ["Set-Cookie"],
   }),
 );
 app.use(cookieParser());
