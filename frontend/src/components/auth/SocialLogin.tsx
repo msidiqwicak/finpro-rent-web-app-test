@@ -46,7 +46,7 @@ export default function SocialLogin({ action, requestedRole, redirectTo = '/' }:
   // Flag lokal: menandai bahwa komponen INI yang memulai proses social login
   const [isAwaitingAuth, setIsAwaitingAuth] = useState(false);
 
-  // ─── EFEK 1: Tangkap hasil redirect login (mobile browser) ───
+  // ─── EFEK 1: Tangkap hasil redirect login (mobile/popup-blocked browser) ───
   // getRedirectResult dipanggil ketika user kembali dari halaman autentikasi Google/Facebook.
   // onAuthStateChanged di AuthContext akan menangani pemanggilan backend-nya.
   useEffect(() => {
@@ -56,10 +56,14 @@ export default function SocialLogin({ action, requestedRole, redirectTo = '/' }:
         if (result?.user) {
           // User baru kembali dari redirect, onAuthStateChanged sudah dipicu.
           // Kita tandai bahwa kita sedang menunggu hasilnya.
+          const intentStr = sessionStorage.getItem('social_login_intent');
+          const provider = intentStr ? JSON.parse(intentStr).provider : 'GOOGLE';
           setIsAwaitingAuth(true);
-          setLoading(JSON.parse(sessionStorage.getItem('social_login_intent') || '{}').provider ?? 'GOOGLE');
+          setLoading(provider);
         }
       } catch (err: any) {
+        // Bersihkan state jika redirect gagal
+        sessionStorage.removeItem('social_login_intent');
         setError(err.message ?? 'An error occurred during redirect login.');
       }
     };
@@ -67,6 +71,8 @@ export default function SocialLogin({ action, requestedRole, redirectTo = '/' }:
   }, []);
 
   // ─── EFEK 2: Tangkap error dari AuthContext (via sessionStorage) ────
+  // PENTING: Dependency array [] wajib ada agar efek ini hanya berjalan
+  // SEKALI saat komponen pertama kali dimuat, bukan setiap render.
   useEffect(() => {
     const storedError = sessionStorage.getItem('social_login_error');
     if (storedError) {
@@ -75,7 +81,7 @@ export default function SocialLogin({ action, requestedRole, redirectTo = '/' }:
       setLoading(null);
       setIsAwaitingAuth(false);
     }
-  });
+  }, []); // ← [] WAJIB: hanya jalankan sekali saat mount
 
   // ─── EFEK 3: Navigasi setelah login berhasil ────────────────
   // Dipicu ketika 'user' di AuthContext berubah dari null → ada user (login berhasil).
