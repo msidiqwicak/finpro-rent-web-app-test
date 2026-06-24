@@ -3,7 +3,6 @@ import { signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase
 import { useNavigate } from 'react-router-dom';
 import { auth, googleProvider, facebookProvider } from '../../config/firebase';
 import { useAuth } from '../../context/AuthContext';
-import api from '../../api/axiosConfig';
 
 // ─── Types ────────────────────────────────────────────────────
 type SocialProvider = 'GOOGLE' | 'FACEBOOK';
@@ -40,44 +39,25 @@ function FacebookIcon() {
 
 // ─── Main Component ───────────────────────────────────────────
 export default function SocialLogin({ action, requestedRole, redirectTo = '/' }: SocialLoginProps) {
-  const { login }                   = useAuth();
+  const { user }                    = useAuth();
   const navigate                    = useNavigate();
   const [loading, setLoading]       = useState<SocialProvider | null>(null);
   const [error, setError]           = useState('');
+  // Flag lokal: menandai bahwa komponen INI yang memulai proses social login
+  const [isAwaitingAuth, setIsAwaitingAuth] = useState(false);
 
-  const processAuthResult = async (firebaseUser: any, provider: SocialProvider, act: string, role: string) => {
-    try {
-      const idToken = await firebaseUser.getIdToken();
-      const res = await api.post('/auth/social-login', {
-        idToken,
-        provider,
-        action: act,
-        requestedRole: role
-      });
-
-      const data = res.data.data ?? res.data;
-      login({ ...data.user });
-      
-      sessionStorage.removeItem('social_login_state');
-      navigate(redirectTo);
-    } catch (err: any) {
-      setError(err.response?.data?.error ?? err.message ?? 'Social login failed.');
-      setLoading(null);
-    }
-  };
-
-  // Mengecek apakah user baru saja kembali dari redirect login (contoh di mobile browser)
+  // ─── EFEK 1: Tangkap hasil redirect login (mobile browser) ───
+  // getRedirectResult dipanggil ketika user kembali dari halaman autentikasi Google/Facebook.
+  // onAuthStateChanged di AuthContext akan menangani pemanggilan backend-nya.
   useEffect(() => {
     const checkRedirect = async () => {
       try {
         const result = await getRedirectResult(auth);
-        if (result && result.user) {
-          const storedState = sessionStorage.getItem('social_login_state');
-          if (storedState) {
-            const { provider, action: storedAction, requestedRole: storedRole } = JSON.parse(storedState);
-            setLoading(provider);
-            await processAuthResult(result.user, provider, storedAction, storedRole);
-          }
+        if (result?.user) {
+          // User baru kembali dari redirect, onAuthStateChanged sudah dipicu.
+          // Kita tandai bahwa kita sedang menunggu hasilnya.
+          setIsAwaitingAuth(true);
+          setLoading(JSON.parse(sessionStorage.getItem('social_login_intent') || '{}').provider ?? 'GOOGLE');
         }
       } catch (err: any) {
         setError(err.message ?? 'An error occurred during redirect login.');
@@ -86,32 +66,69 @@ export default function SocialLogin({ action, requestedRole, redirectTo = '/' }:
     checkRedirect();
   }, []);
 
+  // ─── EFEK 2: Tangkap error dari AuthContext (via sessionStorage) ────
+  useEffect(() => {
+    const storedError = sessionStorage.getItem('social_login_error');
+    if (storedError) {
+      setError(storedError);
+      sessionStorage.removeItem('social_login_error');
+      setLoading(null);
+      setIsAwaitingAuth(false);
+    }
+  });
+
+  // ─── EFEK 3: Navigasi setelah login berhasil ────────────────
+  // Dipicu ketika 'user' di AuthContext berubah dari null → ada user (login berhasil).
+  // Hanya navigasi jika komponen INI yang memulai proses social login (isAwaitingAuth).
+  useEffect(() => {
+    if (user && isAwaitingAuth) {
+      setLoading(null);
+      setIsAwaitingAuth(false);
+      navigate(redirectTo);
+    }
+  }, [user, isAwaitingAuth, navigate, redirectTo]);
+
+  // ─── Handler utama saat tombol diklik ───────────────────────
   const handleSocialLogin = async (provider: SocialProvider) => {
     setError('');
     setLoading(provider);
 
+    // LANGKAH KUNCI: Simpan "intent" ke sessionStorage SEBELUM membuka popup.
+    // Flag ini akan dibaca oleh onAuthStateChanged di AuthContext untuk tahu
+    // bahwa ini adalah login baru (bukan sekadar refresh halaman).
+    sessionStorage.setItem('social_login_intent', JSON.stringify({
+      provider,
+      action,
+      requestedRole,
+    }));
+
     const firebaseProvider = provider === 'GOOGLE' ? googleProvider : facebookProvider;
 
     try {
-      const result = await signInWithPopup(auth, firebaseProvider);
-      if (result.user) {
-        await processAuthResult(result.user, provider, action, requestedRole);
-      }
+      await signInWithPopup(auth, firebaseProvider);
+      // Setelah popup berhasil, onAuthStateChanged di AuthContext OTOMATIS terpicu.
+      // Kita tandai komponen ini sedang menunggu hasilnya.
+      setIsAwaitingAuth(true);
     } catch (err: any) {
+      // Bersihkan flag jika terjadi error (popup ditutup, diblokir, dll)
       if (err?.code === 'auth/popup-blocked') {
-        // Fallback jika popup diblokir oleh browser
-        sessionStorage.setItem('social_login_state', JSON.stringify({ provider, action, requestedRole }));
+        // Fallback ke redirect jika popup diblokir browser
         await signInWithRedirect(auth, firebaseProvider);
+        // Tidak perlu setIsAwaitingAuth(false) karena halaman akan redirect
       } else if (err?.code !== 'auth/popup-closed-by-user') {
+        sessionStorage.removeItem('social_login_intent');
         if (err?.code === 'auth/account-exists-with-different-credential') {
-          setError('This email is registered with another login method (e.g. Google). Please use that method.');
+          setError('This email is registered with another login method. Please use that method.');
         } else {
           setError(err.message ?? 'An error occurred. Please try again.');
         }
         setLoading(null);
+        setIsAwaitingAuth(false);
       } else {
         // User menutup popup secara manual
+        sessionStorage.removeItem('social_login_intent');
         setLoading(null);
+        setIsAwaitingAuth(false);
       }
     }
   };

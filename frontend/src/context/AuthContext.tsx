@@ -1,64 +1,139 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { auth } from '../config/firebase';
-import { signOut } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import api from '../api/axiosConfig';
 
 // ============================================================
 // TIPE DATA
 // ============================================================
-// Mendefinisikan struktur data user yang akan disimpan di state global
 export interface AuthUser {
-  id:         string;
-  name:       string;
-  email:      string;
-  role:       'USER' | 'TENANT';
-  token?:     string; // Token is now optional since it's stored in HttpOnly cookie
+  id:          string;
+  name:        string;
+  email:       string;
+  role:        'USER' | 'TENANT';
+  token?:      string;
   avatar_url?: string | null;
 }
 
 interface AuthContextType {
-  user: AuthUser | null;           // Data user yang login, null jika belum login
-  isLoading: boolean;              // True saat sedang mengecek status login dari localStorage
-  login: (userData: AuthUser) => void;  // Fungsi untuk menyimpan data login
-  logout: () => void;              // Fungsi untuk menghapus data login
+  user:      AuthUser | null;
+  isLoading: boolean;
+  login:     (userData: AuthUser) => void;
+  logout:    () => void;
 }
 
 // ============================================================
 // MEMBUAT CONTEXT
 // ============================================================
-// Context adalah "wadah global" yang bisa diakses oleh semua komponen
-// tanpa perlu meneruskan props secara manual (prop drilling)
 const AuthContext = createContext<AuthContextType | null>(null);
 
 // ============================================================
 // PROVIDER
 // ============================================================
-// Provider adalah komponen pembungkus yang menyediakan nilai context
-// ke semua komponen di dalamnya (children)
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser]           = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Saat aplikasi pertama dibuka (mount), ambil data dari backend via HTTPOnly cookie
+  // ----- Fungsi Login & Logout (stable reference) -----------
+  const login = useCallback((userData: AuthUser) => {
+    setUser(userData);
+    localStorage.setItem('auth_user_public', JSON.stringify({
+      name: userData.name,
+      role: userData.role
+    }));
+    localStorage.removeItem('auth_user');
+  }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (err) {
+      console.error('Logout API failed:', err);
+    }
+    setUser(null);
+    localStorage.removeItem('auth_user_public');
+    localStorage.removeItem('auth_user');
+    localStorage.removeItem('token');
+    sessionStorage.removeItem('social_login_intent');
+    signOut(auth).catch((error) => console.error('Firebase logout failed:', error));
+  }, []);
+
+  // ============================================================
+  // STEP 1 — onAuthStateChanged (Hanya untuk Social Login baru)
+  // ============================================================
+  // Observer ini dipanggil Firebase setiap kali status auth berubah.
+  // KUNCI: Kita gunakan flag 'social_login_intent' di sessionStorage untuk
+  // membedakan antara "login baru" dan "refresh halaman biasa".
+  // Jika flag ADA  → ini login baru → panggil /social-login ke backend.
+  // Jika flag TIDAK ADA → ini refresh halaman → ABAIKAN, biarkan /auth/me yang menangani (Step 2).
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      const intentStr = sessionStorage.getItem('social_login_intent');
+
+      // Bukan login baru (hanya refresh halaman), langsung skip.
+      if (!intentStr) return;
+
+      if (firebaseUser) {
+        try {
+          const { provider, action, requestedRole } = JSON.parse(intentStr);
+
+          // Dapatkan ID Token terbaru dari Firebase
+          const idToken = await firebaseUser.getIdToken();
+
+          // Kirim ke backend HANYA SEKALI untuk verifikasi & membuat sesi (cookie)
+          const res = await api.post('/auth/social-login', {
+            idToken,
+            provider,
+            action,
+            requestedRole,
+          });
+
+          const data = res.data.data ?? res.data;
+          // Update state global dengan data user dari DATABASE kita sendiri
+          login({ ...data.user });
+
+        } catch (err: any) {
+          // Simpan error agar bisa ditampilkan oleh komponen SocialLogin
+          const message = err.response?.data?.error ?? err.message ?? 'Social login failed.';
+          sessionStorage.setItem('social_login_error', message);
+          // Sign out dari Firebase jika backend gagal memvalidasi
+          await signOut(auth);
+        } finally {
+          // Hapus flag intent apapun hasilnya, agar tidak dipanggil lagi saat refresh
+          sessionStorage.removeItem('social_login_intent');
+        }
+      } else {
+        // Firebase tidak mengembalikan user (misal popup ditutup)
+        sessionStorage.removeItem('social_login_intent');
+      }
+    });
+
+    // Bersihkan listener saat komponen di-unmount
+    return () => unsubscribe();
+  }, [login]);
+
+  // ============================================================
+  // STEP 2 — Cek sesi via Cookie /auth/me (saat refresh halaman)
+  // ============================================================
+  // Dipanggil HANYA SEKALI saat aplikasi pertama dibuka.
+  // Mengandalkan HTTP-Only cookie yang sudah disimpan oleh backend.
   useEffect(() => {
     const fetchMe = async () => {
-      // PERMANENT FIX: Wipe any ghost token left over from old code versions
-      // so it never appears in the Application tab and avoids mentor sanctions.
+      // Bersihkan sisa token lama yang mungkin masih ada
       localStorage.removeItem('token');
 
       try {
-        const { default: api } = await import('../api/axiosConfig');
         const res = await api.get('/auth/me');
         setUser(res.data.user);
-        // Sinkronisasi data non-sensitif ke localStorage untuk UI
         localStorage.setItem('auth_user_public', JSON.stringify({
           name: res.data.user.name,
-          role: res.data.user.role
+          role: res.data.user.role,
         }));
-      } catch (error) {
+      } catch {
         setUser(null);
         localStorage.removeItem('auth_user_public');
-        localStorage.removeItem('auth_user'); // Bersihkan sisa data lama jika ada
+        localStorage.removeItem('auth_user');
       } finally {
         setIsLoading(false);
       }
@@ -66,35 +141,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     fetchMe();
   }, []);
 
-  // Fungsi dipanggil setelah user berhasil login dari API
-  const login = (userData: AuthUser) => {
-    setUser(userData);
-    // HANYA simpan data non-sensitif (name & role) ke localStorage sesuai instruksi keamanan
-    localStorage.setItem('auth_user_public', JSON.stringify({
-      name: userData.name,
-      role: userData.role
-    }));
-    // Hapus data lama yang mungkin menyimpan token
-    localStorage.removeItem('auth_user');
-  };
-
-  // Fungsi dipanggil saat user menekan tombol Logout
-  const logout = async () => {
-    try {
-      const { default: api } = await import('../api/axiosConfig');
-      await api.post('/auth/logout');
-    } catch (err) {
-      console.error("Logout API failed:", err);
-    }
-    setUser(null);
-    localStorage.removeItem('auth_user_public');
-    localStorage.removeItem('auth_user');
-    localStorage.removeItem('token'); // Pastikan token hantu juga terhapus
-    signOut(auth).catch((error) => console.error("Firebase logout failed:", error));
-  };
-
   // ============================================================
-  // AUTO LOGOUT (IDLE TIMEOUT) - 1 JAM (3.600.000 ms)
+  // AUTO LOGOUT (IDLE TIMEOUT) - 30 MENIT
   // ============================================================
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout>;
@@ -103,30 +151,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(async () => {
         if (user) {
-          console.log('Session expired due to inactivity (1 minute).');
+          console.log('Session expired due to inactivity.');
           await logout();
-          // Use alert to notify the user why they were logged out automatically
           alert('Your session has automatically expired due to 30 minutes of inactivity.');
           window.location.href = '/login';
         }
       }, 1800000); // 30 menit
     };
 
-    // Daftar event yang dianggap sebagai "aktivitas pengguna"
     const events = ['mousemove', 'keydown', 'mousedown', 'scroll', 'touchstart'];
 
-    // Hanya jalankan sensor pendeteksi jika ada user yang login
     if (user) {
       resetTimer();
       events.forEach((event) => window.addEventListener(event, resetTimer, { passive: true }));
     }
 
-    // Bersihkan event listener saat komponen dihancurkan / user berubah
     return () => {
       clearTimeout(timeoutId);
       events.forEach((event) => window.removeEventListener(event, resetTimer));
     };
-  }, [user]); // Effect ini dipicu setiap kali status 'user' berubah
+  }, [user, logout]);
 
   return (
     <AuthContext.Provider value={{ user, isLoading, login, logout }}>
@@ -138,8 +182,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 // ============================================================
 // CUSTOM HOOK
 // ============================================================
-// Hook ini mempermudah komponen lain untuk mengakses AuthContext
-// Cukup tulis: const { user, login, logout } = useAuth();
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
