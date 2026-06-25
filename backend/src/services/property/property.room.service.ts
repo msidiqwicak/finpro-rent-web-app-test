@@ -69,6 +69,11 @@ export const updateRoomType = async (userId: string, roomTypeId: string, data: a
   }
 
   const cleanData: any = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== undefined));
+
+  if (cleanData.capacity !== undefined) cleanData.capacity = Number(cleanData.capacity);
+  if (cleanData.price_per_night !== undefined) cleanData.price_per_night = Number(cleanData.price_per_night);
+  if (cleanData.total_units !== undefined) cleanData.total_units = Number(cleanData.total_units);
+
   if (data.existing_images !== undefined || (files && files.length > 0)) {
     cleanData.image_urls = parseImages(data.existing_images, existing.image_urls, files);
   }
